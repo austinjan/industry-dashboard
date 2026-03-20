@@ -1,0 +1,28 @@
+# Worktrees
+.worktrees/
+
+# Go
+/server
+*.exe
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Environment
+.env
+.env.local
+
+# Database
+pgdata/
+
+# Superpowers
+.superpowers/
+
+# OS
+.DS_Store
