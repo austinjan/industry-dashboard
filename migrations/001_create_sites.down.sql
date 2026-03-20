@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS machines;
+DROP TABLE IF EXISTS production_lines;
+DROP TABLE IF EXISTS sites;
