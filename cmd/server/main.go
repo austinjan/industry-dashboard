@@ -28,8 +28,14 @@ func main() {
 	defer pool.Close()
 
 	// Parse JWT durations
-	accessDuration, _ := time.ParseDuration(cfg.JWTAccessDuration)
-	refreshDuration, _ := time.ParseDuration(cfg.JWTRefreshDuration)
+	accessDuration, err := time.ParseDuration(cfg.JWTAccessDuration)
+	if err != nil {
+		log.Fatalf("Invalid JWT_ACCESS_DURATION %q: %v", cfg.JWTAccessDuration, err)
+	}
+	refreshDuration, err := time.ParseDuration(cfg.JWTRefreshDuration)
+	if err != nil {
+		log.Fatalf("Invalid JWT_REFRESH_DURATION %q: %v", cfg.JWTRefreshDuration, err)
+	}
 
 	// Services
 	jwtService := auth.NewJWTService(cfg.JWTSecret, accessDuration, refreshDuration)
@@ -80,6 +86,7 @@ func main() {
 			r.Get("/login", authHandler.Login)
 			r.Get("/callback", authHandler.Callback)
 			r.Post("/refresh", authHandler.Refresh)
+			r.Post("/logout", authHandler.Logout)
 		})
 	}
 

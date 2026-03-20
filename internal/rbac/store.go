@@ -134,7 +134,7 @@ func (s *Store) CreateRole(ctx context.Context, name, description string, permis
 	return &role, nil
 }
 
-func (s *Store) AssignUserSiteRole(ctx context.Context, userID, roleID, siteID string) error {
+func (s *Store) AssignUserSiteRole(ctx context.Context, userID, roleID string, siteID *string) error {
 	_, err := s.db.Exec(ctx,
 		`INSERT INTO user_site_roles (user_id, role_id, site_id)
 		 VALUES ($1, $2, $3)

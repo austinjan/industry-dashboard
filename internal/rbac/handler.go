@@ -72,9 +72,9 @@ func (h *Handler) CreateRole(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) AssignUserSiteRole(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		UserID string `json:"user_id"`
-		RoleID string `json:"role_id"`
-		SiteID string `json:"site_id"`
+		UserID string  `json:"user_id"`
+		RoleID string  `json:"role_id"`
+		SiteID *string `json:"site_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)

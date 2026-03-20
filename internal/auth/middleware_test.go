@@ -51,3 +51,33 @@ func TestAuthMiddleware_RefreshTokenRejected(t *testing.T) {
 	handler.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
+
+func TestAuthMiddleware_ValidCookie(t *testing.T) {
+	j := auth.NewJWTService("test-secret", 15*time.Minute, 168*time.Hour)
+	mw := auth.NewMiddleware(j)
+	token, _ := j.CreateAccessToken("user-456", "cookie@example.com")
+	handler := mw.Authenticate(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		claims := auth.GetClaims(r.Context())
+		assert.Equal(t, "user-456", claims.UserID)
+		w.WriteHeader(http.StatusOK)
+	}))
+	req := httptest.NewRequest("GET", "/", nil)
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: token})
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestAuthMiddleware_RefreshTokenInCookieRejected(t *testing.T) {
+	j := auth.NewJWTService("test-secret", 15*time.Minute, 168*time.Hour)
+	mw := auth.NewMiddleware(j)
+	token, _ := j.CreateRefreshToken("user-456", "cookie@example.com")
+	handler := mw.Authenticate(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	req := httptest.NewRequest("GET", "/", nil)
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: token})
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}

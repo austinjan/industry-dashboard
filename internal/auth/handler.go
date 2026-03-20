@@ -58,18 +58,34 @@ func (h *Handler) Callback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to create token", http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/?access_token="+accessToken+"&refresh_token="+refreshToken, http.StatusTemporaryRedirect)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    accessToken,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   900,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Path:     "/api/auth",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   604800,
+	})
+	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 }
 
 func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
-	var body struct {
-		RefreshToken string `json:"refresh_token"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+	cookie, err := r.Cookie("refresh_token")
+	if err != nil || cookie.Value == "" {
+		http.Error(w, "no refresh token", http.StatusUnauthorized)
 		return
 	}
-	claims, err := h.jwt.ValidateToken(body.RefreshToken)
+
+	claims, err := h.jwt.ValidateToken(cookie.Value)
 	if err != nil || claims.TokenType != "refresh" {
 		http.Error(w, "invalid refresh token", http.StatusUnauthorized)
 		return
@@ -84,11 +100,44 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to create token", http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    accessToken,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   900,
 	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Path:     "/api/auth",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   604800,
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/api/auth",
+		HttpOnly: true,
+		MaxAge:   -1,
+	})
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {

@@ -20,12 +20,22 @@ func NewMiddleware(jwt *JWTService) *Middleware {
 
 func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var tokenString string
+
+		// Check Authorization header first
 		header := r.Header.Get("Authorization")
-		if header == "" || !strings.HasPrefix(header, "Bearer ") {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
+		if header != "" && strings.HasPrefix(header, "Bearer ") {
+			tokenString = strings.TrimPrefix(header, "Bearer ")
+		} else {
+			// Fall back to cookie
+			cookie, err := r.Cookie("access_token")
+			if err != nil || cookie.Value == "" {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
+			tokenString = cookie.Value
 		}
-		tokenString := strings.TrimPrefix(header, "Bearer ")
+
 		claims, err := m.jwt.ValidateToken(tokenString)
 		if err != nil || claims.TokenType != "access" {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)

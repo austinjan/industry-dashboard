@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { apiFetch, loadTokens, setTokens, clearTokens, getAccessToken } from './api';
+import { apiFetch } from './api';
 
 interface User {
   id: string;
@@ -24,29 +24,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const access = params.get('access_token');
-    const refresh = params.get('refresh_token');
-    if (access && refresh) {
-      setTokens(access, refresh);
-      window.history.replaceState({}, '', '/');
-    } else {
-      loadTokens();
-    }
-    if (getAccessToken()) {
-      apiFetch('/auth/me')
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => setUser(data))
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    apiFetch('/auth/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setUser(data))
+      .finally(() => setLoading(false));
   }, []);
 
-  const logout = () => {
-    clearTokens();
+  const logout = async () => {
+    await apiFetch('/auth/logout', { method: 'POST' });
     setUser(null);
-    window.location.href = '/';
+    window.location.href = '/login';
   };
 
   return (
