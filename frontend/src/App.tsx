@@ -32,7 +32,7 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
 
-            {/* Full-screen editor routes — no AppShell chrome */}
+            {/* All protected routes share one SiteProvider */}
             <Route
               element={
                 <ProtectedRoute>
@@ -42,20 +42,12 @@ export default function App() {
                 </ProtectedRoute>
               }
             >
+              {/* Full-screen editor routes — no AppShell chrome */}
               <Route path="/dashboards/new" element={<DashboardEditorPage />} />
               <Route path="/dashboards/:id/edit" element={<DashboardEditorPage />} />
-            </Route>
 
-            {/* Normal routes inside AppShell */}
-            <Route
-              element={
-                <ProtectedRoute>
-                  <SiteProvider>
-                    <AppShell />
-                  </SiteProvider>
-                </ProtectedRoute>
-              }
-            >
+              {/* Normal routes inside AppShell */}
+              <Route element={<AppShell />}>
               <Route path="/" element={<DashboardPage />} />
               <Route path="/machines" element={<MachineListPage />} />
               <Route path="/machines/:machineId" element={<MachineDetailPage />} />
@@ -66,6 +58,7 @@ export default function App() {
               <Route path="/admin/users" element={<UsersPage />} />
               <Route path="/admin/roles" element={<RolesPage />} />
               <Route path="/admin/audit" element={<AuditLogPage />} />
+              </Route>
             </Route>
           </Routes>
         </BrowserRouter>
