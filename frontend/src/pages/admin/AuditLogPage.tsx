@@ -21,7 +21,7 @@ export function AuditLogPage() {
     <div>
       <h2 className="mb-4 text-xl font-bold">Audit Log</h2>
       <div className="mb-4 flex items-center gap-3">
-        <Select value={action} onValueChange={setAction}>
+        <Select value={action} onValueChange={(v) => setAction(v ?? '')}>
           <SelectTrigger className="w-40"><SelectValue placeholder="All actions" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="">All</SelectItem>
@@ -31,7 +31,7 @@ export function AuditLogPage() {
             <SelectItem value="acknowledge">Acknowledge</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={resourceType} onValueChange={setResourceType}>
+        <Select value={resourceType} onValueChange={(v) => setResourceType(v ?? '')}>
           <SelectTrigger className="w-40"><SelectValue placeholder="All resources" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="">All</SelectItem>

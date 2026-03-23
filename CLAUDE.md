@@ -46,6 +46,9 @@ internal/
   rbac/                    # Custom roles, permissions, RBAC middleware
   audit/                   # Audit trail middleware and store
   site/                    # Site/line/machine CRUD
+  alert/                   # Alert CRUD and alert events
+  user/                    # User listing with role details
+  datapoint/               # Time-series data queries, aggregations
   config/                  # Env-based configuration
   database/                # DB connection pool
 ```

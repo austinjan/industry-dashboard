@@ -50,7 +50,7 @@ export function RolesPage() {
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-bold">Role Management</h2>
         <Dialog>
-          <DialogTrigger asChild><Button>Create Role</Button></DialogTrigger>
+          <DialogTrigger><Button>Create Role</Button></DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>Create New Role</DialogTitle></DialogHeader>
             <div className="space-y-3">

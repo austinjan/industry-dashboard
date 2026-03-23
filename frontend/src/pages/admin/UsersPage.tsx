@@ -72,13 +72,13 @@ export function UsersPage() {
                 </TableCell>
                 <TableCell>
                   <Dialog>
-                    <DialogTrigger asChild>
+                    <DialogTrigger>
                       <Button size="sm" variant="outline" onClick={() => setSelectedUser(u.id)}>Assign Role</Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader><DialogTitle>Assign Role to {u.name}</DialogTitle></DialogHeader>
                       <div className="space-y-3">
-                        <Select value={selectedRole} onValueChange={setSelectedRole}>
+                        <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v ?? '')}>
                           <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
                           <SelectContent>
                             {roles?.map((r: any) => (
@@ -86,7 +86,7 @@ export function UsersPage() {
                             ))}
                           </SelectContent>
                         </Select>
-                        <Select value={selectedSite} onValueChange={setSelectedSite}>
+                        <Select value={selectedSite} onValueChange={(v) => setSelectedSite(v ?? '')}>
                           <SelectTrigger><SelectValue placeholder="Global (all sites)" /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="">Global</SelectItem>
