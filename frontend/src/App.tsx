@@ -7,6 +7,7 @@ import { LoginPage } from '@/pages/LoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { MachineListPage } from '@/pages/MachineListPage';
 import { MachineDetailPage } from '@/pages/MachineDetailPage';
+import { AlertsPage } from '@/pages/AlertsPage';
 
 const queryClient = new QueryClient();
 
@@ -36,7 +37,7 @@ export default function App() {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/machines" element={<MachineListPage />} />
               <Route path="/machines/:machineId" element={<MachineDetailPage />} />
-              <Route path="/alerts" element={<div>Alerts (coming soon)</div>} />
+              <Route path="/alerts" element={<AlertsPage />} />
               <Route path="/reports" element={<div>Reports (coming soon)</div>} />
               <Route path="/dashboards" element={<div>My Dashboards (coming soon)</div>} />
               <Route path="/admin/users" element={<div>User Management (coming soon)</div>} />
