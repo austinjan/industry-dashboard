@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -100,6 +102,148 @@ func main() {
 			r.Post("/refresh", authHandler.Refresh)
 			r.Post("/logout", authHandler.Logout)
 		})
+	}
+
+	// Dev mode: seed data + bypass auth
+	if os.Getenv("DEV_MODE") == "1" {
+		log.Println("⚠ DEV_MODE enabled — dev login and seed endpoints active")
+
+		r.Get("/api/dev/seed", func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			// Create test user
+			var userID string
+			err := pool.QueryRow(ctx,
+				`INSERT INTO users (email, name, microsoft_id, is_active)
+				 VALUES ('dev@example.com', 'Dev User', 'dev-local', true)
+				 ON CONFLICT (microsoft_id) DO UPDATE SET email = EXCLUDED.email
+				 RETURNING id`).Scan(&userID)
+			if err != nil {
+				http.Error(w, "failed to create user: "+err.Error(), 500)
+				return
+			}
+			// Assign admin role (global)
+			var adminRoleID string
+			_ = pool.QueryRow(ctx, `SELECT id FROM roles WHERE name = 'Admin'`).Scan(&adminRoleID)
+			if adminRoleID != "" {
+				pool.Exec(ctx,
+					`INSERT INTO user_site_roles (user_id, role_id, site_id) VALUES ($1, $2, NULL) ON CONFLICT DO NOTHING`,
+					userID, adminRoleID)
+			}
+			// Create test sites
+			var siteAID, siteBID string
+			pool.QueryRow(ctx,
+				`INSERT INTO sites (name, code, timezone) VALUES ('Factory Alpha', 'ALPHA', 'Asia/Taipei')
+				 ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name RETURNING id`).Scan(&siteAID)
+			pool.QueryRow(ctx,
+				`INSERT INTO sites (name, code, timezone) VALUES ('Factory Beta', 'BETA', 'Asia/Tokyo')
+				 ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name RETURNING id`).Scan(&siteBID)
+			// Create production lines + machines for site A
+			var line1ID, line2ID string
+			pool.QueryRow(ctx,
+				`INSERT INTO production_lines (site_id, name, display_order)
+				 VALUES ($1, 'Assembly Line 1', 1)
+				 ON CONFLICT DO NOTHING RETURNING id`, siteAID).Scan(&line1ID)
+			pool.QueryRow(ctx,
+				`INSERT INTO production_lines (site_id, name, display_order)
+				 VALUES ($1, 'Packaging Line 2', 2)
+				 ON CONFLICT DO NOTHING RETURNING id`, siteAID).Scan(&line2ID)
+			if line1ID != "" {
+				pool.Exec(ctx, `INSERT INTO machines (line_id, name, model, status) VALUES ($1, 'CNC-01', 'Haas VF-2', 'running') ON CONFLICT DO NOTHING`, line1ID)
+				pool.Exec(ctx, `INSERT INTO machines (line_id, name, model, status) VALUES ($1, 'CNC-02', 'Haas VF-2', 'running') ON CONFLICT DO NOTHING`, line1ID)
+				pool.Exec(ctx, `INSERT INTO machines (line_id, name, model, status) VALUES ($1, 'CNC-03', 'Haas VF-3', 'offline') ON CONFLICT DO NOTHING`, line1ID)
+			}
+			if line2ID != "" {
+				pool.Exec(ctx, `INSERT INTO machines (line_id, name, model, status) VALUES ($1, 'PKG-01', 'Bosch PK-200', 'running') ON CONFLICT DO NOTHING`, line2ID)
+				pool.Exec(ctx, `INSERT INTO machines (line_id, name, model, status) VALUES ($1, 'PKG-02', 'Bosch PK-200', 'error') ON CONFLICT DO NOTHING`, line2ID)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{
+				"status":  "seeded",
+				"user_id": userID,
+				"site_a":  siteAID,
+				"site_b":  siteBID,
+			})
+		})
+
+		r.Get("/api/dev/login", func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			var userID, email string
+			err := pool.QueryRow(ctx, `SELECT id, email FROM users WHERE microsoft_id = 'dev-local'`).Scan(&userID, &email)
+			if err != nil {
+				http.Error(w, "run /api/dev/seed first", 400)
+				return
+			}
+			accessToken, _ := jwtService.CreateAccessToken(userID, email)
+			refreshToken, _ := jwtService.CreateRefreshToken(userID, email)
+			http.SetCookie(w, &http.Cookie{
+				Name: "access_token", Value: accessToken, Path: "/",
+				HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: 900,
+			})
+			http.SetCookie(w, &http.Cookie{
+				Name: "refresh_token", Value: refreshToken, Path: "/api/auth",
+				HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: 604800,
+			})
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		})
+
+		// Dev /api/auth/me fallback (when OIDC not configured)
+		if authHandler == nil {
+			r.Route("/api/auth", func(r chi.Router) {
+				r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
+					cookie, err := r.Cookie("access_token")
+					if err != nil || cookie.Value == "" {
+						http.Error(w, "unauthorized", http.StatusUnauthorized)
+						return
+					}
+					claims, err := jwtService.ValidateToken(cookie.Value)
+					if err != nil {
+						http.Error(w, "unauthorized", http.StatusUnauthorized)
+						return
+					}
+					var u struct {
+						ID    string `json:"id"`
+						Email string `json:"email"`
+						Name  string `json:"name"`
+					}
+					err = pool.QueryRow(r.Context(), "SELECT id, email, name FROM users WHERE id = $1", claims.UserID).Scan(&u.ID, &u.Email, &u.Name)
+					if err != nil {
+						http.Error(w, "user not found", http.StatusNotFound)
+						return
+					}
+					w.Header().Set("Content-Type", "application/json")
+					json.NewEncoder(w).Encode(u)
+				})
+				r.Post("/refresh", func(w http.ResponseWriter, r *http.Request) {
+					cookie, err := r.Cookie("refresh_token")
+					if err != nil || cookie.Value == "" {
+						http.Error(w, "no refresh token", http.StatusUnauthorized)
+						return
+					}
+					claims, err := jwtService.ValidateToken(cookie.Value)
+					if err != nil || claims.TokenType != "refresh" {
+						http.Error(w, "invalid refresh token", http.StatusUnauthorized)
+						return
+					}
+					accessToken, _ := jwtService.CreateAccessToken(claims.UserID, claims.Email)
+					refreshToken, _ := jwtService.CreateRefreshToken(claims.UserID, claims.Email)
+					http.SetCookie(w, &http.Cookie{
+						Name: "access_token", Value: accessToken, Path: "/",
+						HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: 900,
+					})
+					http.SetCookie(w, &http.Cookie{
+						Name: "refresh_token", Value: refreshToken, Path: "/api/auth",
+						HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: 604800,
+					})
+					w.Header().Set("Content-Type", "application/json")
+					json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+				})
+				r.Post("/logout", func(w http.ResponseWriter, r *http.Request) {
+					http.SetCookie(w, &http.Cookie{Name: "access_token", Value: "", Path: "/", MaxAge: -1, HttpOnly: true})
+					http.SetCookie(w, &http.Cookie{Name: "refresh_token", Value: "", Path: "/api/auth", MaxAge: -1, HttpOnly: true})
+					w.WriteHeader(http.StatusNoContent)
+				})
+			})
+		}
 	}
 
 	// Protected API routes

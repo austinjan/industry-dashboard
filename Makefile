@@ -15,7 +15,7 @@ migrate-down:
 		-path ./migrations -database "postgres://dashboard:dashboard@localhost:5432/industry_dashboard?sslmode=disable" down 1
 
 dev:
-	go run ./cmd/server
+	DEV_MODE=1 go run ./cmd/server
 
 test:
 	go test ./... -v
