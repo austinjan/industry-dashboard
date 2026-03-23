@@ -52,20 +52,22 @@ export function WidgetConfigSheet({ open, onClose, widgetType, config, onSave }:
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <SheetContent className="w-[340px] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>{typeName}</SheetTitle>
-        </SheetHeader>
-        {hint && (
-          <div className="my-3 rounded-md p-3 text-xs" style={{ background: hint.bg, color: hint.color }}>
-            {hint.text}
-          </div>
-        )}
-        {FormComponent ? (
-          <FormComponent config={config} onSave={onSave} onCancel={onClose} />
-        ) : (
-          <p className="text-sm text-slate-400">No configuration available.</p>
-        )}
+      <SheetContent className="w-[360px] overflow-y-auto">
+        <div className="px-4 pb-6 pt-2">
+          <SheetHeader>
+            <SheetTitle>{typeName}</SheetTitle>
+          </SheetHeader>
+          {hint && (
+            <div className="my-3 rounded-md p-3 text-xs" style={{ background: hint.bg, color: hint.color }}>
+              {hint.text}
+            </div>
+          )}
+          {FormComponent ? (
+            <FormComponent config={config} onSave={onSave} onCancel={onClose} />
+          ) : (
+            <p className="text-sm text-slate-400">No configuration available.</p>
+          )}
+        </div>
       </SheetContent>
     </Sheet>
   );
