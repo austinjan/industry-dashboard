@@ -108,7 +108,7 @@ func main() {
 	if os.Getenv("DEV_MODE") == "1" {
 		log.Println("⚠ DEV_MODE enabled — dev login and seed endpoints active")
 
-		r.Get("/api/dev/seed", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/dev/seed", func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			// Create test user
 			var userID string
@@ -165,12 +165,12 @@ func main() {
 			})
 		})
 
-		r.Get("/api/dev/login", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/dev/login", func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			var userID, email string
 			err := pool.QueryRow(ctx, `SELECT id, email FROM users WHERE microsoft_id = 'dev-local'`).Scan(&userID, &email)
 			if err != nil {
-				http.Error(w, "run /api/dev/seed first", 400)
+				http.Error(w, "run /dev/seed first", 400)
 				return
 			}
 			accessToken, _ := jwtService.CreateAccessToken(userID, email)
