@@ -169,6 +169,95 @@ func main() {
 			})
 		})
 
+		r.Get("/dev/seed-data", func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			// Get all machine IDs
+			rows, err := pool.Query(ctx, `SELECT id FROM machines`)
+			if err != nil {
+				http.Error(w, "failed to query machines: "+err.Error(), 500)
+				return
+			}
+			defer rows.Close()
+			var machineIDs []string
+			for rows.Next() {
+				var id string
+				rows.Scan(&id)
+				machineIDs = append(machineIDs, id)
+			}
+			if len(machineIDs) == 0 {
+				http.Error(w, "run /dev/seed first", 400)
+				return
+			}
+
+			metrics := []string{"temperature", "speed", "power", "vibration"}
+			inserted := 0
+
+			// Generate 24h of data points for each machine, every 5 minutes
+			for _, machineID := range machineIDs {
+				for _, metric := range metrics {
+					baseValue := 50.0
+					switch metric {
+					case "temperature":
+						baseValue = 70.0
+					case "speed":
+						baseValue = 120.0
+					case "power":
+						baseValue = 4.0
+					case "vibration":
+						baseValue = 0.5
+					}
+					for i := 0; i < 288; i++ { // 24h * 12 (every 5 min)
+						// Add some randomness using the loop index
+						variance := float64(i%20-10) / 10.0 * baseValue * 0.1
+						value := baseValue + variance
+						_, err := pool.Exec(ctx,
+							`INSERT INTO data_points (time, machine_id, metric_name, value)
+							 VALUES (NOW() - ($1 || ' minutes')::interval, $2, $3, $4)`,
+							i*5, machineID, metric, value)
+						if err == nil {
+							inserted++
+						}
+					}
+				}
+			}
+
+			// Create alerts and alert events
+			for _, machineID := range machineIDs[:2] { // First 2 machines
+				var alertID string
+				pool.QueryRow(ctx,
+					`INSERT INTO alerts (name, machine_id, metric_name, condition, threshold, severity)
+					 VALUES ('High Temperature', $1, 'temperature', '>', 80, 'critical')
+					 ON CONFLICT DO NOTHING RETURNING id`, machineID).Scan(&alertID)
+				if alertID != "" {
+					pool.Exec(ctx,
+						`INSERT INTO alert_events (alert_id, triggered_at)
+						 VALUES ($1, NOW() - interval '30 minutes')`, alertID)
+					pool.Exec(ctx,
+						`INSERT INTO alert_events (alert_id, triggered_at)
+						 VALUES ($1, NOW() - interval '2 hours')`, alertID)
+				}
+				var alertID2 string
+				pool.QueryRow(ctx,
+					`INSERT INTO alerts (name, machine_id, metric_name, condition, threshold, severity)
+					 VALUES ('Low Speed', $1, 'speed', '<', 100, 'warning')
+					 ON CONFLICT DO NOTHING RETURNING id`, machineID).Scan(&alertID2)
+				if alertID2 != "" {
+					pool.Exec(ctx,
+						`INSERT INTO alert_events (alert_id, triggered_at)
+						 VALUES ($1, NOW() - interval '1 hour')`, alertID2)
+				}
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"status":       "data seeded",
+				"machines":     len(machineIDs),
+				"metrics":      len(metrics),
+				"data_points":  inserted,
+				"alert_events": 6,
+			})
+		})
+
 		r.Get("/dev/login", func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			var userID, email string
