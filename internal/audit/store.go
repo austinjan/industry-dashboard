@@ -33,10 +33,14 @@ func NewStore(db *pgxpool.Pool) *Store {
 
 func (s *Store) Log(ctx context.Context, entry Entry) error {
 	details, _ := json.Marshal(entry.Details)
+	var ipAddr interface{}
+	if entry.IPAddress != "" {
+		ipAddr = entry.IPAddress
+	}
 	_, err := s.db.Exec(ctx,
 		`INSERT INTO audit_logs (user_id, action, resource_type, resource_id, details, ip_address, timestamp)
 		 VALUES ($1, $2, $3, $4, $5, $6::inet, $7)`,
-		entry.UserID, entry.Action, entry.ResourceType, entry.ResourceID, details, entry.IPAddress, entry.Timestamp,
+		entry.UserID, entry.Action, entry.ResourceType, entry.ResourceID, details, ipAddr, entry.Timestamp,
 	)
 	return err
 }

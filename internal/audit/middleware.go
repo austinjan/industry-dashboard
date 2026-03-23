@@ -38,11 +38,24 @@ func (m *Middleware) Log(resourceType, action string) func(http.Handler) http.Ha
 
 func extractIP(r *http.Request) string {
 	if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
-		return strings.Split(forwarded, ",")[0]
+		ip := strings.TrimSpace(strings.Split(forwarded, ",")[0])
+		return cleanIP(ip)
 	}
-	ip := r.RemoteAddr
-	if idx := strings.LastIndex(ip, ":"); idx != -1 {
-		ip = ip[:idx]
+	return cleanIP(r.RemoteAddr)
+}
+
+func cleanIP(addr string) string {
+	// Handle IPv6 with brackets: [::1]:port
+	if strings.HasPrefix(addr, "[") {
+		if idx := strings.Index(addr, "]"); idx != -1 {
+			return addr[1:idx]
+		}
 	}
-	return ip
+	// Handle IPv4: 127.0.0.1:port
+	if strings.Count(addr, ":") == 1 {
+		host, _, _ := strings.Cut(addr, ":")
+		return host
+	}
+	// Plain IP (no port)
+	return addr
 }
