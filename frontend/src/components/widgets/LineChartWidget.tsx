@@ -11,10 +11,22 @@ import {
   Legend,
 } from 'recharts';
 
-const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const DEFAULT_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+
+const STYLE_TO_DASHARRAY: Record<string, string | undefined> = {
+  solid: undefined,
+  dashed: '8 4',
+  dotted: '2 3',
+};
+
+interface MetricStyle {
+  color: string;
+  style: string;
+}
 
 export function LineChartWidget({ config }: { config: Record<string, unknown> }) {
   const metrics = (config.metrics as string[]) || [];
+  const metricStyles = (config.metric_styles as Record<string, MetricStyle>) || {};
   const machineId = config.machine_id as string | undefined;
   const timeRange = (config.time_range as string) || '24h';
 
@@ -73,17 +85,23 @@ export function LineChartWidget({ config }: { config: Record<string, unknown> })
               contentStyle={{ fontSize: 11 }}
             />
             {metrics.length > 1 && <Legend fontSize={10} />}
-            {metrics.map((metric, i) => (
-              <Line
-                key={metric}
-                type="monotone"
-                dataKey={metric}
-                stroke={COLORS[i % COLORS.length]}
-                strokeWidth={2}
-                dot={false}
-                name={metric}
-              />
-            ))}
+            {metrics.map((metric, i) => {
+              const ms = metricStyles[metric];
+              const color = ms?.color || DEFAULT_COLORS[i % DEFAULT_COLORS.length];
+              const dashArray = STYLE_TO_DASHARRAY[ms?.style || 'solid'];
+              return (
+                <Line
+                  key={metric}
+                  type="monotone"
+                  dataKey={metric}
+                  stroke={color}
+                  strokeWidth={2}
+                  strokeDasharray={dashArray}
+                  dot={false}
+                  name={metric}
+                />
+              );
+            })}
           </RechartsLineChart>
         </ResponsiveContainer>
       ) : (
