@@ -8,6 +8,9 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { MachineListPage } from '@/pages/MachineListPage';
 import { MachineDetailPage } from '@/pages/MachineDetailPage';
 import { AlertsPage } from '@/pages/AlertsPage';
+import { UsersPage } from '@/pages/admin/UsersPage';
+import { RolesPage } from '@/pages/admin/RolesPage';
+import { AuditLogPage } from '@/pages/admin/AuditLogPage';
 
 const queryClient = new QueryClient();
 
@@ -40,9 +43,9 @@ export default function App() {
               <Route path="/alerts" element={<AlertsPage />} />
               <Route path="/reports" element={<div>Reports (coming soon)</div>} />
               <Route path="/dashboards" element={<div>My Dashboards (coming soon)</div>} />
-              <Route path="/admin/users" element={<div>User Management (coming soon)</div>} />
-              <Route path="/admin/roles" element={<div>RBAC Settings (coming soon)</div>} />
-              <Route path="/admin/audit" element={<div>Audit Log (coming soon)</div>} />
+              <Route path="/admin/users" element={<UsersPage />} />
+              <Route path="/admin/roles" element={<RolesPage />} />
+              <Route path="/admin/audit" element={<AuditLogPage />} />
             </Route>
           </Routes>
         </BrowserRouter>
