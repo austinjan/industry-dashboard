@@ -1,0 +1,93 @@
+site_code: "ALPHA"
+site_name: "Factory Alpha"
+timezone: "Asia/Taipei"
+poll_interval: 5s
+
+lines:
+  - name: "Assembly Line 1"
+    display_order: 1
+    machines:
+      - name: "CNC-01"
+        model: "Haas VF-2"
+        registers:
+          - name: temperature
+            min: 60
+            max: 95
+            unit: "°C"
+            pattern: drift
+          - name: speed
+            min: 80
+            max: 150
+            unit: "rpm"
+            pattern: sine
+          - name: power
+            min: 2.0
+            max: 6.0
+            unit: "kW"
+            pattern: random
+          - name: vibration
+            min: 0.1
+            max: 2.0
+            unit: "mm/s"
+            pattern: random
+      - name: "CNC-02"
+        model: "Haas VF-2"
+        registers:
+          - name: temperature
+            min: 65
+            max: 90
+            unit: "°C"
+            pattern: drift
+          - name: speed
+            min: 90
+            max: 140
+            unit: "rpm"
+            pattern: sine
+          - name: power
+            min: 2.5
+            max: 5.5
+            unit: "kW"
+            pattern: random
+      - name: "CNC-03"
+        model: "Haas VF-3"
+        registers:
+          - name: temperature
+            min: 55
+            max: 85
+            unit: "°C"
+            pattern: spike
+          - name: speed
+            min: 100
+            max: 160
+            unit: "rpm"
+            pattern: sine
+
+  - name: "Packaging Line 2"
+    display_order: 2
+    machines:
+      - name: "PKG-01"
+        model: "Bosch PK-200"
+        registers:
+          - name: temperature
+            min: 30
+            max: 60
+            unit: "°C"
+            pattern: random
+          - name: speed
+            min: 40
+            max: 80
+            unit: "pcs/min"
+            pattern: sine
+      - name: "PKG-02"
+        model: "Bosch PK-200"
+        registers:
+          - name: temperature
+            min: 35
+            max: 55
+            unit: "°C"
+            pattern: drift
+          - name: speed
+            min: 45
+            max: 75
+            unit: "pcs/min"
+            pattern: sine
