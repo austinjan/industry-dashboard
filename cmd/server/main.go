@@ -212,7 +212,7 @@ func main() {
 						value := baseValue + variance
 						_, err := pool.Exec(ctx,
 							`INSERT INTO data_points (time, machine_id, metric_name, value)
-							 VALUES (NOW() - ($1 || ' minutes')::interval, $2, $3, $4)`,
+							 VALUES (NOW() - make_interval(mins => $1), $2, $3, $4)`,
 							i*5, machineID, metric, value)
 						if err == nil {
 							inserted++
