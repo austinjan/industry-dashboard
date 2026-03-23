@@ -163,18 +163,18 @@ export function DashboardEditorPage() {
                   <WidgetRenderer widgetType={w.widget_type} config={w.config} />
                 </div>
                 {/* Action buttons — pointer-events back on */}
-                <div className="absolute right-2 top-2 z-20 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="absolute right-2 top-2 z-20 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
                   <button
                     onClick={() => setConfigWidget(w)}
-                    className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-sm text-slate-600 shadow-sm hover:bg-slate-200"
+                    className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-100 text-lg leading-none text-slate-600 shadow-sm hover:bg-slate-200"
                   >
                     ⚙
                   </button>
                   <button
                     onClick={() => removeWidget(w.id)}
-                    className="flex h-8 w-8 items-center justify-center rounded-md bg-red-50 text-sm text-red-500 shadow-sm hover:bg-red-100"
+                    className="flex h-9 w-9 items-center justify-center rounded-md bg-red-50 text-lg leading-none text-red-500 shadow-sm hover:bg-red-100"
                   >
-                    ×
+                    ✕
                   </button>
                 </div>
               </div>
