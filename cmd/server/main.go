@@ -183,7 +183,7 @@ func main() {
 				Name: "refresh_token", Value: refreshToken, Path: "/api/auth",
 				HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: 604800,
 			})
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, "http://localhost:5173/", http.StatusTemporaryRedirect)
 		})
 
 		// Dev /api/auth/me fallback (when OIDC not configured)
