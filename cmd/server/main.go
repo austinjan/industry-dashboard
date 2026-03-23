@@ -15,6 +15,7 @@ import (
 	"github.com/industry-dashboard/server/internal/audit"
 	"github.com/industry-dashboard/server/internal/auth"
 	"github.com/industry-dashboard/server/internal/config"
+	"github.com/industry-dashboard/server/internal/dashboard"
 	"github.com/industry-dashboard/server/internal/database"
 	"github.com/industry-dashboard/server/internal/datapoint"
 	"github.com/industry-dashboard/server/internal/rbac"
@@ -66,6 +67,9 @@ func main() {
 
 	datapointStore := datapoint.NewStore(pool)
 	datapointHandler := datapoint.NewHandler(datapointStore)
+
+	dashboardStore := dashboard.NewStore(pool)
+	dashboardHandler := dashboard.NewHandler(dashboardStore, rbacStore)
 
 	// OIDC client (optional — skip if Azure not configured)
 	var authHandler *auth.Handler
@@ -290,6 +294,23 @@ func main() {
 			r.Get("/metrics", datapointHandler.GetMachineMetrics)
 			r.Get("/latest", datapointHandler.GetLatestValues)
 		})
+
+		// Dashboards
+		r.Route("/dashboards", func(r chi.Router) {
+			r.With(rbacMW.Require("dashboard:view", rbac.SiteFromQuery)).Get("/", dashboardHandler.ListDashboards)
+			r.With(rbacMW.Require("dashboard:create", rbac.SiteFromQuery), auditMW.Log("dashboard", "create")).Post("/", dashboardHandler.CreateDashboard)
+			r.Route("/{dashboardID}", func(r chi.Router) {
+				r.Get("/", dashboardHandler.GetDashboard)
+				r.With(auditMW.Log("dashboard", "update")).Put("/", dashboardHandler.UpdateDashboard)
+				r.With(rbacMW.Require("dashboard:delete", rbac.SiteFromQuery), auditMW.Log("dashboard", "delete")).Delete("/", dashboardHandler.DeleteDashboard)
+				r.With(auditMW.Log("dashboard", "save_widgets")).Put("/widgets", dashboardHandler.SaveWidgets)
+				r.Get("/access", dashboardHandler.GetAccess)
+				r.With(rbacMW.Require("dashboard:share", rbac.SiteFromQuery), auditMW.Log("dashboard", "set_access")).Put("/access", dashboardHandler.SetAccess)
+			})
+		})
+
+		// Widget types
+		r.Get("/widget-types", dashboardHandler.ListWidgetTypes)
 
 		// RBAC admin
 		r.Route("/rbac", func(r chi.Router) {

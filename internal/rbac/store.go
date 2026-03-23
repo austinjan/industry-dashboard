@@ -149,6 +149,25 @@ func (s *Store) RemoveUserSiteRole(ctx context.Context, id string) error {
 	return err
 }
 
+func (s *Store) GetUserRolesAtSite(ctx context.Context, userID, siteID string) ([]string, error) {
+	rows, err := s.db.Query(ctx,
+		`SELECT role_id FROM user_site_roles WHERE user_id = $1 AND (site_id = $2 OR site_id IS NULL)`,
+		userID, siteID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var roleIDs []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		roleIDs = append(roleIDs, id)
+	}
+	return roleIDs, rows.Err()
+}
+
 func (s *Store) GetRolePermissions(ctx context.Context, roleID string) ([]Permission, error) {
 	rows, err := s.db.Query(ctx,
 		`SELECT p.id, p.code, p.group_name, p.description
