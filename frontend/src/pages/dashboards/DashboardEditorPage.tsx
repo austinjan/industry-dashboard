@@ -114,8 +114,10 @@ export function DashboardEditorPage() {
         <span className="font-semibold">{dashboard?.title || 'New Dashboard'}</span>
         <div className="h-5 w-px bg-slate-200" />
         <Popover>
-          <PopoverTrigger>
-            <Button size="sm" variant="outline">+ Add Widget</Button>
+          <PopoverTrigger
+            className="inline-flex shrink-0 items-center justify-center rounded-md border bg-background px-3 py-1.5 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground"
+          >
+            + Add Widget
           </PopoverTrigger>
           <PopoverContent className="w-80">
             <p className="mb-2 text-sm font-semibold">Add Widget</p>

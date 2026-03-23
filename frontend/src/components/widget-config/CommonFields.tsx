@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useSite } from '@/lib/site-context';
@@ -18,38 +17,56 @@ export function TitleField({ value, onChange }: { value: string; onChange: (v: s
 
 export function MachinePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const { currentSite } = useSite();
-  const { data: lines } = useSiteLines(currentSite?.id);
+  const { data: lines, isLoading: linesLoading } = useSiteLines(currentSite?.id);
   const [lineId, setLineId] = useState('');
-  const { data: machines } = useLineMachines(lineId || undefined);
+  const { data: machines, isLoading: machinesLoading } = useLineMachines(lineId || undefined);
 
-  // Auto-select first line
+  // Auto-select first line when lines load
   useEffect(() => {
-    if (lines && lines.length > 0 && !lineId) setLineId(lines[0].id);
+    if (lines && lines.length > 0 && !lineId) {
+      setLineId(lines[0].id);
+    }
   }, [lines, lineId]);
 
   return (
     <div className="space-y-2">
       <div className="space-y-1">
         <Label className="text-xs uppercase text-slate-500">Production Line</Label>
-        <Select value={lineId} onValueChange={(v) => setLineId(v ?? '')}>
-          <SelectTrigger><SelectValue placeholder="Select line" /></SelectTrigger>
-          <SelectContent>
-            {lines?.map((l: { id: string; name: string }) => (
-              <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+        {linesLoading ? (
+          <p className="text-xs text-slate-400">Loading lines...</p>
+        ) : !lines || lines.length === 0 ? (
+          <p className="text-xs text-slate-400">No production lines found. Is a site selected?</p>
+        ) : (
+          <select
+            value={lineId}
+            onChange={(e) => setLineId(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Select line</option>
+            {lines.map((l: any) => (
+              <option key={l.id} value={l.id}>{l.name}</option>
             ))}
-          </SelectContent>
-        </Select>
+          </select>
+        )}
       </div>
       <div className="space-y-1">
         <Label className="text-xs uppercase text-slate-500">Machine</Label>
-        <Select value={value} onValueChange={(v) => onChange(v ?? '')}>
-          <SelectTrigger><SelectValue placeholder="Select machine" /></SelectTrigger>
-          <SelectContent>
-            {machines?.map((m: { id: string; name: string; model: string }) => (
-              <SelectItem key={m.id} value={m.id}>{m.name} ({m.model})</SelectItem>
+        {machinesLoading ? (
+          <p className="text-xs text-slate-400">Loading machines...</p>
+        ) : !machines || machines.length === 0 ? (
+          <p className="text-xs text-slate-400">{lineId ? 'No machines in this line.' : 'Select a line first.'}</p>
+        ) : (
+          <select
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Select machine</option>
+            {machines.map((m: any) => (
+              <option key={m.id} value={m.id}>{m.name} ({m.model})</option>
             ))}
-          </SelectContent>
-        </Select>
+          </select>
+        )}
         <p className="text-xs text-slate-400">Choose which machine to monitor</p>
       </div>
     </div>
@@ -58,32 +75,31 @@ export function MachinePicker({ value, onChange }: { value: string; onChange: (v
 
 export function LinePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const { currentSite } = useSite();
-  const { data: lines } = useSiteLines(currentSite?.id);
+  const { data: lines, isLoading } = useSiteLines(currentSite?.id);
+
   return (
     <div className="space-y-1">
       <Label className="text-xs uppercase text-slate-500">Production Line</Label>
-      <Select value={value} onValueChange={(v) => onChange(v ?? '')}>
-        <SelectTrigger><SelectValue placeholder="Select line" /></SelectTrigger>
-        <SelectContent>
-          {lines?.map((l: { id: string; name: string }) => (
-            <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+      {isLoading ? (
+        <p className="text-xs text-slate-400">Loading lines...</p>
+      ) : (
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        >
+          <option value="">Select line</option>
+          {lines?.map((l: any) => (
+            <option key={l.id} value={l.id}>{l.name}</option>
           ))}
-        </SelectContent>
-      </Select>
+        </select>
+      )}
     </div>
   );
 }
 
-export function MetricPicker({
-  machineId,
-  value,
-  onChange,
-}: {
-  machineId: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  const { data: metrics } = useQuery({
+export function MetricPicker({ machineId, value, onChange }: { machineId: string; value: string; onChange: (v: string) => void }) {
+  const { data: metrics, isLoading } = useQuery({
     queryKey: ['machine-metrics', machineId],
     queryFn: async () => {
       const r = await apiFetch(`/machines/${machineId}/metrics`);
@@ -91,17 +107,26 @@ export function MetricPicker({
     },
     enabled: !!machineId,
   });
+
   return (
     <div className="space-y-1">
       <Label className="text-xs uppercase text-slate-500">Metric</Label>
-      <Select value={value} onValueChange={(v) => onChange(v ?? '')}>
-        <SelectTrigger><SelectValue placeholder="Select metric" /></SelectTrigger>
-        <SelectContent>
+      {isLoading ? (
+        <p className="text-xs text-slate-400">Loading metrics...</p>
+      ) : !machineId ? (
+        <p className="text-xs text-slate-400">Select a machine first.</p>
+      ) : (
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        >
+          <option value="">Select metric</option>
           {((metrics as string[]) || []).map((m: string) => (
-            <SelectItem key={m} value={m}>{m}</SelectItem>
+            <option key={m} value={m}>{m}</option>
           ))}
-        </SelectContent>
-      </Select>
+        </select>
+      )}
       <p className="text-xs text-slate-400">Auto-populated from machine's data points</p>
     </div>
   );
