@@ -139,3 +139,105 @@ export function useRemoveRoleAssignment() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
   });
 }
+
+// Dashboards
+export function useDashboards(siteId: string | undefined) {
+  return useQuery({
+    queryKey: ['dashboards', siteId],
+    queryFn: () => fetchJSON<any[]>(`/dashboards?site_id=${siteId}`),
+    enabled: !!siteId,
+  });
+}
+
+export function useDashboard(id: string | undefined) {
+  return useQuery({
+    queryKey: ['dashboard', id],
+    queryFn: () => fetchJSON<any>(`/dashboards/${id}`),
+    enabled: !!id,
+  });
+}
+
+export function useWidgetTypes() {
+  return useQuery({
+    queryKey: ['widget-types'],
+    queryFn: () => fetchJSON<any[]>('/widget-types'),
+  });
+}
+
+export function useDashboardAccess(id: string | undefined) {
+  return useQuery({
+    queryKey: ['dashboard-access', id],
+    queryFn: () => fetchJSON<any[]>(`/dashboards/${id}/access`),
+    enabled: !!id,
+  });
+}
+
+export function useCreateDashboard() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { title: string; site_id: string }) =>
+      apiFetch('/dashboards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['dashboards'] }),
+  });
+}
+
+export function useUpdateDashboard() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, title }: { id: string; title: string }) =>
+      apiFetch(`/dashboards/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['dashboards'] }),
+  });
+}
+
+export function useDeleteDashboard() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch(`/dashboards/${id}`, { method: 'DELETE' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['dashboards'] }),
+  });
+}
+
+export function useSaveWidgets() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ dashboardId, widgets }: { dashboardId: string; widgets: any[] }) =>
+      apiFetch(`/dashboards/${dashboardId}/widgets`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ widgets }),
+      }),
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['dashboard', vars.dashboardId] }),
+  });
+}
+
+export function useSetDashboardAccess() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ dashboardId, access }: { dashboardId: string; access: any[] }) =>
+      apiFetch(`/dashboards/${dashboardId}/access`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access }),
+      }),
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['dashboard-access', vars.dashboardId] }),
+  });
+}
+
+export function useLatestValues(machineId: string | undefined) {
+  return useQuery({
+    queryKey: ['machine-latest', machineId],
+    queryFn: () => fetchJSON<Record<string, number>>(`/machines/${machineId}/latest`),
+    enabled: !!machineId,
+    refetchInterval: 30000,
+  });
+}
