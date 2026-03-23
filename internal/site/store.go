@@ -94,6 +94,36 @@ func (s *Store) ListLinesBySite(ctx context.Context, siteID string) ([]Productio
 	return lines, nil
 }
 
+type SiteSummary struct {
+	TotalMachines  int `json:"total_machines"`
+	OnlineMachines int `json:"online_machines"`
+	ActiveAlerts   int `json:"active_alerts"`
+	TotalLines     int `json:"total_lines"`
+}
+
+func (s *Store) GetSite(ctx context.Context, id string) (*Site, error) {
+	var site Site
+	err := s.db.QueryRow(ctx,
+		`SELECT id, name, code, timezone, address, created_at FROM sites WHERE id = $1`, id,
+	).Scan(&site.ID, &site.Name, &site.Code, &site.Timezone, &site.Address, &site.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &site, nil
+}
+
+func (s *Store) GetSiteSummary(ctx context.Context, siteID string) (*SiteSummary, error) {
+	var summary SiteSummary
+	err := s.db.QueryRow(ctx, `
+		SELECT
+			(SELECT COUNT(*) FROM machines m JOIN production_lines pl ON m.line_id = pl.id WHERE pl.site_id = $1) as total_machines,
+			(SELECT COUNT(*) FROM machines m JOIN production_lines pl ON m.line_id = pl.id WHERE pl.site_id = $1 AND m.status = 'running') as online_machines,
+			(SELECT COUNT(*) FROM alert_events ae JOIN alerts a ON ae.alert_id = a.id JOIN machines m ON a.machine_id = m.id JOIN production_lines pl ON m.line_id = pl.id WHERE pl.site_id = $1 AND ae.resolved_at IS NULL) as active_alerts,
+			(SELECT COUNT(*) FROM production_lines WHERE site_id = $1) as total_lines
+	`, siteID).Scan(&summary.TotalMachines, &summary.OnlineMachines, &summary.ActiveAlerts, &summary.TotalLines)
+	return &summary, err
+}
+
 func (s *Store) ListMachinesByLine(ctx context.Context, lineID string) ([]Machine, error) {
 	rows, err := s.db.Query(ctx,
 		`SELECT id, line_id, name, model, status, modbus_config, created_at FROM machines WHERE line_id = $1 ORDER BY name`,

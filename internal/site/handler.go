@@ -64,6 +64,28 @@ func (h *Handler) ListLines(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(lines)
 }
 
+func (h *Handler) GetSite(w http.ResponseWriter, r *http.Request) {
+	siteID := chi.URLParam(r, "siteID")
+	site, err := h.store.GetSite(r.Context(), siteID)
+	if err != nil {
+		http.Error(w, "site not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(site)
+}
+
+func (h *Handler) GetSiteSummary(w http.ResponseWriter, r *http.Request) {
+	siteID := chi.URLParam(r, "siteID")
+	summary, err := h.store.GetSiteSummary(r.Context(), siteID)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(summary)
+}
+
 func (h *Handler) ListMachines(w http.ResponseWriter, r *http.Request) {
 	lineID := chi.URLParam(r, "lineID")
 	machines, err := h.store.ListMachinesByLine(r.Context(), lineID)
