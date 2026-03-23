@@ -49,6 +49,7 @@ internal/
   alert/                   # Alert CRUD and alert events
   user/                    # User listing with role details
   datapoint/               # Time-series data queries, aggregations
+  dashboard/               # Custom dashboard CRUD, widget management, access control
   config/                  # Env-based configuration
   database/                # DB connection pool
 ```

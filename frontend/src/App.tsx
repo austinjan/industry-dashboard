@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { SiteProvider } from '@/lib/site-context';
@@ -11,6 +11,9 @@ import { AlertsPage } from '@/pages/AlertsPage';
 import { UsersPage } from '@/pages/admin/UsersPage';
 import { RolesPage } from '@/pages/admin/RolesPage';
 import { AuditLogPage } from '@/pages/admin/AuditLogPage';
+import { DashboardListPage } from '@/pages/dashboards/DashboardListPage';
+import { DashboardViewPage } from '@/pages/dashboards/DashboardViewPage';
+import { DashboardEditorPage } from '@/pages/dashboards/DashboardEditorPage';
 
 const queryClient = new QueryClient();
 
@@ -28,6 +31,22 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+
+            {/* Full-screen editor routes — no AppShell chrome */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <SiteProvider>
+                    <Outlet />
+                  </SiteProvider>
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/dashboards/new" element={<DashboardEditorPage />} />
+              <Route path="/dashboards/:id/edit" element={<DashboardEditorPage />} />
+            </Route>
+
+            {/* Normal routes inside AppShell */}
             <Route
               element={
                 <ProtectedRoute>
@@ -42,7 +61,8 @@ export default function App() {
               <Route path="/machines/:machineId" element={<MachineDetailPage />} />
               <Route path="/alerts" element={<AlertsPage />} />
               <Route path="/reports" element={<div>Reports (coming soon)</div>} />
-              <Route path="/dashboards" element={<div>My Dashboards (coming soon)</div>} />
+              <Route path="/dashboards" element={<DashboardListPage />} />
+              <Route path="/dashboards/:id" element={<DashboardViewPage />} />
               <Route path="/admin/users" element={<UsersPage />} />
               <Route path="/admin/roles" element={<RolesPage />} />
               <Route path="/admin/audit" element={<AuditLogPage />} />
