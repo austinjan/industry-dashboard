@@ -5,6 +5,8 @@ import { SiteProvider } from '@/lib/site-context';
 import { AppShell } from '@/components/layout/AppShell';
 import { LoginPage } from '@/pages/LoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { MachineListPage } from '@/pages/MachineListPage';
+import { MachineDetailPage } from '@/pages/MachineDetailPage';
 
 const queryClient = new QueryClient();
 
@@ -32,7 +34,8 @@ export default function App() {
               }
             >
               <Route path="/" element={<DashboardPage />} />
-              <Route path="/machines" element={<div>Machine List (coming soon)</div>} />
+              <Route path="/machines" element={<MachineListPage />} />
+              <Route path="/machines/:machineId" element={<MachineDetailPage />} />
               <Route path="/alerts" element={<div>Alerts (coming soon)</div>} />
               <Route path="/reports" element={<div>Reports (coming soon)</div>} />
               <Route path="/dashboards" element={<div>My Dashboards (coming soon)</div>} />
