@@ -40,6 +40,9 @@ func (r *Runner) RunMachine(ctx context.Context, machine ProvisionedMachine) {
 		case <-ticker.C:
 			values := make(map[string]float64)
 			for _, reg := range machine.Registers {
+				if reg.Fake == nil {
+					continue
+				}
 				value := gen.GenerateFor(reg.Name, reg.Fake.Pattern, reg.Fake.Min, reg.Fake.Max, tick)
 				values[reg.Name] = value
 

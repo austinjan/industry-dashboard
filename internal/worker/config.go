@@ -14,6 +14,9 @@ type WorkerConfig struct {
 	Timezone     string        `yaml:"timezone"`
 	PollInterval time.Duration `yaml:"poll_interval"`
 	Lines        []LineConfig  `yaml:"lines"`
+	DatabaseURL  string        `yaml:"database_url"`
+	LogLevel     string        `yaml:"log_level"`
+	WorkerName   string        `yaml:"worker_name"`
 }
 
 type LineConfig struct {
@@ -37,15 +40,16 @@ type ConnectionConfig struct {
 }
 
 type RegisterConfig struct {
-	Name      string     `yaml:"name"`
-	Address   int        `yaml:"address"`
-	Type      string     `yaml:"type"`
-	DataType  string     `yaml:"data_type"`
-	ByteOrder string     `yaml:"byte_order"`
-	Scale     float64    `yaml:"scale"`
-	Offset    float64    `yaml:"offset"`
-	Unit      string     `yaml:"unit"`
-	Fake      FakeConfig `yaml:"fake"`
+	Name      string      `yaml:"name"`
+	Address   int         `yaml:"address"`
+	Type      string      `yaml:"type"`
+	DataType  string      `yaml:"data_type"`
+	ByteOrder string      `yaml:"byte_order"`
+	Scale     float64     `yaml:"scale"`
+	Offset    float64     `yaml:"offset"`
+	Unit      string      `yaml:"unit"`
+	Length    int         `yaml:"length"`
+	Fake      *FakeConfig `yaml:"fake"`
 }
 
 type FakeConfig struct {
@@ -75,12 +79,29 @@ func LoadConfig(path string) (*WorkerConfig, error) {
 	if cfg.SiteName == "" {
 		cfg.SiteName = cfg.SiteCode
 	}
+	if cfg.LogLevel == "" {
+		cfg.LogLevel = "info"
+	}
+	if dbURL := os.Getenv("DATABASE_URL"); dbURL != "" {
+		cfg.DatabaseURL = dbURL
+	}
 	for i := range cfg.Lines {
 		if cfg.Lines[i].DisplayOrder == 0 {
 			cfg.Lines[i].DisplayOrder = i + 1
 		}
 		for j := range cfg.Lines[i].Machines {
 			applyMachineDefaults(&cfg.Lines[i].Machines[j])
+		}
+	}
+	// Validate string registers have length
+	for i := range cfg.Lines {
+		for j := range cfg.Lines[i].Machines {
+			for k := range cfg.Lines[i].Machines[j].Registers {
+				r := &cfg.Lines[i].Machines[j].Registers[k]
+				if r.DataType == "string" && r.Length == 0 {
+					return nil, fmt.Errorf("register %q has data_type=string but no length specified", r.Name)
+				}
+			}
 		}
 	}
 	return &cfg, nil
@@ -110,11 +131,13 @@ func applyMachineDefaults(m *MachineConfig) {
 		if r.Scale == 0 {
 			r.Scale = 1.0
 		}
-		if r.Fake.Max == 0 && r.Fake.Min == 0 {
-			r.Fake.Max = 100
-		}
-		if r.Fake.Pattern == "" {
-			r.Fake.Pattern = "random"
+		if r.Fake != nil {
+			if r.Fake.Max == 0 && r.Fake.Min == 0 {
+				r.Fake.Max = 100
+			}
+			if r.Fake.Pattern == "" {
+				r.Fake.Pattern = "random"
+			}
 		}
 	}
 }
