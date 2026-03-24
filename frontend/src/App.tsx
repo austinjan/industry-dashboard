@@ -11,6 +11,8 @@ import { AlertsPage } from '@/pages/AlertsPage';
 import { UsersPage } from '@/pages/admin/UsersPage';
 import { RolesPage } from '@/pages/admin/RolesPage';
 import { AuditLogPage } from '@/pages/admin/AuditLogPage';
+import { SitesPage } from '@/pages/admin/SitesPage';
+import { WorkersPage } from '@/pages/admin/WorkersPage';
 import { DashboardListPage } from '@/pages/dashboards/DashboardListPage';
 import { DashboardViewPage } from '@/pages/dashboards/DashboardViewPage';
 import { DashboardEditorPage } from '@/pages/dashboards/DashboardEditorPage';
@@ -58,6 +60,8 @@ export default function App() {
               <Route path="/admin/users" element={<UsersPage />} />
               <Route path="/admin/roles" element={<RolesPage />} />
               <Route path="/admin/audit" element={<AuditLogPage />} />
+              <Route path="/admin/sites" element={<SitesPage />} />
+              <Route path="/admin/workers" element={<WorkersPage />} />
               </Route>
             </Route>
           </Routes>
