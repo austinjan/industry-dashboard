@@ -9,85 +9,160 @@ lines:
     machines:
       - name: "CNC-01"
         model: "Haas VF-2"
+        connection:
+          host: "192.168.1.101"
+          port: 502
+          slave_id: 1
         registers:
           - name: temperature
-            min: 60
-            max: 95
+            address: 40001
+            type: holding
+            data_type: float32
             unit: "°C"
-            pattern: drift
+            fake:
+              min: 60
+              max: 95
+              pattern: drift
           - name: speed
-            min: 80
-            max: 150
+            address: 40003
+            type: holding
+            data_type: uint16
             unit: "rpm"
-            pattern: sine
+            fake:
+              min: 80
+              max: 150
+              pattern: sine
           - name: power
-            min: 2.0
-            max: 6.0
+            address: 40004
+            type: holding
+            data_type: float32
             unit: "kW"
-            pattern: random
+            fake:
+              min: 2.0
+              max: 6.0
+              pattern: random
           - name: vibration
-            min: 0.1
-            max: 2.0
+            address: 40006
+            type: holding
+            data_type: float32
             unit: "mm/s"
-            pattern: random
+            fake:
+              min: 0.1
+              max: 2.0
+              pattern: random
+
       - name: "CNC-02"
         model: "Haas VF-2"
+        connection:
+          host: "192.168.1.102"
+          port: 502
+          slave_id: 1
         registers:
           - name: temperature
-            min: 65
-            max: 90
+            address: 40001
+            type: holding
+            data_type: float32
             unit: "°C"
-            pattern: drift
+            fake:
+              min: 65
+              max: 90
+              pattern: drift
           - name: speed
-            min: 90
-            max: 140
+            address: 40003
+            type: holding
+            data_type: uint16
             unit: "rpm"
-            pattern: sine
+            fake:
+              min: 90
+              max: 140
+              pattern: sine
           - name: power
-            min: 2.5
-            max: 5.5
+            address: 40004
+            type: holding
+            data_type: float32
             unit: "kW"
-            pattern: random
+            fake:
+              min: 2.5
+              max: 5.5
+              pattern: random
+
       - name: "CNC-03"
         model: "Haas VF-3"
+        connection:
+          host: "192.168.1.103"
+          port: 502
+          slave_id: 1
         registers:
           - name: temperature
-            min: 55
-            max: 85
+            address: 40001
+            type: holding
+            data_type: float32
             unit: "°C"
-            pattern: spike
+            fake:
+              min: 55
+              max: 85
+              pattern: spike
           - name: speed
-            min: 100
-            max: 160
+            address: 40003
+            type: holding
+            data_type: uint16
             unit: "rpm"
-            pattern: sine
+            fake:
+              min: 100
+              max: 160
+              pattern: sine
 
   - name: "Packaging Line 2"
     display_order: 2
     machines:
       - name: "PKG-01"
         model: "Bosch PK-200"
+        connection:
+          host: "192.168.2.101"
+          port: 502
+          slave_id: 1
         registers:
           - name: temperature
-            min: 30
-            max: 60
+            address: 40001
+            type: holding
+            data_type: float32
             unit: "°C"
-            pattern: random
+            fake:
+              min: 30
+              max: 60
+              pattern: random
           - name: speed
-            min: 40
-            max: 80
+            address: 40003
+            type: holding
+            data_type: uint16
             unit: "pcs/min"
-            pattern: sine
+            fake:
+              min: 40
+              max: 80
+              pattern: sine
+
       - name: "PKG-02"
         model: "Bosch PK-200"
+        connection:
+          host: "192.168.2.102"
+          port: 502
+          slave_id: 1
         registers:
           - name: temperature
-            min: 35
-            max: 55
+            address: 40001
+            type: holding
+            data_type: float32
             unit: "°C"
-            pattern: drift
+            fake:
+              min: 35
+              max: 55
+              pattern: drift
           - name: speed
-            min: 45
-            max: 75
+            address: 40003
+            type: holding
+            data_type: uint16
             unit: "pcs/min"
-            pattern: sine
+            fake:
+              min: 45
+              max: 75
+              pattern: sine

@@ -32,29 +32,79 @@ go build -o bin/fake-worker ./cmd/fake-worker
 
 ## Configuration
 
-The worker reads a YAML config file. A default config is included at `cmd/fake-worker/config.yaml`.
+The config file uses the **same format as the real Modbus worker**. The fake worker extends it with an optional `fake` block per register for simulation parameters. The real worker ignores `fake`; the fake worker ignores `connection`.
+
+A default config is included at `cmd/fake-worker/config.yaml`.
 
 ### Config Structure
 
 ```yaml
-site_code: "ALPHA"          # Required. Unique site identifier (matches sites.code)
-site_name: "Factory Alpha"  # Optional. Defaults to site_code
-timezone: "Asia/Taipei"     # Optional. Defaults to "UTC"
-poll_interval: 5s           # Optional. Data generation interval. Defaults to 5s
+site_code: "ALPHA"              # REQUIRED — unique site identifier (matches sites.code)
+site_name: "Factory Alpha"      # default: same as site_code
+timezone: "Asia/Taipei"         # default: "UTC"
+poll_interval: 5s               # default: 5s
 
 lines:
-  - name: "Assembly Line 1"
-    display_order: 1          # Optional. Auto-assigned if omitted
+  - name: "Assembly Line 1"    # REQUIRED
+    display_order: 1            # default: auto-increment (1, 2, 3...)
     machines:
-      - name: "CNC-01"
-        model: "Haas VF-2"
+      - name: "CNC-01"         # REQUIRED
+        model: "Haas VF-2"     # default: "" (empty)
+
+        # Modbus connection (REQUIRED for real worker, ignored by fake worker)
+        connection:
+          host: "192.168.1.100" # REQUIRED for real worker
+          port: 502             # default: 502 (standard Modbus TCP)
+          slave_id: 1           # default: 1
+          timeout: 3s           # default: 3s
+
         registers:
-          - name: temperature
-            min: 60
-            max: 95
-            unit: "°C"
-            pattern: drift    # Optional. One of: drift, sine, random, spike. Defaults to "random"
+          - name: temperature   # REQUIRED
+            # Modbus register settings (REQUIRED for real worker, ignored by fake worker)
+            address: 40001      # Modbus register address
+            type: holding       # default: "holding" (holding | input | coil | discrete)
+            data_type: float32  # default: "float32" (int16 | uint16 | float32 | int32)
+            byte_order: big     # default: "big" (big | little)
+            scale: 1.0          # default: 1.0 (multiplier applied to raw value)
+            offset: 0           # default: 0 (added after scaling)
+            unit: "°C"          # default: "" (empty)
+
+            # Fake worker simulation (ignored by real worker)
+            fake:
+              min: 60           # default: 0
+              max: 95           # default: 100
+              pattern: drift    # default: "random" (drift | sine | random | spike)
 ```
+
+### Defaults Summary
+
+| Field | Default | Notes |
+|-------|---------|-------|
+| `site_name` | same as `site_code` | |
+| `timezone` | `"UTC"` | |
+| `poll_interval` | `5s` | |
+| `display_order` | auto-increment | 1, 2, 3... based on position |
+| `connection.port` | `502` | Standard Modbus TCP port |
+| `connection.slave_id` | `1` | |
+| `connection.timeout` | `3s` | |
+| `type` | `"holding"` | Register type |
+| `data_type` | `"float32"` | |
+| `byte_order` | `"big"` | |
+| `scale` | `1.0` | No scaling |
+| `offset` | `0` | No offset |
+| `fake.min` | `0` | |
+| `fake.max` | `100` | |
+| `fake.pattern` | `"random"` | |
+
+### Missing Field Behavior
+
+| Field | Fake Worker | Real Worker |
+|-------|------------|-------------|
+| `connection` block missing | Runs fine — not needed | **Error** — cannot poll without connection |
+| `fake` block missing | Uses defaults (0–100, random) | Ignored entirely |
+| `registers[].address` missing | Ignored | **Error** — must know which register to read |
+
+A **minimal fake-only config** just needs `site_code`, line `name`, machine `name`, and register `name`. Everything else has sensible defaults.
 
 ### Data Patterns
 
@@ -80,12 +130,16 @@ lines:
     machines:
       - name: "WELD-01"
         model: "Lincoln S350"
+        connection:
+          host: "192.168.3.101"
         registers:
           - name: temperature
-            min: 200
-            max: 400
+            address: 40001
             unit: "°C"
-            pattern: drift
+            fake:
+              min: 200
+              max: 400
+              pattern: drift
 ```
 
 ## Run
@@ -172,7 +226,7 @@ cmd/fake-worker/
   config.yaml          # Default factory config
 
 internal/worker/
-  config.go            # YAML config types and loader
+  config.go            # YAML config types and loader (shared with real worker)
   provisioner.go       # Upserts sites, lines, machines from config
   coordinator.go       # Machine claiming, heartbeat, release via machine_workers table
   generator.go         # Data generation with four patterns
@@ -181,3 +235,13 @@ internal/worker/
 ```
 
 Each machine runs in its own goroutine with an independent `Generator` instance (no shared state, no data races). The coordinator sends heartbeats every 30s; machines with stale heartbeats (>90s) can be reclaimed by another worker.
+
+### Shared with Real Worker
+
+When the real Modbus worker is built, it will reuse:
+- `config.go` — same YAML config format
+- `provisioner.go` — same factory upsert logic
+- `coordinator.go` — same heartbeat/claiming system
+- `alerteval.go` — same alert evaluation
+
+Only `runner.go` and `generator.go` are fake-worker-specific. The real worker will replace them with actual Modbus polling via `connection` settings.
