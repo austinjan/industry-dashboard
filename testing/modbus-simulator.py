@@ -2,10 +2,10 @@
 
 Serves static register values on port 5020 (configurable via --port).
 
-Default registers:
-  40001-40002: temperature (float32) = 72.5
-  40003:       speed (uint16) = 1200
-  40004-40005: power (float32) = 3.75
+Holding registers (PLC notation / PDU address):
+  40001 / 0:  temperature (float32) = 72.5
+  40003 / 2:  speed (uint16) = 1200
+  40004 / 3:  power (float32) = 3.75
 
 Usage:
   python3 modbus-simulator.py
@@ -46,18 +46,20 @@ def main():
 
     values = build_registers()
 
+    # pymodbus zero_mode=False (default) adds +1 offset to incoming addresses,
+    # so data block starts at address 1 to align with 0-based PDU addresses.
     store = ModbusSlaveContext(
-        hr=ModbusSequentialDataBlock(40001, values),
-        ir=ModbusSequentialDataBlock(0, [0] * 100),
-        di=ModbusSequentialDataBlock(0, [0] * 100),
-        co=ModbusSequentialDataBlock(0, [0] * 100),
+        hr=ModbusSequentialDataBlock(1, values),
+        ir=ModbusSequentialDataBlock(1, [0] * 100),
+        di=ModbusSequentialDataBlock(1, [0] * 100),
+        co=ModbusSequentialDataBlock(1, [0] * 100),
     )
     context = ModbusServerContext(slaves=store, single=True)
 
     log.info("Modbus TCP simulator starting on port %d", args.port)
-    log.info("  40001-40002: temperature = 72.5 (float32)")
-    log.info("  40003:       speed = 1200 (uint16)")
-    log.info("  40004-40005: power = 3.75 (float32)")
+    log.info("  40001 (addr 0-1): temperature = 72.5 (float32)")
+    log.info("  40003 (addr 2):   speed = 1200 (uint16)")
+    log.info("  40004 (addr 3-4): power = 3.75 (float32)")
     log.info("Press Ctrl+C to stop")
 
     StartTcpServer(context=context, address=("0.0.0.0", args.port))

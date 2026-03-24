@@ -14,6 +14,7 @@ lines:
           port: 5020
           slave_id: 1
         registers:
+          # PLC notation (40001-based) — auto-converted to PDU address 0
           - name: temperature
             address: 40001
             type: holding

@@ -76,7 +76,7 @@ func (m *ModbusDataSource) Read(ctx context.Context) (*ReadResult, error) {
 	}
 	for _, reg := range m.registers {
 		count := RegisterCount(reg.DataType, reg.Length)
-		address := uint16(reg.Address)
+		address := ModbusPDUAddress(reg.Address, reg.Type)
 
 		var raw []byte
 		var err error
@@ -123,6 +123,44 @@ func (m *ModbusDataSource) Close() error {
 		m.handler.Close()
 	}
 	return nil
+}
+
+// ModbusPDUAddress converts a config address to a 0-based PDU address.
+// Supports both conventions:
+//   - PLC notation: 40001 (holding), 30001 (input), 10001 (coil), 20001 (discrete)
+//   - Direct PDU:   0, 1, 2, ... (already 0-based)
+func ModbusPDUAddress(address int, regType string) uint16 {
+	switch regType {
+	case "holding":
+		if address >= 400001 {
+			return uint16(address - 400001)
+		}
+		if address >= 40001 {
+			return uint16(address - 40001)
+		}
+	case "input":
+		if address >= 300001 {
+			return uint16(address - 300001)
+		}
+		if address >= 30001 {
+			return uint16(address - 30001)
+		}
+	case "coil":
+		if address >= 100001 {
+			return uint16(address - 100001)
+		}
+		if address >= 1 && address < 10000 {
+			return uint16(address - 1)
+		}
+	case "discrete":
+		if address >= 200001 {
+			return uint16(address - 200001)
+		}
+		if address >= 10001 && address < 20000 {
+			return uint16(address - 10001)
+		}
+	}
+	return uint16(address)
 }
 
 func RegisterCount(dataType string, length int) uint16 {
