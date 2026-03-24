@@ -25,6 +25,8 @@ func (g *Generator) GenerateFor(metricName, pattern string, min, max float64, ti
 		return g.sine(min, rng, tick)
 	case "drift":
 		return g.drift(metricName, min, max, rng)
+	case "monotonic":
+		return g.monotonic(metricName, min, max, rng)
 	case "spike":
 		return g.spike(min, rng)
 	default: // random
@@ -54,6 +56,21 @@ func (g *Generator) drift(metricName string, min, max, rng float64) float64 {
 	reversion := (center - current) * 0.02
 	current += step + reversion
 	current = clamp(current, min, max)
+	g.driftState[metricName] = current
+	return current
+}
+
+func (g *Generator) monotonic(metricName string, min, max, rng float64) float64 {
+	current, exists := g.driftState[metricName]
+	if !exists {
+		current = min
+	}
+	// Always increase, small random step
+	step := g.rng.Float64() * rng * 0.01
+	current += step
+	if current > max {
+		current = max
+	}
 	g.driftState[metricName] = current
 	return current
 }

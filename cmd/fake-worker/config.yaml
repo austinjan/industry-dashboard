@@ -50,6 +50,15 @@ lines:
               min: 0.1
               max: 2.0
               pattern: random
+          - name: runtime
+            address: 40008
+            type: holding
+            data_type: int32
+            unit: "hrs"
+            fake:
+              min: 0
+              max: 10000
+              pattern: monotonic
 
       - name: "CNC-02"
         model: "Haas VF-2"
@@ -85,6 +94,15 @@ lines:
               min: 2.5
               max: 5.5
               pattern: random
+          - name: runtime
+            address: 40008
+            type: holding
+            data_type: int32
+            unit: "hrs"
+            fake:
+              min: 0
+              max: 10000
+              pattern: monotonic
 
       - name: "CNC-03"
         model: "Haas VF-3"
@@ -111,6 +129,15 @@ lines:
               min: 100
               max: 160
               pattern: sine
+          - name: runtime
+            address: 40008
+            type: holding
+            data_type: int32
+            unit: "hrs"
+            fake:
+              min: 0
+              max: 10000
+              pattern: monotonic
 
   - name: "Packaging Line 2"
     display_order: 2
@@ -140,6 +167,15 @@ lines:
               min: 40
               max: 80
               pattern: sine
+          - name: runtime
+            address: 40008
+            type: holding
+            data_type: int32
+            unit: "hrs"
+            fake:
+              min: 0
+              max: 10000
+              pattern: monotonic
 
       - name: "PKG-02"
         model: "Bosch PK-200"
@@ -166,3 +202,12 @@ lines:
               min: 45
               max: 75
               pattern: sine
+          - name: runtime
+            address: 40008
+            type: holding
+            data_type: int32
+            unit: "hrs"
+            fake:
+              min: 0
+              max: 10000
+              pattern: monotonic

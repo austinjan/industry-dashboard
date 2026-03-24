@@ -35,6 +35,17 @@ func TestGenerateValue_Drift(t *testing.T) {
 	assert.LessOrEqual(t, v1, 90.0)
 }
 
+func TestGenerateValue_Monotonic(t *testing.T) {
+	g := worker.NewGenerator()
+	prev := 0.0
+	for i := 0; i < 100; i++ {
+		v := g.Generate("monotonic", 0, 10000, i)
+		assert.GreaterOrEqual(t, v, prev)
+		assert.LessOrEqual(t, v, 10000.0)
+		prev = v
+	}
+}
+
 func TestGenerateValue_Spike(t *testing.T) {
 	g := worker.NewGenerator()
 	values := make([]float64, 200)
