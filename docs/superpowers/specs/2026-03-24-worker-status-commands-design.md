@@ -136,14 +136,27 @@ Collected at startup and stored in the `workers` table:
 | `os_info` | `runtime.GOOS + "/" + runtime.GOARCH` |
 | `started_at` | `time.Now()` at registration |
 
+### Coordinator State
+
+After SP2, the `Coordinator` struct must hold these fields:
+
+| Field | Type | Source |
+|-------|------|--------|
+| `workerID` | `string` | Legacy `hostname-PID` string (kept for `machine_workers.worker_id` VARCHAR column) |
+| `workerDBID` | `uuid.UUID` | UUID returned from `workers.id` at registration — used for all `workers` table operations |
+| `configPath` | `string` | Absolute path of config YAML, frozen at startup for `reload_config` |
+| `machineCancels` | `map[string]context.CancelFunc` | Per-machine cancel functions keyed by machine name — enables `reload_config` to stop individual machines |
+
 ### Heartbeat
 
-Every 30s, updates both tables:
+Every 30s, updates both tables. Uses `workerDBID` (UUID) for the `workers` table:
 
 ```sql
-UPDATE workers SET heartbeat_at = NOW(), updated_at = NOW() WHERE id = $1;
-UPDATE machine_workers SET heartbeat_at = NOW() WHERE worker_id = $2 AND machine_id = ANY($3);
+UPDATE workers SET heartbeat_at = NOW(), updated_at = NOW() WHERE id = $1;  -- $1 = workerDBID (UUID)
+UPDATE machine_workers SET heartbeat_at = NOW() WHERE worker_id = $2 AND machine_id = ANY($3);  -- $2 = workerID (string)
 ```
+
+The `workers` table heartbeat is the primary one — stale detection depends on it.
 
 ### Graceful Shutdown
 
@@ -244,7 +257,7 @@ The `config_path` used for reload is the path stored in-memory at startup — no
 - **Worker dies mid-command:** Command stays `in_progress`. Dashboard can see `started_at` was long ago and infer failure. The stale detection (Section 3) will eventually mark the worker offline.
 - **Multiple pending commands:** Executed one at a time, oldest first. If `stop` is pending, later commands won't execute (worker exits).
 - **`restart` exec failure:** The command is marked `completed` before exec. If exec fails, the command is updated to `failed` with the error, and the process exits with code 1. The stale detection will mark the worker offline.
-- **`reload_config` details:** Re-reads YAML, calls `Provision()` to upsert site/lines/machines in DB, then diffs the returned `ProvisionedMachine` list against the in-memory list. Comparison key is `machine name` (unique per line). Machines no longer in config → cancel their goroutine, release from `machine_workers`. New machines → create DataSource, claim, start goroutine. Existing machines where any register field changed (address, type, data_type, scale, offset, byte_order) → stop goroutine, recreate DataSource, restart goroutine.
+- **`reload_config` details:** Re-reads YAML, calls `Provision()` to upsert site/lines/machines in DB, then diffs the returned `ProvisionedMachine` list against the in-memory list. Comparison key is `machine name` (unique per line). Machines no longer in config → call `machineCancels[name]()` to cancel their goroutine, release from `machine_workers`. New machines → create DataSource, claim, create per-machine context via `context.WithCancel(parentCtx)`, store cancel func in `machineCancels`, start goroutine with `runner.RunMachine(machineCtx, machine)`. Existing machines where any register field changed (address, type, data_type, scale, offset, byte_order) → cancel goroutine, recreate DataSource, start new goroutine. Note: `runner.go` remains unchanged — per-machine context is created by the caller (`cmd/worker/main.go` or Coordinator) before passing to `RunMachine`.
 
 ---
 
@@ -326,7 +339,7 @@ Response:
 { "id": "cmd-uuid", "command": "restart", "status": "pending", "created_at": "..." }
 ```
 
-Validation: command must be one of `stop`, `restart`, `reload_config`. Worker must exist and be online (reject commands to offline workers).
+Validation: command must be one of `stop`, `restart`, `reload_config`. Worker must exist and be online (reject commands to offline workers). `:id` must be a valid UUID — return 400 if not parseable.
 
 ### GET /api/workers/:id/commands
 
@@ -363,7 +376,7 @@ Response:
 |------|---------|
 | `internal/worker/coordinator.go` | Register in `workers` table, duplicate name check with FOR UPDATE, command poller with FOR UPDATE SKIP LOCKED |
 | `internal/worker/config.go` | (no changes needed — `worker_name` already exists) |
-| `cmd/worker/main.go` | Wire up command poller, add `-ldflags` version variable, pass `worker_name` to coordinator |
+| `cmd/worker/main.go` | Wire up command poller, add `-ldflags` version variable, pass `worker_name` to coordinator, use per-machine `context.WithCancel` for goroutines |
 | `cmd/server/main.go` | Register `/api/workers` routes |
 | `Makefile` | Add `version` ldflags to worker build target |
 
