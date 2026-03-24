@@ -152,7 +152,7 @@ registers:
     address: 40100
     type: holding
     data_type: string
-    length: 10        # number of registers to read (string/timestamp_bcd only)
+    length: 10        # number of registers to read (string type only)
 ```
 
 ### Full Config Example
