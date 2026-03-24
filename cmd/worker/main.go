@@ -60,7 +60,7 @@ func main() {
 	}
 	log.Printf("Provisioned %d machines", len(result.Machines))
 
-	coordinator := worker.NewCoordinator(pool)
+	coordinator := worker.NewCoordinator(pool, workerCfg.WorkerName, *configPath, "dev")
 	machineIDs := make([]string, len(result.Machines))
 	for i, m := range result.Machines {
 		machineIDs[i] = m.ID
