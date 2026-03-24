@@ -33,7 +33,8 @@
 |------|---------|
 | `internal/worker/config.go` | `FakeConfig` → `*FakeConfig`, add `DatabaseURL`/`LogLevel`/`WorkerName`/`Length` fields, fix defaults |
 | `internal/worker/provisioner.go` | Add `DataSource` field to `ProvisionedMachine`, call `NewDataSource()` |
-| `internal/worker/runner.go` | Replace Generator calls with `source.Read()`, add error counting + machine status updates, batch writes |
+| `internal/worker/runner.go` | Replace Generator calls with `source.Read()`, add error counting + machine status updates, string metadata writes |
+| `internal/worker/coordinator.go` | Accept optional `workerName` in `NewCoordinator()` — use instead of hostname-pid when provided |
 | `go.mod` | Add `github.com/goburrow/modbus` |
 | `Makefile` | Add `worker` and `worker-config` targets |
 
@@ -1152,7 +1153,7 @@ func main() {
 	}
 	log.Printf("Provisioned %d machines", len(result.Machines))
 
-	coordinator := worker.NewCoordinator(pool)
+	coordinator := worker.NewCoordinator(pool, workerCfg.WorkerName)
 	machineIDs := make([]string, len(result.Machines))
 	for i, m := range result.Machines {
 		machineIDs[i] = m.ID
