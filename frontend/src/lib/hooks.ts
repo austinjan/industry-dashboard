@@ -233,6 +233,20 @@ export function useSetDashboardAccess() {
   });
 }
 
+export function useUpdateLocale() {
+  return useMutation({
+    mutationFn: async (locale: string) => {
+      const res = await apiFetch('/me/preferences', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locale }),
+      });
+      if (!res.ok) throw new Error('Failed to update locale');
+      return res.json();
+    },
+  });
+}
+
 export function useLatestValues(machineId: string | undefined) {
   return useQuery({
     queryKey: ['machine-latest', machineId],
