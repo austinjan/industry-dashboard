@@ -1,0 +1,213 @@
+site_code: "ALPHA"
+site_name: "Factory Alpha"
+timezone: "Asia/Taipei"
+poll_interval: 5s
+
+lines:
+  - name: "Assembly Line 1"
+    display_order: 1
+    machines:
+      - name: "CNC-01"
+        model: "Haas VF-2"
+        connection:
+          host: "192.168.1.101"
+          port: 502
+          slave_id: 1
+        registers:
+          - name: temperature
+            address: 40001
+            type: holding
+            data_type: float32
+            unit: "°C"
+            fake:
+              min: 60
+              max: 95
+              pattern: drift
+          - name: speed
+            address: 40003
+            type: holding
+            data_type: uint16
+            unit: "rpm"
+            fake:
+              min: 80
+              max: 150
+              pattern: sine
+          - name: power
+            address: 40004
+            type: holding
+            data_type: float32
+            unit: "kW"
+            fake:
+              min: 2.0
+              max: 6.0
+              pattern: random
+          - name: vibration
+            address: 40006
+            type: holding
+            data_type: float32
+            unit: "mm/s"
+            fake:
+              min: 0.1
+              max: 2.0
+              pattern: random
+          - name: 運行時間
+            address: 40008
+            type: holding
+            data_type: int32
+            unit: "hrs"
+            fake:
+              min: 0
+              max: 10000
+              pattern: monotonic
+
+      - name: "CNC-02"
+        model: "Haas VF-2"
+        connection:
+          host: "192.168.1.102"
+          port: 502
+          slave_id: 1
+        registers:
+          - name: temperature
+            address: 40001
+            type: holding
+            data_type: float32
+            unit: "°C"
+            fake:
+              min: 65
+              max: 90
+              pattern: drift
+          - name: speed
+            address: 40003
+            type: holding
+            data_type: uint16
+            unit: "rpm"
+            fake:
+              min: 90
+              max: 140
+              pattern: sine
+          - name: power
+            address: 40004
+            type: holding
+            data_type: float32
+            unit: "kW"
+            fake:
+              min: 2.5
+              max: 5.5
+              pattern: random
+          - name: 運行時間
+            address: 40008
+            type: holding
+            data_type: int32
+            unit: "hrs"
+            fake:
+              min: 0
+              max: 10000
+              pattern: monotonic
+
+      - name: "CNC-03"
+        model: "Haas VF-3"
+        connection:
+          host: "192.168.1.103"
+          port: 502
+          slave_id: 1
+        registers:
+          - name: temperature
+            address: 40001
+            type: holding
+            data_type: float32
+            unit: "°C"
+            fake:
+              min: 55
+              max: 85
+              pattern: spike
+          - name: speed
+            address: 40003
+            type: holding
+            data_type: uint16
+            unit: "rpm"
+            fake:
+              min: 100
+              max: 160
+              pattern: sine
+          - name: 運行時間
+            address: 40008
+            type: holding
+            data_type: int32
+            unit: "hrs"
+            fake:
+              min: 0
+              max: 10000
+              pattern: monotonic
+
+  - name: "Packaging Line 2"
+    display_order: 2
+    machines:
+      - name: "PKG-01"
+        model: "Bosch PK-200"
+        connection:
+          host: "192.168.2.101"
+          port: 502
+          slave_id: 1
+        registers:
+          - name: temperature
+            address: 40001
+            type: holding
+            data_type: float32
+            unit: "°C"
+            fake:
+              min: 30
+              max: 60
+              pattern: random
+          - name: speed
+            address: 40003
+            type: holding
+            data_type: uint16
+            unit: "pcs/min"
+            fake:
+              min: 40
+              max: 80
+              pattern: sine
+          - name: 運行時間
+            address: 40008
+            type: holding
+            data_type: int32
+            unit: "hrs"
+            fake:
+              min: 0
+              max: 10000
+              pattern: monotonic
+
+      - name: "PKG-02"
+        model: "Bosch PK-200"
+        connection:
+          host: "192.168.2.102"
+          port: 502
+          slave_id: 1
+        registers:
+          - name: temperature
+            address: 40001
+            type: holding
+            data_type: float32
+            unit: "°C"
+            fake:
+              min: 35
+              max: 55
+              pattern: drift
+          - name: speed
+            address: 40003
+            type: holding
+            data_type: uint16
+            unit: "pcs/min"
+            fake:
+              min: 45
+              max: 75
+              pattern: sine
+          - name: 運行時間
+            address: 40008
+            type: holding
+            data_type: int32
+            unit: "hrs"
+            fake:
+              min: 0
+              max: 10000
+              pattern: monotonic

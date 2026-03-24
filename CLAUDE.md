@@ -28,6 +28,12 @@ make migrate-down     # Roll back one migration
 go build ./...        # Verify compilation
 ```
 
+### Fake Worker
+```bash
+make fake-worker      # Run fake worker with default config (cmd/fake-worker/config.yaml)
+make fake-worker-config CONFIG=path/to/config.yaml  # Run with custom config
+```
+
 ### Frontend (React)
 ```bash
 cd frontend
@@ -41,6 +47,7 @@ npm run lint          # Lint
 ### Backend Structure
 ```
 cmd/server/main.go        # Entry point — wires all handlers and middleware
+cmd/fake-worker/          # Fake Modbus worker for testing
 internal/
   auth/                    # JWT, OIDC, auth middleware
   rbac/                    # Custom roles, permissions, RBAC middleware
@@ -51,6 +58,7 @@ internal/
   datapoint/               # Time-series data queries, aggregations
   dashboard/               # Custom dashboard CRUD, widget management, access control
   config/                  # Env-based configuration
+  worker/                  # Worker coordination, data generation, alert evaluation
   database/                # DB connection pool
 ```
 
@@ -61,4 +69,4 @@ All protected API routes pass through: **Auth (JWT) → RBAC (permission check) 
 - **json-render** (not yet implemented) will let users customize dashboards via natural language — OpenAI generates layout specs constrained to a widget catalog
 - RBAC uses custom roles with permission sets, scoped per site via `user_site_roles` table
 - Audit logs are append-only with JSONB details
-- Modbus workers (not yet implemented) will be a separate binary, distributed via DB-based coordination
+- Fake worker (`cmd/fake-worker`) generates simulated sensor data for testing; real Modbus workers will share the same `internal/worker` coordination layer

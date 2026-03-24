@@ -41,6 +41,7 @@ export function LineChartWidget({ config }: { config: Record<string, unknown> })
         return { metric, data: data as { time: string; value: number }[] };
       },
       enabled: !!machineId && !!metric,
+      refetchInterval: 30000,
     })),
   });
 
