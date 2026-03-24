@@ -357,6 +357,12 @@ func main() {
 		// User preferences (no RBAC — users update their own)
 		r.Patch("/me/preferences", prefHandler.UpdatePreferences)
 
+		// Global scope helper (no site scoping — used for admin routes)
+		globalScope := func(r *http.Request) string { return "" }
+
+		// Admin: all sites (global scope)
+		r.With(rbacMW.Require("site:manage", globalScope)).Get("/admin/sites", siteHandler.ListAllSites)
+
 		// Sites
 		r.Route("/sites", func(r chi.Router) {
 			r.With(rbacMW.Require("machine:view", rbac.SiteFromQuery)).Get("/", siteHandler.ListSites)
@@ -365,12 +371,19 @@ func main() {
 				r.With(rbacMW.Require("machine:view", rbac.SiteFromURLParam)).Get("/", siteHandler.GetSite)
 				r.With(rbacMW.Require("machine:view", rbac.SiteFromURLParam)).Get("/summary", siteHandler.GetSiteSummary)
 				r.With(rbacMW.Require("machine:view", rbac.SiteFromURLParam)).Get("/lines", siteHandler.ListLines)
+				r.With(rbacMW.Require("site:manage", rbac.SiteFromURLParam), auditMW.Log("site", "update")).Put("/", siteHandler.UpdateSite)
+				r.With(rbacMW.Require("site:manage", rbac.SiteFromURLParam), auditMW.Log("site", "delete")).Delete("/", siteHandler.DeleteSite)
+				r.With(rbacMW.Require("site:manage", rbac.SiteFromURLParam)).Get("/detail", siteHandler.GetSiteDetail)
+				r.With(rbacMW.Require("site:manage", rbac.SiteFromURLParam), auditMW.Log("line", "create")).Post("/lines", siteHandler.CreateLine)
 			})
 		})
 
 		// Lines
 		r.Route("/lines/{lineID}", func(r chi.Router) {
 			r.With(rbacMW.Require("machine:view", rbac.SiteFromQuery)).Get("/machines", siteHandler.ListMachines)
+			r.With(rbacMW.Require("site:manage", rbac.SiteFromQuery), auditMW.Log("line", "update")).Put("/", siteHandler.UpdateLine)
+			r.With(rbacMW.Require("site:manage", rbac.SiteFromQuery), auditMW.Log("line", "delete")).Delete("/", siteHandler.DeleteLine)
+			r.With(rbacMW.Require("machine:edit", rbac.SiteFromQuery), auditMW.Log("machine", "create")).Post("/machines", siteHandler.CreateMachine)
 		})
 
 		// Alerts
@@ -391,6 +404,8 @@ func main() {
 		r.Route("/machines/{machineID}", func(r chi.Router) {
 			r.Get("/metrics", datapointHandler.GetMachineMetrics)
 			r.Get("/latest", datapointHandler.GetLatestValues)
+			r.With(rbacMW.Require("machine:edit", rbac.SiteFromQuery), auditMW.Log("machine", "update")).Put("/", siteHandler.UpdateMachine)
+			r.With(rbacMW.Require("machine:edit", rbac.SiteFromQuery), auditMW.Log("machine", "delete")).Delete("/", siteHandler.DeleteMachine)
 		})
 
 		// Dashboards
@@ -424,7 +439,6 @@ func main() {
 		r.With(rbacMW.Require("audit:view", rbac.SiteFromQuery)).Get("/audit-logs", auditHandler.List)
 
 		// Workers (global permission — no site scope)
-		globalScope := func(r *http.Request) string { return "" }
 		r.Route("/workers", func(r chi.Router) {
 			r.With(rbacMW.Require("workers:manage", globalScope)).Get("/", workerAPIHandler.ListWorkers)
 			r.Route("/{workerID}", func(r chi.Router) {
