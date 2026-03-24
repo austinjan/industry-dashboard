@@ -41,6 +41,19 @@ func main() {
 	}
 	log.Printf("Provisioned %d machines", len(result.Machines))
 
+	// Attach DataSource to each machine
+	for i, m := range result.Machines {
+		machineCfg := findMachineConfig(workerCfg, m.Name)
+		if machineCfg == nil {
+			log.Fatalf("Machine config not found for %s", m.Name)
+		}
+		ds, err := worker.NewDataSource(*machineCfg)
+		if err != nil {
+			log.Fatalf("Failed to create data source for %s: %v", m.Name, err)
+		}
+		result.Machines[i].DataSource = ds
+	}
+
 	coordinator := worker.NewCoordinator(pool)
 	machineIDs := make([]string, len(result.Machines))
 	for i, m := range result.Machines {
@@ -73,4 +86,15 @@ func main() {
 	wg.Wait()
 	coordinator.ReleaseMachines(context.Background(), machineIDs)
 	log.Println("Done.")
+}
+
+func findMachineConfig(cfg *worker.WorkerConfig, name string) *worker.MachineConfig {
+	for _, line := range cfg.Lines {
+		for i, m := range line.Machines {
+			if m.Name == name {
+				return &line.Machines[i]
+			}
+		}
+	}
+	return nil
 }
