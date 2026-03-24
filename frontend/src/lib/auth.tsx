@@ -1,10 +1,12 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { apiFetch } from './api';
+import i18n from './i18n';
 
 interface User {
   id: string;
   email: string;
   name: string;
+  locale?: string | null;
 }
 
 interface AuthContextType {
@@ -26,7 +28,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     apiFetch('/auth/me')
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setUser(data))
+      .then((data) => {
+        setUser(data);
+        if (data?.locale) {
+          i18n.changeLanguage(data.locale);
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
