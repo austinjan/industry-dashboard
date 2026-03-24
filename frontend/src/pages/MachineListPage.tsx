@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useSite } from '@/lib/site-context';
 import { useSiteLines, useLineMachines } from '@/lib/hooks';
 
 function MachinesForLine({ lineId }: { lineId: string }) {
+  const { t } = useTranslation();
   const { data: machines, isLoading } = useLineMachines(lineId);
-  if (isLoading) return <p className="p-2 text-sm text-slate-400">Loading...</p>;
-  if (!machines || machines.length === 0) return <p className="p-2 text-sm text-slate-400">No machines.</p>;
+  if (isLoading) return <p className="p-2 text-sm text-slate-400">{t('common.loading')}</p>;
+  if (!machines || machines.length === 0) return <p className="p-2 text-sm text-slate-400">{t('machines.noMachines')}</p>;
 
   const statusColor: Record<string, string> = {
     running: 'bg-green-500', offline: 'bg-slate-400', error: 'bg-red-500', maintenance: 'bg-yellow-500',
@@ -17,9 +19,9 @@ function MachinesForLine({ lineId }: { lineId: string }) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Machine</TableHead>
-          <TableHead>Model</TableHead>
-          <TableHead>Status</TableHead>
+          <TableHead>{t('machines.machine')}</TableHead>
+          <TableHead>{t('machines.model')}</TableHead>
+          <TableHead>{t('machines.status')}</TableHead>
           <TableHead></TableHead>
         </TableRow>
       </TableHeader>
@@ -35,7 +37,7 @@ function MachinesForLine({ lineId }: { lineId: string }) {
               </div>
             </TableCell>
             <TableCell>
-              <Link to={`/machines/${m.id}`} className="text-sm text-blue-500 hover:underline">Details</Link>
+              <Link to={`/machines/${m.id}`} className="text-sm text-blue-500 hover:underline">{t('machines.details')}</Link>
             </TableCell>
           </TableRow>
         ))}
@@ -45,14 +47,15 @@ function MachinesForLine({ lineId }: { lineId: string }) {
 }
 
 export function MachineListPage() {
+  const { t } = useTranslation();
   const { currentSite } = useSite();
   const { data: lines } = useSiteLines(currentSite?.id);
 
-  if (!currentSite) return <div className="text-slate-500">Select a site.</div>;
+  if (!currentSite) return <div className="text-slate-500">{t('machines.selectSite')}</div>;
 
   return (
     <div>
-      <h2 className="mb-4 text-xl font-bold">Machines — {currentSite.name}</h2>
+      <h2 className="mb-4 text-xl font-bold">{t('machines.heading', { siteName: currentSite.name })}</h2>
       {lines && lines.length > 0 ? (
         <div className="space-y-4">
           {lines.map((line: any) => (
@@ -63,7 +66,7 @@ export function MachineListPage() {
           ))}
         </div>
       ) : (
-        <p className="text-slate-400">No production lines.</p>
+        <p className="text-slate-400">{t('machines.noProductionLines')}</p>
       )}
     </div>
   );
