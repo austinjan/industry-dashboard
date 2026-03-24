@@ -36,16 +36,3 @@ func NewDataSource(machine MachineConfig) (DataSource, error) {
 
 	return NewModbusDataSource(machine.Connection, machine.Registers)
 }
-
-// TODO(Task 4): replace with real Modbus implementation.
-func NewModbusDataSource(conn ConnectionConfig, registers []RegisterConfig) (*ModbusDataSource, error) {
-	return nil, fmt.Errorf("ModbusDataSource not yet implemented")
-}
-
-type ModbusDataSource struct{}
-
-func (m *ModbusDataSource) Read(ctx context.Context) (*ReadResult, error) {
-	return &ReadResult{Values: make(map[string]float64), Strings: make(map[string]string)}, nil
-}
-
-func (m *ModbusDataSource) Close() error { return nil }
