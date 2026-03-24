@@ -147,13 +147,14 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var user struct {
-		ID    string `json:"id"`
-		Email string `json:"email"`
-		Name  string `json:"name"`
+		ID     string  `json:"id"`
+		Email  string  `json:"email"`
+		Name   string  `json:"name"`
+		Locale *string `json:"locale"`
 	}
 	err := h.db.QueryRow(r.Context(),
-		"SELECT id, email, name FROM users WHERE id = $1", claims.UserID,
-	).Scan(&user.ID, &user.Email, &user.Name)
+		"SELECT id, email, name, locale FROM users WHERE id = $1", claims.UserID,
+	).Scan(&user.ID, &user.Email, &user.Name, &user.Locale)
 	if err != nil {
 		http.Error(w, "user not found", http.StatusNotFound)
 		return

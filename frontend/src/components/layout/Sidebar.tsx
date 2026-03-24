@@ -1,24 +1,8 @@
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { useSite } from '@/lib/site-context';
 import { useDashboards } from '@/lib/hooks';
-
-const staticNav = [
-  { label: 'Main', items: [
-    { to: '/', label: 'Site Overview' },
-    { to: '/machines', label: 'Machine List' },
-    { to: '/alerts', label: 'Alerts & Alarms' },
-    { to: '/reports', label: 'Reports' },
-  ]},
-];
-
-const adminNav = [
-  { label: 'Admin', items: [
-    { to: '/admin/users', label: 'User Management' },
-    { to: '/admin/roles', label: 'RBAC Settings' },
-    { to: '/admin/audit', label: 'Audit Log' },
-  ]},
-];
 
 function NavGroup({ label, items }: { label: string; items: { to: string; label: string }[] }) {
   return (
@@ -43,11 +27,28 @@ function NavGroup({ label, items }: { label: string; items: { to: string; label:
 }
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const { currentSite } = useSite();
   const { data: dashboards } = useDashboards(currentSite?.id);
 
-  // Shared dashboards the user can at least view
   const sharedDashboards = dashboards?.filter((d: any) => d.access_level === 'view' || d.access_level === 'edit') ?? [];
+
+  const staticNav = [
+    { label: t('nav.main'), items: [
+      { to: '/', label: t('nav.siteOverview') },
+      { to: '/machines', label: t('nav.machineList') },
+      { to: '/alerts', label: t('nav.alertsAlarms') },
+      { to: '/reports', label: t('nav.reports') },
+    ]},
+  ];
+
+  const adminNav = [
+    { label: t('nav.admin'), items: [
+      { to: '/admin/users', label: t('nav.userManagement') },
+      { to: '/admin/roles', label: t('nav.rbacSettings') },
+      { to: '/admin/audit', label: t('nav.auditLog') },
+    ]},
+  ];
 
   return (
     <aside className="w-56 border-r bg-slate-50 p-3 overflow-y-auto">
@@ -57,7 +58,7 @@ export function Sidebar() {
 
       {/* Custom dashboards section */}
       <div className="mb-4">
-        <p className="mb-1 text-xs font-semibold uppercase text-slate-400">Dashboards</p>
+        <p className="mb-1 text-xs font-semibold uppercase text-slate-400">{t('nav.custom')}</p>
         <NavLink
           to="/dashboards"
           end
@@ -68,7 +69,7 @@ export function Sidebar() {
             )
           }
         >
-          All Dashboards
+          {t('nav.myDashboards')}
         </NavLink>
         {sharedDashboards.map((d: any) => (
           <NavLink

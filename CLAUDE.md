@@ -70,3 +70,35 @@ All protected API routes pass through: **Auth (JWT) → RBAC (permission check) 
 - RBAC uses custom roles with permission sets, scoped per site via `user_site_roles` table
 - Audit logs are append-only with JSONB details
 - Fake worker (`cmd/fake-worker`) generates simulated sensor data for testing; real Modbus workers will share the same `internal/worker` coordination layer
+
+## i18n (Internationalization)
+
+Supports 4 languages: English (`en`), Traditional Chinese (`zh-TW`), Thai (`th`), Vietnamese (`vi`).
+
+### How it works
+- **Frontend:** `react-i18next` with static JSON locale files imported at build time
+- **Backend:** Stores user locale preference in `users.locale` column; served via `GET /api/auth/me` and updated via `PATCH /api/me/preferences`
+- **Flow:** User picks language in TopNav dropdown → `i18n.changeLanguage()` updates UI instantly → `PATCH /api/me/preferences` persists to DB → on next login, saved locale is restored from `/api/auth/me`
+
+### Key files
+| Area | Files |
+|------|-------|
+| Locale JSON | `frontend/src/locales/{en,zh-TW,th,vi}.json` |
+| i18n init | `frontend/src/lib/i18n.ts` |
+| Language switcher | `frontend/src/components/layout/TopNav.tsx` |
+| Locale restore on login | `frontend/src/lib/auth.tsx` |
+| API hook | `frontend/src/lib/hooks.ts` → `useUpdateLocale()` |
+| Backend handler | `internal/user/preference.go` |
+| Store methods | `internal/user/store.go` → `ValidLocales`, `GetUserLocale`, `UpdateUserLocale` |
+| DB migration | `migrations/012_add_user_locale.{up,down}.sql` |
+
+### Adding a new language
+1. Create `frontend/src/locales/<code>.json` (copy `en.json`, translate values)
+2. Import it in `frontend/src/lib/i18n.ts` and add to `resources`
+3. Add `{ code: '<code>', label: '<native name>' }` to the `languages` array in `TopNav.tsx`
+4. Add `"<code>": true` to `ValidLocales` in `internal/user/store.go`
+
+### Adding a new translatable string
+1. Add the key to **all 4** locale JSON files (`en.json`, `zh-TW.json`, `th.json`, `vi.json`)
+2. Use `t('section.key')` in the component (import `useTranslation` from `react-i18next`)
+3. For interpolation: `t('section.key', { varName: value })` with `"key": "text {{varName}}"` in JSON

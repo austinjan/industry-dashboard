@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -85,4 +86,31 @@ func (s *Store) GetUserRoles(ctx context.Context, userID string) ([]UserRole, er
 		roles = append(roles, r)
 	}
 	return roles, rows.Err()
+}
+
+func (s *Store) GetUserLocale(ctx context.Context, userID string) (*string, error) {
+	var locale *string
+	err := s.db.QueryRow(ctx,
+		"SELECT locale FROM users WHERE id = $1", userID).Scan(&locale)
+	if err != nil {
+		return nil, err
+	}
+	return locale, nil
+}
+
+var ValidLocales = map[string]bool{
+	"en":    true,
+	"zh-TW": true,
+	"th":    true,
+	"vi":    true,
+}
+
+func (s *Store) UpdateUserLocale(ctx context.Context, userID string, locale string) error {
+	if !ValidLocales[locale] {
+		return fmt.Errorf("invalid locale: %s", locale)
+	}
+	_, err := s.db.Exec(ctx,
+		"UPDATE users SET locale = $1, updated_at = NOW() WHERE id = $2",
+		locale, userID)
+	return err
 }

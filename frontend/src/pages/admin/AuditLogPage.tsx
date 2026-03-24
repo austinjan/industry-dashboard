@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -6,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useAuditLogs } from '@/lib/hooks';
 
 export function AuditLogPage() {
+  const { t } = useTranslation();
   const [action, setAction] = useState('');
   const [resourceType, setResourceType] = useState('');
   const [page, setPage] = useState(0);
@@ -19,12 +21,12 @@ export function AuditLogPage() {
 
   return (
     <div>
-      <h2 className="mb-4 text-xl font-bold">Audit Log</h2>
+      <h2 className="mb-4 text-xl font-bold">{t('admin.auditLog')}</h2>
       <div className="mb-4 flex items-center gap-3">
         <Select value={action} onValueChange={(v) => setAction(v ?? '')}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="All actions" /></SelectTrigger>
+          <SelectTrigger className="w-40"><SelectValue placeholder={t('admin.allActions')} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All</SelectItem>
+            <SelectItem value="">{t('alerts.all')}</SelectItem>
             <SelectItem value="create">Create</SelectItem>
             <SelectItem value="assign">Assign</SelectItem>
             <SelectItem value="remove">Remove</SelectItem>
@@ -32,9 +34,9 @@ export function AuditLogPage() {
           </SelectContent>
         </Select>
         <Select value={resourceType} onValueChange={(v) => setResourceType(v ?? '')}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="All resources" /></SelectTrigger>
+          <SelectTrigger className="w-40"><SelectValue placeholder={t('admin.allResources')} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All</SelectItem>
+            <SelectItem value="">{t('alerts.all')}</SelectItem>
             <SelectItem value="site">Site</SelectItem>
             <SelectItem value="role">Role</SelectItem>
             <SelectItem value="user_site_role">Role Assignment</SelectItem>
@@ -47,19 +49,19 @@ export function AuditLogPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Timestamp</TableHead>
-              <TableHead>User</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead>Resource</TableHead>
-              <TableHead>IP</TableHead>
+              <TableHead>{t('admin.timestamp')}</TableHead>
+              <TableHead>{t('admin.user')}</TableHead>
+              <TableHead>{t('admin.action')}</TableHead>
+              <TableHead>{t('admin.resource')}</TableHead>
+              <TableHead>{t('admin.ip')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
-              <TableRow><TableCell colSpan={5} className="text-center text-slate-400">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-slate-400">{t('common.loading')}</TableCell></TableRow>
             )}
             {logs && logs.length === 0 && (
-              <TableRow><TableCell colSpan={5} className="text-center text-slate-400">No audit logs.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-slate-400">{t('admin.noAuditLogs')}</TableCell></TableRow>
             )}
             {logs?.map((log: any) => (
               <TableRow key={log.id}>
@@ -77,9 +79,9 @@ export function AuditLogPage() {
         </Table>
       </Card>
       <div className="mt-3 flex items-center justify-between">
-        <Button variant="outline" size="sm" onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0}>Previous</Button>
-        <span className="text-sm text-slate-500">Page {page + 1}</span>
-        <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={!logs || logs.length < limit}>Next</Button>
+        <Button variant="outline" size="sm" onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0}>{t('admin.previous')}</Button>
+        <span className="text-sm text-slate-500">{t('admin.page', { page: page + 1 })}</span>
+        <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={!logs || logs.length < limit}>{t('admin.next')}</Button>
       </div>
     </div>
   );

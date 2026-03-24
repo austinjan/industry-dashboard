@@ -1,45 +1,47 @@
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSite } from '@/lib/site-context';
 import { useSiteSummary, useSiteLines, useAlertEvents } from '@/lib/hooks';
 
 export function DashboardPage() {
+  const { t } = useTranslation();
   const { currentSite } = useSite();
   const { data: summary } = useSiteSummary(currentSite?.id);
   const { data: lines } = useSiteLines(currentSite?.id);
   const { data: alertEvents } = useAlertEvents(currentSite?.id, { limit: '5' });
 
   if (!currentSite) {
-    return <div className="text-slate-500">Select a site to view the dashboard.</div>;
+    return <div className="text-slate-500">{t('common.selectSite')}</div>;
   }
 
   return (
     <div>
-      <h2 className="mb-4 text-xl font-bold">{currentSite.name} — Overview</h2>
+      <h2 className="mb-4 text-xl font-bold">{t('dashboard.overview', { siteName: currentSite.name })}</h2>
       <div className="mb-6 grid grid-cols-4 gap-4">
         <Card className="p-4">
-          <p className="text-sm text-slate-500">Machines Online</p>
+          <p className="text-sm text-slate-500">{t('dashboard.machinesOnline')}</p>
           <p className="text-2xl font-bold text-green-600">
             {summary ? `${summary.online_machines}/${summary.total_machines}` : '--'}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-slate-500">Production Lines</p>
+          <p className="text-sm text-slate-500">{t('dashboard.productionLines')}</p>
           <p className="text-2xl font-bold text-blue-600">{summary?.total_lines ?? '--'}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-slate-500">Active Alerts</p>
+          <p className="text-sm text-slate-500">{t('dashboard.activeAlerts')}</p>
           <p className="text-2xl font-bold text-red-600">{summary?.active_alerts ?? '--'}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-slate-500">Site</p>
+          <p className="text-sm text-slate-500">{t('dashboard.site')}</p>
           <p className="text-lg font-semibold">{currentSite.code}</p>
           <p className="text-xs text-slate-400">{currentSite.timezone}</p>
         </Card>
       </div>
       <div className="grid grid-cols-3 gap-4">
         <Card className="col-span-2 p-4">
-          <h3 className="mb-3 font-semibold">Production Lines</h3>
+          <h3 className="mb-3 font-semibold">{t('dashboard.productionLines')}</h3>
           {lines && lines.length > 0 ? (
             <div className="space-y-2">
               {lines.map((line: any) => (
@@ -50,11 +52,11 @@ export function DashboardPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-slate-400">No production lines configured.</p>
+            <p className="text-sm text-slate-400">{t('dashboard.noProductionLines')}</p>
           )}
         </Card>
         <Card className="p-4">
-          <h3 className="mb-3 font-semibold">Recent Alerts</h3>
+          <h3 className="mb-3 font-semibold">{t('dashboard.recentAlerts')}</h3>
           {alertEvents && alertEvents.length > 0 ? (
             <div className="space-y-2">
               {alertEvents.map((event: any) => (
@@ -71,7 +73,7 @@ export function DashboardPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-slate-400">No recent alerts.</p>
+            <p className="text-sm text-slate-400">{t('dashboard.noRecentAlerts')}</p>
           )}
         </Card>
       </div>

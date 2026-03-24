@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ function RoleDetail({ roleId }: { roleId: string }) {
 }
 
 export function RolesPage() {
+  const { t } = useTranslation();
   const { data: roles } = useRoles();
   const { data: permissions } = usePermissions();
   const createRole = useCreateRole();
@@ -48,14 +50,14 @@ export function RolesPage() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-bold">Role Management</h2>
+        <h2 className="text-xl font-bold">{t('admin.roleManagement')}</h2>
         <Dialog>
-          <DialogTrigger><Button>Create Role</Button></DialogTrigger>
+          <DialogTrigger><Button>{t('admin.createRole')}</Button></DialogTrigger>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>Create New Role</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{t('admin.createNewRole')}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <Input placeholder="Role name" value={newName} onChange={(e) => setNewName(e.target.value)} />
-              <Input placeholder="Description" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
+              <Input placeholder={t('admin.roleName')} value={newName} onChange={(e) => setNewName(e.target.value)} />
+              <Input placeholder={t('admin.description')} value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
               <div className="max-h-64 overflow-y-auto">
                 {permGroups && Object.entries(permGroups).map(([group, perms]) => (
                   <div key={group} className="mb-3">
@@ -70,7 +72,7 @@ export function RolesPage() {
                   </div>
                 ))}
               </div>
-              <Button onClick={handleCreate} disabled={!newName || createRole.isPending}>Create</Button>
+              <Button onClick={handleCreate} disabled={!newName || createRole.isPending}>{t('admin.create')}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -81,11 +83,11 @@ export function RolesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <span className="font-semibold">{r.name}</span>
-                {r.is_system && <Badge variant="secondary" className="ml-2 text-xs">System</Badge>}
+                {r.is_system && <Badge variant="secondary" className="ml-2 text-xs">{t('admin.system')}</Badge>}
                 <p className="text-sm text-slate-500">{r.description}</p>
               </div>
               <Button size="sm" variant="ghost" onClick={() => setExpandedRole(expandedRole === r.id ? null : r.id)}>
-                {expandedRole === r.id ? 'Hide' : 'Show'} Permissions
+                {expandedRole === r.id ? t('admin.hidePermissions') : t('admin.showPermissions')}
               </Button>
             </div>
             {expandedRole === r.id && (

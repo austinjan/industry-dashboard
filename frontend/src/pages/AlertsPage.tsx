@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { useSite } from '@/lib/site-context';
 import { useAlertEvents, useAcknowledgeAlert } from '@/lib/hooks';
 
 export function AlertsPage() {
+  const { t } = useTranslation();
   const { currentSite } = useSite();
   const [severity, setSeverity] = useState('');
   const params: Record<string, string> = { limit: '50' };
@@ -16,27 +18,28 @@ export function AlertsPage() {
   const { data: events, isLoading } = useAlertEvents(currentSite?.id, params);
   const acknowledge = useAcknowledgeAlert();
 
-  if (!currentSite) return <div className="text-slate-500">Select a site.</div>;
+  if (!currentSite) return <div className="text-slate-500">{t('alerts.selectSite')}</div>;
 
   const severityBadge = (s: string) => {
+    const label = t(`alerts.${s}` as any, s);
     switch (s) {
-      case 'critical': return <Badge variant="destructive">{s}</Badge>;
-      case 'warning': return <Badge className="bg-yellow-100 text-yellow-800">{s}</Badge>;
-      default: return <Badge variant="secondary">{s}</Badge>;
+      case 'critical': return <Badge variant="destructive">{label}</Badge>;
+      case 'warning': return <Badge className="bg-yellow-100 text-yellow-800">{label}</Badge>;
+      default: return <Badge variant="secondary">{label}</Badge>;
     }
   };
 
   return (
     <div>
-      <h2 className="mb-4 text-xl font-bold">Alerts — {currentSite.name}</h2>
+      <h2 className="mb-4 text-xl font-bold">{t('alerts.heading', { siteName: currentSite.name })}</h2>
       <div className="mb-4 flex items-center gap-3">
         <Select value={severity} onValueChange={(v) => setSeverity(v ?? '')}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="All severities" /></SelectTrigger>
+          <SelectTrigger className="w-40"><SelectValue placeholder={t('alerts.allSeverities')} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All</SelectItem>
-            <SelectItem value="critical">Critical</SelectItem>
-            <SelectItem value="warning">Warning</SelectItem>
-            <SelectItem value="info">Info</SelectItem>
+            <SelectItem value="">{t('alerts.all')}</SelectItem>
+            <SelectItem value="critical">{t('alerts.critical')}</SelectItem>
+            <SelectItem value="warning">{t('alerts.warning')}</SelectItem>
+            <SelectItem value="info">{t('alerts.info')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -44,20 +47,20 @@ export function AlertsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Severity</TableHead>
-              <TableHead>Alert</TableHead>
-              <TableHead>Machine</TableHead>
-              <TableHead>Triggered</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{t('alerts.severity')}</TableHead>
+              <TableHead>{t('alerts.alert')}</TableHead>
+              <TableHead>{t('alerts.machine')}</TableHead>
+              <TableHead>{t('alerts.triggered')}</TableHead>
+              <TableHead>{t('alerts.status')}</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
-              <TableRow><TableCell colSpan={6} className="text-center text-slate-400">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-slate-400">{t('common.loading')}</TableCell></TableRow>
             )}
             {events && events.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="text-center text-slate-400">No alerts.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-slate-400">{t('alerts.noAlerts')}</TableCell></TableRow>
             )}
             {events?.map((e: any) => (
               <TableRow key={e.id}>
@@ -67,17 +70,17 @@ export function AlertsPage() {
                 <TableCell className="text-sm text-slate-500">{new Date(e.triggered_at).toLocaleString()}</TableCell>
                 <TableCell>
                   {e.resolved_at ? (
-                    <Badge variant="outline" className="text-green-600">Resolved</Badge>
+                    <Badge variant="outline" className="text-green-600">{t('alerts.resolved')}</Badge>
                   ) : e.acknowledged_by ? (
-                    <Badge variant="outline" className="text-blue-600">Acknowledged</Badge>
+                    <Badge variant="outline" className="text-blue-600">{t('alerts.acknowledged')}</Badge>
                   ) : (
-                    <Badge variant="outline" className="text-red-600">Open</Badge>
+                    <Badge variant="outline" className="text-red-600">{t('alerts.open')}</Badge>
                   )}
                 </TableCell>
                 <TableCell>
                   {!e.resolved_at && !e.acknowledged_by && (
                     <Button size="sm" variant="outline" onClick={() => acknowledge.mutate(e.id)} disabled={acknowledge.isPending}>
-                      Acknowledge
+                      {t('alerts.acknowledge')}
                     </Button>
                   )}
                 </TableCell>
