@@ -255,3 +255,142 @@ export function useLatestValues(machineId: string | undefined) {
     refetchInterval: 30000,
   });
 }
+
+// Admin: Sites & Machines
+
+export function useAdminSites() {
+  return useQuery({
+    queryKey: ['admin-sites'],
+    queryFn: () => fetchJSON<any[]>('/admin/sites'),
+  });
+}
+
+export function useSiteDetail(siteId: string | undefined) {
+  return useQuery({
+    queryKey: ['site-detail', siteId],
+    queryFn: () => fetchJSON<any>(`/sites/${siteId}/detail`),
+    enabled: !!siteId,
+  });
+}
+
+export function useCreateSite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { name: string; code: string; timezone: string; address?: string }) =>
+      apiFetch('/sites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-sites'] }),
+  });
+}
+
+export function useUpdateSite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: string; name: string; timezone: string; address?: string }) =>
+      apiFetch(`/sites/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-sites'] });
+      qc.invalidateQueries({ queryKey: ['site-detail'] });
+    },
+  });
+}
+
+export function useDeleteSite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch(`/sites/${id}`, { method: 'DELETE' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-sites'] }),
+  });
+}
+
+export function useCreateLine() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ siteId, ...data }: { siteId: string; name: string; display_order: number }) =>
+      apiFetch(`/sites/${siteId}/lines`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['site-detail'] }),
+  });
+}
+
+export function useUpdateLine() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: string; name: string; display_order: number }) =>
+      apiFetch(`/lines/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['site-detail'] }),
+  });
+}
+
+export function useDeleteLine() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch(`/lines/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['site-detail'] });
+      qc.invalidateQueries({ queryKey: ['admin-sites'] });
+    },
+  });
+}
+
+export function useCreateMachine() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ lineId, ...data }: { lineId: string; name: string; model?: string }) =>
+      apiFetch(`/lines/${lineId}/machines`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['site-detail'] }),
+  });
+}
+
+export function useUpdateMachine() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: string; name: string; model?: string }) =>
+      apiFetch(`/machines/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['site-detail'] }),
+  });
+}
+
+export function useDeleteMachine() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch(`/machines/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['site-detail'] });
+      qc.invalidateQueries({ queryKey: ['admin-sites'] });
+    },
+  });
+}
+
+// Admin: Workers
+
+export function useWorkers() {
+  return useQuery({
+    queryKey: ['workers'],
+    queryFn: () => fetchJSON<any[]>('/workers'),
+    refetchInterval: 30000,
+  });
+}
+
+export function useWorkerDetail(workerId: string | undefined) {
+  return useQuery({
+    queryKey: ['worker-detail', workerId],
+    queryFn: () => fetchJSON<any>(`/workers/${workerId}`),
+    enabled: !!workerId,
+    refetchInterval: 30000,
+  });
+}
+
+export function useSendWorkerCommand() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ workerId, command }: { workerId: string; command: string }) =>
+      apiFetch(`/workers/${workerId}/commands`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command }),
+      }).then(r => r.json()),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['workers'] });
+      qc.invalidateQueries({ queryKey: ['worker-detail'] });
+    },
+  });
+}
