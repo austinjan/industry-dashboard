@@ -10,9 +10,10 @@ import (
 )
 
 type ProvisionedMachine struct {
-	ID        string
-	Name      string
-	Registers []RegisterConfig
+	ID         string
+	Name       string
+	Registers  []RegisterConfig
+	DataSource DataSource
 }
 
 type ProvisionResult struct {

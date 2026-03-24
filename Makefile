@@ -1,4 +1,4 @@
-.PHONY: dev db-up db-down migrate test fake-worker
+.PHONY: dev db-up db-down migrate test fake-worker worker worker-config
 
 db-up:
 	docker compose up -d db
@@ -28,3 +28,9 @@ fake-worker:
 
 fake-worker-config:
 	go run ./cmd/fake-worker -config $(CONFIG)
+
+worker:
+	go run ./cmd/worker
+
+worker-config:
+	go run ./cmd/worker -config $(CONFIG)

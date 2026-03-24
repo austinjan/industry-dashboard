@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	configPath := flag.String("config", "cmd/fake-worker/config.yaml", "Path to worker config YAML")
+	configPath := flag.String("config", "cmd/worker/config.yaml", "Path to worker config YAML")
 	flag.Parse()
 
 	workerCfg, err := worker.LoadConfig(*configPath)
@@ -25,11 +25,17 @@ func main() {
 	log.Printf("Loaded config: site=%s, lines=%d, poll=%s",
 		workerCfg.SiteCode, len(workerCfg.Lines), workerCfg.PollInterval)
 
-	appCfg := config.Load()
+	// Resolve database URL: env var > YAML config > app config fallback
+	dbURL := workerCfg.DatabaseURL
+	if dbURL == "" {
+		appCfg := config.Load()
+		dbURL = appCfg.DatabaseURL
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	pool, err := database.Connect(ctx, appCfg.DatabaseURL)
+	pool, err := database.Connect(ctx, dbURL)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -39,9 +45,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to provision: %v", err)
 	}
-	log.Printf("Provisioned %d machines", len(result.Machines))
 
-	// Attach DataSource to each machine
+	// Create DataSource for each machine
 	for i, m := range result.Machines {
 		machineCfg := findMachineConfig(workerCfg, m.Name)
 		if machineCfg == nil {
@@ -53,6 +58,7 @@ func main() {
 		}
 		result.Machines[i].DataSource = ds
 	}
+	log.Printf("Provisioned %d machines", len(result.Machines))
 
 	coordinator := worker.NewCoordinator(pool)
 	machineIDs := make([]string, len(result.Machines))
@@ -75,7 +81,7 @@ func main() {
 		}(machine)
 	}
 
-	log.Printf("Fake worker running (worker_id: %s). Press Ctrl+C to stop.", coordinator.WorkerID())
+	log.Printf("Worker running (worker_id: %s). Press Ctrl+C to stop.", coordinator.WorkerID())
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
