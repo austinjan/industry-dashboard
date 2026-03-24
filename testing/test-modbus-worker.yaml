@@ -2,6 +2,7 @@ site_code: "TEST"
 site_name: "Test Site"
 timezone: "Asia/Taipei"
 poll_interval: 5s
+worker_name: "test-modbus-worker"
 
 lines:
   - name: "Test Line"

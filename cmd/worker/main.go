@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sync"
 	"syscall"
 
@@ -14,9 +16,13 @@ import (
 	"github.com/industry-dashboard/server/internal/worker"
 )
 
+var version = "dev"
+
 func main() {
 	configPath := flag.String("config", "cmd/worker/config.yaml", "Path to worker config YAML")
 	flag.Parse()
+
+	absConfigPath, _ := filepath.Abs(*configPath)
 
 	workerCfg, err := worker.LoadConfig(*configPath)
 	if err != nil {
@@ -41,6 +47,12 @@ func main() {
 	}
 	defer pool.Close()
 
+	coordinator := worker.NewCoordinator(pool, workerCfg.WorkerName, absConfigPath, version)
+
+	if err := coordinator.Register(ctx); err != nil {
+		log.Fatalf("Failed to register worker: %v", err)
+	}
+
 	result, err := worker.Provision(ctx, pool, workerCfg)
 	if err != nil {
 		log.Fatalf("Failed to provision: %v", err)
@@ -60,7 +72,6 @@ func main() {
 	}
 	log.Printf("Provisioned %d machines", len(result.Machines))
 
-	coordinator := worker.NewCoordinator(pool)
 	machineIDs := make([]string, len(result.Machines))
 	for i, m := range result.Machines {
 		machineIDs[i] = m.ID
@@ -74,14 +85,50 @@ func main() {
 	runner := worker.NewRunner(pool, workerCfg.PollInterval)
 	var wg sync.WaitGroup
 	for _, machine := range result.Machines {
+		machineCtx, machineCancel := context.WithCancel(ctx)
+		coordinator.StoreMachineCancel(machine.Name, machineCancel)
 		wg.Add(1)
-		go func(m worker.ProvisionedMachine) {
+		go func(m worker.ProvisionedMachine, mCtx context.Context) {
 			defer wg.Done()
-			runner.RunMachine(ctx, m)
-		}(machine)
+			runner.RunMachine(mCtx, m)
+		}(machine, machineCtx)
 	}
 
-	log.Printf("Worker running (worker_id: %s). Press Ctrl+C to stop.", coordinator.WorkerID())
+	commandHandler := func(cmdCtx context.Context, command string, params []byte) error {
+		switch command {
+		case "stop":
+			log.Println("Received stop command")
+			cancel()
+			wg.Wait()
+			coordinator.ReleaseMachines(context.Background(), machineIDs)
+			coordinator.SetOffline(context.Background())
+			log.Println("Worker stopped by command")
+			os.Exit(0)
+		case "restart":
+			log.Println("Received restart command")
+			cancel()
+			wg.Wait()
+			coordinator.ReleaseMachines(context.Background(), machineIDs)
+			executable, err := os.Executable()
+			if err != nil {
+				return fmt.Errorf("failed to get executable path: %w", err)
+			}
+			log.Println("Re-executing worker process...")
+			if err := syscall.Exec(executable, os.Args, os.Environ()); err != nil {
+				return fmt.Errorf("failed to restart: %w", err)
+			}
+		case "reload_config":
+			log.Println("Received reload_config command — not yet fully implemented")
+			return fmt.Errorf("reload_config not yet implemented")
+		default:
+			return fmt.Errorf("unknown command: %s", command)
+		}
+		return nil
+	}
+
+	go coordinator.PollCommands(ctx, commandHandler)
+
+	log.Printf("Worker running (name: %s, id: %s). Press Ctrl+C to stop.", coordinator.WorkerName(), coordinator.WorkerDBID())
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
@@ -91,6 +138,7 @@ func main() {
 	cancel()
 	wg.Wait()
 	coordinator.ReleaseMachines(context.Background(), machineIDs)
+	coordinator.SetOffline(context.Background())
 	log.Println("Done.")
 }
 

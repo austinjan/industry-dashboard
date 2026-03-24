@@ -21,6 +21,7 @@ import (
 	"github.com/industry-dashboard/server/internal/rbac"
 	"github.com/industry-dashboard/server/internal/site"
 	"github.com/industry-dashboard/server/internal/user"
+	"github.com/industry-dashboard/server/internal/worker_api"
 )
 
 func main() {
@@ -70,6 +71,9 @@ func main() {
 
 	dashboardStore := dashboard.NewStore(pool)
 	dashboardHandler := dashboard.NewHandler(dashboardStore, rbacStore)
+
+	workerAPIStore := worker_api.NewStore(pool)
+	workerAPIHandler := worker_api.NewHandler(workerAPIStore)
 
 	// OIDC client (optional — skip if Azure not configured)
 	var authHandler *auth.Handler
@@ -413,6 +417,17 @@ func main() {
 
 		// Audit logs
 		r.With(rbacMW.Require("audit:view", rbac.SiteFromQuery)).Get("/audit-logs", auditHandler.List)
+
+		// Workers (global permission — no site scope)
+		globalScope := func(r *http.Request) string { return "" }
+		r.Route("/workers", func(r chi.Router) {
+			r.With(rbacMW.Require("workers:manage", globalScope)).Get("/", workerAPIHandler.ListWorkers)
+			r.Route("/{workerID}", func(r chi.Router) {
+				r.With(rbacMW.Require("workers:manage", globalScope)).Get("/", workerAPIHandler.GetWorker)
+				r.With(rbacMW.Require("workers:manage", globalScope), auditMW.Log("worker", "command")).Post("/commands", workerAPIHandler.SendCommand)
+				r.With(rbacMW.Require("workers:manage", globalScope)).Get("/commands", workerAPIHandler.ListCommands)
+			})
+		})
 	})
 
 	log.Printf("Server starting on :%s", cfg.Port)
