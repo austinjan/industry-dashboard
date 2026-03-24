@@ -30,7 +30,7 @@ fake-worker-config:
 	go run ./cmd/fake-worker -config $(CONFIG)
 
 worker:
-	go run ./cmd/worker
+	go run -ldflags "-X main.version=$$(git describe --tags --always --dirty 2>/dev/null || echo dev)" ./cmd/worker
 
 worker-config:
-	go run ./cmd/worker -config $(CONFIG)
+	go run -ldflags "-X main.version=$$(git describe --tags --always --dirty 2>/dev/null || echo dev)" ./cmd/worker -config $(CONFIG)
