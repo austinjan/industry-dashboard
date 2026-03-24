@@ -20,9 +20,10 @@ func NewHandler(store *Store) *Handler {
 }
 
 var validCommands = map[string]bool{
-	"stop":          true,
-	"restart":       true,
-	"reload_config": true,
+	"stop":    true,
+	"restart": true,
+	// "reload_config" is defined in the spec but not yet implemented in the worker.
+	// It will be added here once the worker-side implementation is complete.
 }
 
 // ListWorkers returns all workers as a JSON array.

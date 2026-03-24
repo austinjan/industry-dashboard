@@ -263,29 +263,32 @@ func (c *Coordinator) processNextCommand(ctx context.Context, handler CommandHan
 		return
 	}
 
-	// For stop/restart: mark completed BEFORE calling handler (process may not return)
+	// For stop/restart: pre-mark completed BEFORE calling handler (process may not return)
 	isTerminating := command == "stop" || command == "restart"
 	if isTerminating {
-		c.db.Exec(ctx,
-			`UPDATE worker_commands SET status = 'completed', completed_at = NOW() WHERE id = $1`,
+		if _, err := c.db.Exec(context.Background(),
+			`UPDATE worker_commands SET status = 'completed', result = 'ok', completed_at = NOW() WHERE id = $1`,
 			cmdID,
-		)
+		); err != nil {
+			log.Printf("PollCommands: failed to pre-mark %s completed: %v", command, err)
+		}
 	}
 
 	handlerErr := handler(ctx, command, paramsRaw)
 
-	if !isTerminating {
-		if handlerErr != nil {
-			c.db.Exec(ctx,
-				`UPDATE worker_commands SET status = 'failed', completed_at = NOW(), result = $2 WHERE id = $1`,
-				cmdID, handlerErr.Error(),
-			)
-		} else {
-			c.db.Exec(ctx,
-				`UPDATE worker_commands SET status = 'completed', completed_at = NOW() WHERE id = $1`,
-				cmdID,
-			)
+	if handlerErr != nil {
+		// For restart: if syscall.Exec fails, mark as failed (overrides the pre-mark)
+		if _, err := c.db.Exec(context.Background(),
+			`UPDATE worker_commands SET status = 'failed', completed_at = NOW(), result = $2 WHERE id = $1`,
+			cmdID, handlerErr.Error(),
+		); err != nil {
+			log.Printf("PollCommands: failed to mark command failed: %v", err)
 		}
+	} else if !isTerminating {
+		c.db.Exec(context.Background(),
+			`UPDATE worker_commands SET status = 'completed', result = 'ok', completed_at = NOW() WHERE id = $1`,
+			cmdID,
+		)
 	}
 }
 
