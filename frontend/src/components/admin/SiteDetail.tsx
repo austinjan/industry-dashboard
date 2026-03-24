@@ -22,7 +22,7 @@ type DeleteTarget =
   | null;
 
 type EditLineTarget = { id: string; name: string; display_order: number } | undefined;
-type EditMachineTarget = { id: string; name: string; model?: string; host?: string; port?: number; slave_id?: number } | undefined;
+type EditMachineTarget = { id: string; name: string; model?: string } | undefined;
 
 function statusDotClass(status: string) {
   switch (status) {
@@ -168,7 +168,6 @@ export function SiteDetail({ siteId, onSiteDeleted }: SiteDetailProps) {
                   <TableHead className="w-8"></TableHead>
                   <TableHead>{t('admin.machineName')}</TableHead>
                   <TableHead>{t('admin.machineModel')}</TableHead>
-                  <TableHead>{t('admin.hostAddress')}</TableHead>
                   <TableHead>{t('admin.status')}</TableHead>
                   <TableHead>{t('admin.workerLabel')}</TableHead>
                   <TableHead className="w-20"></TableHead>
@@ -184,9 +183,6 @@ export function SiteDetail({ siteId, onSiteDeleted }: SiteDetailProps) {
                     </TableCell>
                     <TableCell className="font-medium">{machine.name}</TableCell>
                     <TableCell className="text-muted-foreground">{machine.model ?? '—'}</TableCell>
-                    <TableCell className="text-muted-foreground text-xs font-mono">
-                      {machine.host ? `${machine.host}:${machine.port ?? 502}` : '—'}
-                    </TableCell>
                     <TableCell className="text-muted-foreground">{machine.status ?? '—'}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {machine.worker_name ?? t('admin.noWorkerAssigned')}
@@ -198,7 +194,7 @@ export function SiteDetail({ siteId, onSiteDeleted }: SiteDetailProps) {
                           variant="ghost"
                           onClick={() => {
                             setActiveLine(line.id);
-                            setEditMachine({ id: machine.id, name: machine.name, model: machine.model, host: machine.host, port: machine.port, slave_id: machine.slave_id });
+                            setEditMachine({ id: machine.id, name: machine.name, model: machine.model });
                             setMachineDialogOpen(true);
                           }}
                         >

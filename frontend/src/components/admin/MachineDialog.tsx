@@ -10,7 +10,7 @@ interface MachineDialogProps {
   open: boolean;
   onClose: () => void;
   lineId: string;
-  machine?: { id: string; name: string; model?: string; host?: string; port?: number; slave_id?: number };
+  machine?: { id: string; name: string; model?: string };
 }
 
 export function MachineDialog({ open, onClose, lineId, machine }: MachineDialogProps) {
@@ -19,9 +19,6 @@ export function MachineDialog({ open, onClose, lineId, machine }: MachineDialogP
 
   const [name, setName] = useState('');
   const [model, setModel] = useState('');
-  const [host, setHost] = useState('');
-  const [port, setPort] = useState(502);
-  const [slaveId, setSlaveId] = useState(1);
   const [error, setError] = useState('');
 
   const createMachine = useCreateMachine();
@@ -31,9 +28,6 @@ export function MachineDialog({ open, onClose, lineId, machine }: MachineDialogP
     if (open) {
       setName(machine?.name ?? '');
       setModel(machine?.model ?? '');
-      setHost(machine?.host ?? '');
-      setPort(machine?.port ?? 502);
-      setSlaveId(machine?.slave_id ?? 1);
       setError('');
     }
   }, [open, machine]);
@@ -44,17 +38,10 @@ export function MachineDialog({ open, onClose, lineId, machine }: MachineDialogP
     if (!name) return;
     setError('');
     try {
-      const data = {
-        name,
-        model: model || undefined,
-        host: host || undefined,
-        port: host ? port : undefined,
-        slave_id: host ? slaveId : undefined,
-      };
       if (isEdit) {
-        await updateMachine.mutateAsync({ id: machine.id, ...data });
+        await updateMachine.mutateAsync({ id: machine.id, name, model: model || undefined });
       } else {
-        await createMachine.mutateAsync({ lineId, ...data });
+        await createMachine.mutateAsync({ lineId, name, model: model || undefined });
       }
       onClose();
     } catch (e: any) {
@@ -84,40 +71,6 @@ export function MachineDialog({ open, onClose, lineId, machine }: MachineDialogP
               onChange={(e) => setModel(e.target.value)}
               placeholder={t('admin.machineModel')}
             />
-          </div>
-
-          <div className="border-t pt-3 mt-3">
-            <p className="text-sm font-medium mb-2">{t('admin.modbusConnection')}</p>
-            <div className="space-y-2">
-              <div className="space-y-1">
-                <Label>{t('admin.hostAddress')}</Label>
-                <Input
-                  value={host}
-                  onChange={(e) => setHost(e.target.value)}
-                  placeholder="192.168.1.100"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label>{t('admin.portLabel')}</Label>
-                  <Input
-                    type="number"
-                    value={port}
-                    onChange={(e) => setPort(parseInt(e.target.value) || 502)}
-                    placeholder="502"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label>{t('admin.slaveIdLabel')}</Label>
-                  <Input
-                    type="number"
-                    value={slaveId}
-                    onChange={(e) => setSlaveId(parseInt(e.target.value) || 1)}
-                    placeholder="1"
-                  />
-                </div>
-              </div>
-            </div>
           </div>
         </div>
         {error && <p className="text-sm text-red-500">{error}</p>}
