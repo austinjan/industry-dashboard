@@ -159,7 +159,11 @@
     "noLines": "No production lines.",
     "noMachines": "No machines.",
     "noWorkers": "No workers registered.",
-    "selectSitePrompt": "Select a site to view details."
+    "selectSitePrompt": "Select a site to view details.",
+    "modbusConnection": "Modbus Connection",
+    "hostAddress": "Host",
+    "portLabel": "Port",
+    "slaveIdLabel": "Slave ID"
   },
   "topnav": {
     "title": "Industry Dashboard",

@@ -201,16 +201,39 @@ func (s *Store) DeleteLine(ctx context.Context, id string) error {
 	return err
 }
 
-func (s *Store) CreateMachine(ctx context.Context, lineID, name, model string) (*Machine, error) {
+type MachineConnection struct {
+	Host    string `json:"host"`
+	Port    int    `json:"port"`
+	SlaveID int    `json:"slave_id"`
+}
+
+func (s *Store) CreateMachine(ctx context.Context, lineID, name, model string, conn *MachineConnection) (*Machine, error) {
 	var m Machine
 	var mod *string
 	if model != "" {
 		mod = &model
 	}
+	var configJSON []byte
+	if conn != nil && conn.Host != "" {
+		port := conn.Port
+		if port == 0 {
+			port = 502
+		}
+		slaveID := conn.SlaveID
+		if slaveID == 0 {
+			slaveID = 1
+		}
+		cfg := map[string]interface{}{
+			"host":    conn.Host,
+			"port":    port,
+			"unit_id": slaveID,
+		}
+		configJSON, _ = json.Marshal(cfg)
+	}
 	err := s.db.QueryRow(ctx,
-		`INSERT INTO machines (line_id, name, model, status) VALUES ($1, $2, $3, 'offline')
+		`INSERT INTO machines (line_id, name, model, status, modbus_config) VALUES ($1, $2, $3, 'offline', $4)
 		 RETURNING id, line_id, name, model, status, created_at`,
-		lineID, name, mod,
+		lineID, name, mod, configJSON,
 	).Scan(&m.ID, &m.LineID, &m.Name, &m.Model, &m.Status, &m.CreatedAt)
 	if err != nil {
 		return nil, err
@@ -218,16 +241,33 @@ func (s *Store) CreateMachine(ctx context.Context, lineID, name, model string) (
 	return &m, nil
 }
 
-func (s *Store) UpdateMachine(ctx context.Context, id, name, model string) (*Machine, error) {
+func (s *Store) UpdateMachine(ctx context.Context, id, name, model string, conn *MachineConnection) (*Machine, error) {
 	var m Machine
 	var mod *string
 	if model != "" {
 		mod = &model
 	}
+	var configJSON []byte
+	if conn != nil && conn.Host != "" {
+		port := conn.Port
+		if port == 0 {
+			port = 502
+		}
+		slaveID := conn.SlaveID
+		if slaveID == 0 {
+			slaveID = 1
+		}
+		cfg := map[string]interface{}{
+			"host":    conn.Host,
+			"port":    port,
+			"unit_id": slaveID,
+		}
+		configJSON, _ = json.Marshal(cfg)
+	}
 	err := s.db.QueryRow(ctx,
-		`UPDATE machines SET name=$1, model=$2, updated_at=NOW() WHERE id=$3
+		`UPDATE machines SET name=$1, model=$2, modbus_config=COALESCE($3, modbus_config), updated_at=NOW() WHERE id=$4
 		 RETURNING id, line_id, name, model, status, created_at`,
-		name, mod, id,
+		name, mod, configJSON, id,
 	).Scan(&m.ID, &m.LineID, &m.Name, &m.Model, &m.Status, &m.CreatedAt)
 	if err != nil {
 		return nil, err
@@ -275,6 +315,9 @@ type SiteDetailMachine struct {
 	Name       string  `json:"name"`
 	Model      *string `json:"model"`
 	Status     string  `json:"status"`
+	Host       *string `json:"host"`
+	Port       *int    `json:"port"`
+	SlaveID    *int    `json:"slave_id"`
 	WorkerName *string `json:"worker_name"`
 	WorkerID   *string `json:"worker_id"`
 }
@@ -316,7 +359,11 @@ func (s *Store) GetSiteDetail(ctx context.Context, siteID string) (*SiteDetail, 
 		}
 
 		rows, err := s.db.Query(ctx, `
-			SELECT m.id, m.name, m.model, m.status, w.name, w.id::text
+			SELECT m.id, m.name, m.model, m.status,
+			       m.modbus_config->>'host',
+			       (m.modbus_config->>'port')::int,
+			       (m.modbus_config->>'unit_id')::int,
+			       w.name, w.id::text
 			FROM machines m
 			LEFT JOIN machine_workers mw ON mw.machine_id = m.id
 			LEFT JOIN workers w ON w.id = mw.worker_ref_id
@@ -329,7 +376,7 @@ func (s *Store) GetSiteDetail(ctx context.Context, siteID string) (*SiteDetail, 
 
 		for rows.Next() {
 			var dm SiteDetailMachine
-			if err := rows.Scan(&dm.ID, &dm.Name, &dm.Model, &dm.Status, &dm.WorkerName, &dm.WorkerID); err != nil {
+			if err := rows.Scan(&dm.ID, &dm.Name, &dm.Model, &dm.Status, &dm.Host, &dm.Port, &dm.SlaveID, &dm.WorkerName, &dm.WorkerID); err != nil {
 				rows.Close()
 				return nil, err
 			}

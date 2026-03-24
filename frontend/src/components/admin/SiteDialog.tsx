@@ -45,15 +45,21 @@ export function SiteDialog({ open, onClose, site }: SiteDialogProps) {
   }, [open, site]);
 
   const isPending = createSite.isPending || updateSite.isPending;
+  const [error, setError] = useState('');
 
   const handleSubmit = async () => {
     if (!name || !code || !timezone) return;
-    if (isEdit) {
-      await updateSite.mutateAsync({ id: site.id, name, timezone, address: address || undefined });
-    } else {
-      await createSite.mutateAsync({ name, code, timezone, address: address || undefined });
+    setError('');
+    try {
+      if (isEdit) {
+        await updateSite.mutateAsync({ id: site.id, name, timezone, address: address || undefined });
+      } else {
+        await createSite.mutateAsync({ name, code, timezone, address: address || undefined });
+      }
+      onClose();
+    } catch (e: any) {
+      setError(e.message || 'Unknown error');
     }
-    onClose();
   };
 
   return (
@@ -102,6 +108,7 @@ export function SiteDialog({ open, onClose, site }: SiteDialogProps) {
             />
           </div>
         </div>
+        {error && <p className="text-sm text-red-500">{error}</p>}
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={isPending}>
             {t('admin.cancel')}

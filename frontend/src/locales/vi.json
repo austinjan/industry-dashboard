@@ -159,7 +159,11 @@
     "noLines": "Không có dây chuyền.",
     "noMachines": "Không có máy.",
     "noWorkers": "Chưa có bộ thu thập.",
-    "selectSitePrompt": "Chọn nhà máy để xem chi tiết."
+    "selectSitePrompt": "Chọn nhà máy để xem chi tiết.",
+    "modbusConnection": "Kết nối Modbus",
+    "hostAddress": "Máy chủ",
+    "portLabel": "Cổng",
+    "slaveIdLabel": "Slave ID"
   },
   "topnav": {
     "title": "Bảng điều khiển công nghiệp",

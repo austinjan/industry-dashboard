@@ -7,6 +7,16 @@ async function fetchJSON<T>(path: string): Promise<T> {
   return res.json();
 }
 
+async function mutateJSON<T>(path: string, options: RequestInit): Promise<T> {
+  const res = await apiFetch(path, { ...options, headers: { 'Content-Type': 'application/json', ...options.headers } });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text.trim() || `Request failed: ${res.status}`);
+  }
+  if (res.status === 204) return undefined as T;
+  return res.json();
+}
+
 export function useSiteLines(siteId: string | undefined) {
   return useQuery({
     queryKey: ['lines', siteId],
@@ -277,7 +287,7 @@ export function useCreateSite() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: { name: string; code: string; timezone: string; address?: string }) =>
-      apiFetch('/sites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+      mutateJSON('/sites', { method: 'POST', body: JSON.stringify(data) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-sites'] }),
   });
 }
@@ -286,7 +296,7 @@ export function useUpdateSite() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, ...data }: { id: string; name: string; timezone: string; address?: string }) =>
-      apiFetch(`/sites/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+      mutateJSON(`/sites/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-sites'] });
       qc.invalidateQueries({ queryKey: ['site-detail'] });
@@ -297,7 +307,7 @@ export function useUpdateSite() {
 export function useDeleteSite() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => apiFetch(`/sites/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) => mutateJSON(`/sites/${id}`, { method: 'DELETE' }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-sites'] }),
   });
 }
@@ -306,7 +316,7 @@ export function useCreateLine() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ siteId, ...data }: { siteId: string; name: string; display_order: number }) =>
-      apiFetch(`/sites/${siteId}/lines`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+      mutateJSON(`/sites/${siteId}/lines`, { method: 'POST', body: JSON.stringify(data) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['site-detail'] }),
   });
 }
@@ -315,7 +325,7 @@ export function useUpdateLine() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, ...data }: { id: string; name: string; display_order: number }) =>
-      apiFetch(`/lines/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+      mutateJSON(`/lines/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['site-detail'] }),
   });
 }
@@ -323,7 +333,7 @@ export function useUpdateLine() {
 export function useDeleteLine() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => apiFetch(`/lines/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) => mutateJSON(`/lines/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['site-detail'] });
       qc.invalidateQueries({ queryKey: ['admin-sites'] });
@@ -334,8 +344,8 @@ export function useDeleteLine() {
 export function useCreateMachine() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ lineId, ...data }: { lineId: string; name: string; model?: string }) =>
-      apiFetch(`/lines/${lineId}/machines`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+    mutationFn: ({ lineId, ...data }: { lineId: string; name: string; model?: string; host?: string; port?: number; slave_id?: number }) =>
+      mutateJSON(`/lines/${lineId}/machines`, { method: 'POST', body: JSON.stringify(data) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['site-detail'] }),
   });
 }
@@ -343,8 +353,8 @@ export function useCreateMachine() {
 export function useUpdateMachine() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: string; name: string; model?: string }) =>
-      apiFetch(`/machines/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json()),
+    mutationFn: ({ id, ...data }: { id: string; name: string; model?: string; host?: string; port?: number; slave_id?: number }) =>
+      mutateJSON(`/machines/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['site-detail'] }),
   });
 }
@@ -352,7 +362,7 @@ export function useUpdateMachine() {
 export function useDeleteMachine() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => apiFetch(`/machines/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) => mutateJSON(`/machines/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['site-detail'] });
       qc.invalidateQueries({ queryKey: ['admin-sites'] });
@@ -383,11 +393,10 @@ export function useSendWorkerCommand() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ workerId, command }: { workerId: string; command: string }) =>
-      apiFetch(`/workers/${workerId}/commands`, {
+      mutateJSON(`/workers/${workerId}/commands`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ command }),
-      }).then(r => r.json()),
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['workers'] });
       qc.invalidateQueries({ queryKey: ['worker-detail'] });

@@ -2,11 +2,17 @@ package site
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 )
+
+func isDuplicateKey(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "SQLSTATE 23505")
+}
 
 type Handler struct {
 	store *Store
@@ -46,6 +52,11 @@ func (h *Handler) CreateSite(w http.ResponseWriter, r *http.Request) {
 	}
 	site, err := h.store.CreateSite(r.Context(), body.Name, body.Code, body.Timezone, body.Address)
 	if err != nil {
+		if isDuplicateKey(err) {
+			http.Error(w, "site code already exists", http.StatusConflict)
+			return
+		}
+		log.Printf("CreateSite error: %v", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -223,8 +234,11 @@ func (h *Handler) DeleteLine(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CreateMachine(w http.ResponseWriter, r *http.Request) {
 	lineID := chi.URLParam(r, "lineID")
 	var body struct {
-		Name  string `json:"name"`
-		Model string `json:"model"`
+		Name    string `json:"name"`
+		Model   string `json:"model"`
+		Host    string `json:"host"`
+		Port    int    `json:"port"`
+		SlaveID int    `json:"slave_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
@@ -234,7 +248,11 @@ func (h *Handler) CreateMachine(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "name is required", http.StatusBadRequest)
 		return
 	}
-	machine, err := h.store.CreateMachine(r.Context(), lineID, body.Name, body.Model)
+	var conn *MachineConnection
+	if body.Host != "" {
+		conn = &MachineConnection{Host: body.Host, Port: body.Port, SlaveID: body.SlaveID}
+	}
+	machine, err := h.store.CreateMachine(r.Context(), lineID, body.Name, body.Model, conn)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
@@ -247,8 +265,11 @@ func (h *Handler) CreateMachine(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UpdateMachine(w http.ResponseWriter, r *http.Request) {
 	machineID := chi.URLParam(r, "machineID")
 	var body struct {
-		Name  string `json:"name"`
-		Model string `json:"model"`
+		Name    string `json:"name"`
+		Model   string `json:"model"`
+		Host    string `json:"host"`
+		Port    int    `json:"port"`
+		SlaveID int    `json:"slave_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
@@ -258,7 +279,11 @@ func (h *Handler) UpdateMachine(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "name is required", http.StatusBadRequest)
 		return
 	}
-	machine, err := h.store.UpdateMachine(r.Context(), machineID, body.Name, body.Model)
+	var conn *MachineConnection
+	if body.Host != "" {
+		conn = &MachineConnection{Host: body.Host, Port: body.Port, SlaveID: body.SlaveID}
+	}
+	machine, err := h.store.UpdateMachine(r.Context(), machineID, body.Name, body.Model, conn)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			http.Error(w, "machine not found", http.StatusNotFound)

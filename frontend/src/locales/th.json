@@ -159,7 +159,11 @@
     "noLines": "ไม่มีสายการผลิต",
     "noMachines": "ไม่มีเครื่องจักร",
     "noWorkers": "ยังไม่มีตัวเก็บข้อมูล",
-    "selectSitePrompt": "เลือกโรงงานเพื่อดูรายละเอียด"
+    "selectSitePrompt": "เลือกโรงงานเพื่อดูรายละเอียด",
+    "modbusConnection": "การเชื่อมต่อ Modbus",
+    "hostAddress": "โฮสต์",
+    "portLabel": "พอร์ต",
+    "slaveIdLabel": "Slave ID"
   },
   "topnav": {
     "title": "แดชบอร์ดอุตสาหกรรม",
