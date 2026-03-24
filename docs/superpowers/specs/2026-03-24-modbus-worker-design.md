@@ -55,10 +55,12 @@ type ModbusDataSource struct {
 
 ### Auto-Detection Logic
 
+**Config change required:** `FakeConfig` in `RegisterConfig` must change from a value type to a pointer (`*FakeConfig`). Currently `applyMachineDefaults()` unconditionally sets `Fake.Max=100` and `Fake.Pattern="random"` on every register, making it impossible to distinguish "user specified fake" from "defaults applied." With a pointer, `nil` means real Modbus, non-nil means fake. The default-filling logic must only apply when `Fake != nil` (i.e., the user provided a `fake:` block in YAML).
+
 Per machine, when building `DataSource`:
 
-- ALL registers have `fake:` blocks -> `FakeDataSource`
-- NO registers have `fake:` blocks -> `ModbusDataSource`
+- ALL registers have `Fake != nil` -> `FakeDataSource`
+- ALL registers have `Fake == nil` -> `ModbusDataSource`
 - Mixed -> error: "machine X has mixed fake/real registers, not supported"
 
 ## Register Decoding
@@ -90,7 +92,7 @@ func DecodeRegister(raw []byte, cfg RegisterConfig) (float64, error)
 | `float64` | 4 | Byte order applied, IEEE 754 |
 | `bool` | 1 bit | Coil/discrete only |
 | `string` | N (via `length` field) | ASCII, 2 chars per register, null-trimmed |
-| `timestamp_unix` | 2 | Decoded as uint32 epoch, stored as float64 |
+| `timestamp_unix` | 2 | Decoded as uint32 epoch, stored as float64. Included because it decodes as a simple uint32 — no vendor-specific logic needed. |
 
 ### Byte Orders
 
@@ -107,9 +109,23 @@ Final value: `(decoded_value * scale) + offset`
 
 ### String Handling
 
-- Stored in a separate `machine_metadata` table, not in `data_points`
-- Strings rarely change (serial numbers, model info)
-- Not used for alerts or charts
+String registers are stored in a `machine_metadata` table (not `data_points`), since they rarely change and aren't used for alerts or charts.
+
+```sql
+CREATE TABLE machine_metadata (
+    machine_id  UUID NOT NULL REFERENCES machines(id) ON DELETE CASCADE,
+    key         VARCHAR NOT NULL,       -- register name (e.g. "serial_number")
+    value       TEXT NOT NULL,
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (machine_id, key)
+);
+```
+
+On each read, upsert: `INSERT ... ON CONFLICT (machine_id, key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`. Only write if value has changed to avoid unnecessary DB churn.
+
+### `length` Field
+
+The `length` field on `RegisterConfig` is only required when `data_type` is `string`. For all numeric types, the register count is derived from the data type size. Validation should error if `data_type=string` and `length` is missing.
 
 ## Config Changes
 
@@ -254,7 +270,7 @@ func (r *Runner) RunMachine(ctx context.Context, machine ProvisionedMachine) {
             }
             consecutiveErrors = 0
             r.updateMachineStatus(ctx, machine.ID, "running")
-            r.writeDataPoints(ctx, machine.ID, values)
+            r.writeDataPoints(ctx, machine.ID, values)  // batch insert, replaces per-register writes
             r.alertEval.Evaluate(ctx, machine.ID, values)
         }
     }
