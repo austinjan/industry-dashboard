@@ -2,7 +2,8 @@
   "common": {
     "loading": "Loading...",
     "logout": "Logout",
-    "selectSite": "Select site"
+    "selectSite": "Select site",
+    "refresh": "Refresh"
   },
   "nav": {
     "siteOverview": "Site Overview",

@@ -2,7 +2,8 @@
   "common": {
     "loading": "กำลังโหลด...",
     "logout": "ออกจากระบบ",
-    "selectSite": "เลือกโรงงาน"
+    "selectSite": "เลือกโรงงาน",
+    "refresh": "รีเฟรช"
   },
   "nav": {
     "siteOverview": "ภาพรวมโรงงาน",

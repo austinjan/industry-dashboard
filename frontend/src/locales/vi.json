@@ -2,7 +2,8 @@
   "common": {
     "loading": "Đang tải...",
     "logout": "Đăng xuất",
-    "selectSite": "Chọn nhà máy"
+    "selectSite": "Chọn nhà máy",
+    "refresh": "Làm mới"
   },
   "nav": {
     "siteOverview": "Tổng quan nhà máy",
