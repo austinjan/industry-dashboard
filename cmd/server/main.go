@@ -294,11 +294,12 @@ func main() {
 						return
 					}
 					var u struct {
-						ID    string `json:"id"`
-						Email string `json:"email"`
-						Name  string `json:"name"`
+						ID     string  `json:"id"`
+						Email  string  `json:"email"`
+						Name   string  `json:"name"`
+						Locale *string `json:"locale"`
 					}
-					err = pool.QueryRow(r.Context(), "SELECT id, email, name FROM users WHERE id = $1", claims.UserID).Scan(&u.ID, &u.Email, &u.Name)
+					err = pool.QueryRow(r.Context(), "SELECT id, email, name, locale FROM users WHERE id = $1", claims.UserID).Scan(&u.ID, &u.Email, &u.Name, &u.Locale)
 					if err != nil {
 						http.Error(w, "user not found", http.StatusNotFound)
 						return
