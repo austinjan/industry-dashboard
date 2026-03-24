@@ -64,6 +64,7 @@ func main() {
 
 	userStore := user.NewStore(pool)
 	userHandler := user.NewHandler(userStore)
+	prefHandler := user.NewPreferenceHandler(userStore)
 
 	datapointStore := datapoint.NewStore(pool)
 	datapointHandler := datapoint.NewHandler(datapointStore)
@@ -348,6 +349,9 @@ func main() {
 		if authHandler != nil {
 			r.Get("/auth/me", authHandler.Me)
 		}
+
+		// User preferences (no RBAC — users update their own)
+		r.Patch("/me/preferences", prefHandler.UpdatePreferences)
 
 		// Sites
 		r.Route("/sites", func(r chi.Router) {
