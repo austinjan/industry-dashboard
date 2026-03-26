@@ -44,15 +44,16 @@ export function RegisterTable({ machineId, copyFromMachines }: RegisterTableProp
 
   const registers = data?.registers ?? data ?? [];
   const [rows, setRows] = useState<any[]>([]);
-  const [initialized, setInitialized] = useState(false);
+  const [dataKey, setDataKey] = useState<string>('');
   const [csvOpen, setCsvOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Initialize rows once data loads
-  if (!initialized && !isLoading && data) {
+  // Re-initialize rows whenever data changes (handles navigation back)
+  const currentKey = JSON.stringify(registers);
+  if (!isLoading && data && currentKey !== dataKey) {
     setRows(Array.isArray(registers) ? registers : []);
-    setInitialized(true);
+    setDataKey(currentKey);
   }
 
   const updateRow = (index: number, field: string, value: any) => {
