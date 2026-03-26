@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Building2, Cpu } from 'lucide-react';
+import { Building2, Cpu, FileCode } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSite } from '@/lib/site-context';
 import { useDashboards } from '@/lib/hooks';
@@ -51,6 +51,7 @@ export function Sidebar() {
       { to: '/admin/audit', label: t('nav.auditLog') },
       { to: '/admin/sites', label: t('nav.sitesAndMachines'), icon: Building2 },
       { to: '/admin/workers', label: t('nav.workers'), icon: Cpu },
+      { to: '/admin/worker-configs', label: t('nav.workerConfigs'), icon: FileCode },
     ]},
   ];
 

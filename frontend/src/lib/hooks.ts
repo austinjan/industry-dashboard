@@ -403,3 +403,70 @@ export function useSendWorkerCommand() {
     },
   });
 }
+
+// Worker Configs
+export function useWorkerConfigs() {
+  return useQuery({ queryKey: ['worker-configs'], queryFn: () => fetchJSON<any[]>('/worker-configs') });
+}
+export function useWorkerConfig(id: string | undefined) {
+  return useQuery({ queryKey: ['worker-config', id], queryFn: () => fetchJSON<any>(`/worker-configs/${id}`), enabled: !!id });
+}
+export function useCreateWorkerConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { name: string; site_id: string; poll_interval: string }) => mutateJSON('/worker-configs', { method: 'POST', body: JSON.stringify(data) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['worker-configs'] }),
+  });
+}
+export function useUpdateWorkerConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: string; name: string; site_id: string; poll_interval: string }) => mutateJSON(`/worker-configs/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['worker-configs'] }); qc.invalidateQueries({ queryKey: ['worker-config'] }); },
+  });
+}
+export function useDeleteWorkerConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => mutateJSON(`/worker-configs/${id}`, { method: 'DELETE' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['worker-configs'] }),
+  });
+}
+export function useSetConfigMachines() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ configId, machines }: { configId: string; machines: any[] }) => mutateJSON(`/worker-configs/${configId}/machines`, { method: 'PUT', body: JSON.stringify({ machines }) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['worker-config'] }),
+  });
+}
+export function useMachineRegisters(machineId: string | undefined) {
+  return useQuery({ queryKey: ['machine-registers', machineId], queryFn: () => fetchJSON<any>(`/machines/${machineId}/registers`), enabled: !!machineId });
+}
+export function useSetMachineRegisters() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ machineId, registers }: { machineId: string; registers: any[] }) => mutateJSON(`/machines/${machineId}/registers`, { method: 'PUT', body: JSON.stringify({ registers }) }),
+    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ['machine-registers', vars.machineId] }),
+  });
+}
+export function useImportRegistersCSV() {
+  return useMutation({
+    mutationFn: ({ machineId, csv }: { machineId: string; csv: string }) =>
+      apiFetch(`/machines/${machineId}/registers/import`, { method: 'POST', headers: { 'Content-Type': 'text/csv' }, body: csv })
+        .then(async r => { if (!r.ok) throw new Error(await r.text()); return r.json(); }),
+  });
+}
+export function useDownloadWorkerConfigYAML() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiFetch(`/worker-configs/${id}/yaml`);
+      if (!res.ok) throw new Error(await res.text());
+      const blob = await res.blob();
+      const filename = res.headers.get('content-disposition')?.match(/filename="(.+)"/)?.[1] || 'config.yaml';
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    },
+  });
+}
