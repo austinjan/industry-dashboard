@@ -62,19 +62,21 @@ func Provision(ctx context.Context, db *pgxpool.Pool, cfg *WorkerConfig) (*Provi
 		for _, machineCfg := range lineCfg.Machines {
 			// Build modbus_config JSONB matching the DB schema
 			type regEntry struct {
-				Address  int     `json:"address"`
-				Name     string  `json:"name"`
-				Type     string  `json:"type"`
-				DataType string  `json:"data_type"`
-				Scale    float64 `json:"scale"`
-				Offset   float64 `json:"offset"`
-				Unit     string  `json:"unit"`
+				Address  int        `json:"address"`
+				Name     string     `json:"name"`
+				Type     string     `json:"type"`
+				DataType string     `json:"data_type"`
+				Scale    float64    `json:"scale"`
+				Offset   float64    `json:"offset"`
+				Unit     string     `json:"unit"`
+				Fake     *FakeConfig `json:"fake,omitempty"`
 			}
 			regs := make([]regEntry, len(machineCfg.Registers))
 			for i, r := range machineCfg.Registers {
 				regs[i] = regEntry{
 					Address: r.Address, Name: r.Name, Type: r.DataType,
 					DataType: r.DataType, Scale: r.Scale, Offset: r.Offset, Unit: r.Unit,
+					Fake: r.Fake,
 				}
 			}
 			modbusConfig := map[string]interface{}{
