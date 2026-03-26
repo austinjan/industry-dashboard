@@ -22,6 +22,7 @@ import (
 	"github.com/industry-dashboard/server/internal/site"
 	"github.com/industry-dashboard/server/internal/user"
 	"github.com/industry-dashboard/server/internal/worker_api"
+	"github.com/industry-dashboard/server/internal/worker_config"
 )
 
 func main() {
@@ -76,6 +77,9 @@ func main() {
 	workerAPIStore := worker_api.NewStore(pool)
 	workerAPIHandler := worker_api.NewHandler(workerAPIStore)
 
+	workerConfigStore := worker_config.NewStore(pool)
+	workerConfigHandler := worker_config.NewHandler(workerConfigStore)
+
 	// OIDC client (optional — skip if Azure not configured)
 	var authHandler *auth.Handler
 	if cfg.AzureClientID != "" {
@@ -93,7 +97,7 @@ func main() {
 	r.Use(chiMiddleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
 	}))
@@ -406,6 +410,9 @@ func main() {
 			r.Get("/latest", datapointHandler.GetLatestValues)
 			r.With(rbacMW.Require("machine:edit", rbac.SiteFromQuery), auditMW.Log("machine", "update")).Put("/", siteHandler.UpdateMachine)
 			r.With(rbacMW.Require("machine:edit", rbac.SiteFromQuery), auditMW.Log("machine", "delete")).Delete("/", siteHandler.DeleteMachine)
+			r.With(rbacMW.Require("machine:edit", rbac.SiteFromQuery)).Get("/registers", siteHandler.GetRegisters)
+			r.With(rbacMW.Require("machine:edit", rbac.SiteFromQuery), auditMW.Log("machine", "set_registers")).Put("/registers", siteHandler.SetRegisters)
+			r.With(rbacMW.Require("machine:edit", rbac.SiteFromQuery)).Post("/registers/import", siteHandler.ImportRegistersCSV)
 		})
 
 		// Dashboards
@@ -437,6 +444,19 @@ func main() {
 
 		// Audit logs
 		r.With(rbacMW.Require("audit:view", rbac.SiteFromQuery)).Get("/audit-logs", auditHandler.List)
+
+		// Worker configs
+		r.Route("/worker-configs", func(r chi.Router) {
+			r.With(rbacMW.Require("workers:manage", globalScope)).Get("/", workerConfigHandler.ListConfigs)
+			r.With(rbacMW.Require("workers:manage", globalScope), auditMW.Log("worker_config", "create")).Post("/", workerConfigHandler.CreateConfig)
+			r.Route("/{configID}", func(r chi.Router) {
+				r.With(rbacMW.Require("workers:manage", globalScope)).Get("/", workerConfigHandler.GetConfig)
+				r.With(rbacMW.Require("workers:manage", globalScope), auditMW.Log("worker_config", "update")).Put("/", workerConfigHandler.UpdateConfig)
+				r.With(rbacMW.Require("workers:manage", globalScope), auditMW.Log("worker_config", "delete")).Delete("/", workerConfigHandler.DeleteConfig)
+				r.With(rbacMW.Require("workers:manage", globalScope), auditMW.Log("worker_config", "set_machines")).Put("/machines", workerConfigHandler.SetConfigMachines)
+				r.With(rbacMW.Require("workers:manage", globalScope)).Get("/yaml", workerConfigHandler.ExportYAML)
+			})
+		})
 
 		// Workers (global permission — no site scope)
 		r.Route("/workers", func(r chi.Router) {
