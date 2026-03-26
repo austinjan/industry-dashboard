@@ -367,6 +367,9 @@ func main() {
 		// Admin: all sites (global scope)
 		r.With(rbacMW.Require("site:manage", globalScope)).Get("/admin/sites", siteHandler.ListAllSites)
 
+		// Site-level machines (query param scoped)
+		r.With(rbacMW.Require("machine:view", rbac.SiteFromQuery)).Get("/site-machines", siteHandler.ListSiteMachines)
+
 		// Sites
 		r.Route("/sites", func(r chi.Router) {
 			r.With(rbacMW.Require("machine:view", rbac.SiteFromQuery)).Get("/", siteHandler.ListSites)
@@ -394,10 +397,16 @@ func main() {
 		r.Route("/alerts", func(r chi.Router) {
 			r.With(rbacMW.Require("alert:view", rbac.SiteFromQuery)).Get("/", alertHandler.ListAlerts)
 			r.With(rbacMW.Require("alert:create", rbac.SiteFromQuery), auditMW.Log("alert", "create")).Post("/", alertHandler.CreateAlert)
+			r.With(rbacMW.Require("alert:manage", rbac.SiteFromQuery), auditMW.Log("alert", "bulk_action")).Post("/bulk-action", alertHandler.BulkAlertAction)
+			r.Route("/{alertID}", func(r chi.Router) {
+				r.With(rbacMW.Require("alert:manage", rbac.SiteFromQuery), auditMW.Log("alert", "update")).Put("/", alertHandler.UpdateAlert)
+				r.With(rbacMW.Require("alert:manage", rbac.SiteFromQuery), auditMW.Log("alert", "delete")).Delete("/", alertHandler.DeleteAlert)
+			})
 		})
 		r.Route("/alert-events", func(r chi.Router) {
 			r.With(rbacMW.Require("alert:view", rbac.SiteFromQuery)).Get("/", alertHandler.ListAlertEvents)
 			r.With(rbacMW.Require("alert:acknowledge", rbac.SiteFromQuery), auditMW.Log("alert_event", "acknowledge")).Post("/{eventID}/acknowledge", alertHandler.AcknowledgeAlertEvent)
+			r.With(rbacMW.Require("alert:acknowledge", rbac.SiteFromQuery), auditMW.Log("alert_event", "acknowledge_info")).Post("/acknowledge-info", alertHandler.AcknowledgeInfoEvents)
 		})
 
 		// Users (admin)
@@ -413,6 +422,7 @@ func main() {
 			r.With(rbacMW.Require("machine:edit", globalScope)).Get("/registers", siteHandler.GetRegisters)
 			r.With(rbacMW.Require("machine:edit", globalScope), auditMW.Log("machine", "set_registers")).Put("/registers", siteHandler.SetRegisters)
 			r.With(rbacMW.Require("machine:edit", globalScope)).Post("/registers/import", siteHandler.ImportRegistersCSV)
+			r.Get("/register-metrics", siteHandler.GetRegisterMetrics)
 		})
 
 		// Dashboards

@@ -410,6 +410,31 @@ func (h *Handler) SetRegisters(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"registers": body.Registers})
 }
 
+func (h *Handler) ListSiteMachines(w http.ResponseWriter, r *http.Request) {
+	siteID := r.URL.Query().Get("site_id")
+	if siteID == "" {
+		http.Error(w, "site_id is required", http.StatusBadRequest)
+		return
+	}
+	machines, err := h.store.ListMachinesBySite(r.Context(), siteID)
+	if err != nil {
+		http.Error(w, "failed to list machines", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(machines)
+}
+
+func (h *Handler) GetRegisterMetrics(w http.ResponseWriter, r *http.Request) {
+	machineID := chi.URLParam(r, "machineID")
+	metrics, err := h.store.ListMachineRegisterMetrics(r.Context(), machineID)
+	if err != nil {
+		metrics = []RegisterMetric{}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(metrics)
+}
+
 func (h *Handler) ImportRegistersCSV(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
