@@ -35,7 +35,8 @@ export function RegisterTable({ machineId }: RegisterTableProps) {
   const { data, isLoading } = useMachineRegisters(machineId);
   const setRegisters = useSetMachineRegisters();
 
-  const [rows, setRows] = useState<any[]>(() => data ?? []);
+  const registers = data?.registers ?? data ?? [];
+  const [rows, setRows] = useState<any[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -43,7 +44,7 @@ export function RegisterTable({ machineId }: RegisterTableProps) {
 
   // Initialize rows once data loads
   if (!initialized && !isLoading && data) {
-    setRows(data);
+    setRows(Array.isArray(registers) ? registers : []);
     setInitialized(true);
   }
 
