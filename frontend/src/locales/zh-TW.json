@@ -200,7 +200,14 @@
     "basicSettings": "基本設定",
     "yamlPreview": "YAML 預覽",
     "copyToClipboard": "複製",
-    "copied": "已複製！"
+    "copied": "已複製！",
+    "simulated": "模擬中",
+    "siteLabel": "站點",
+    "noLinesConfigured": "尚未配置產線。",
+    "noRegisters": "尚未配置暫存器。",
+    "registers": "暫存器",
+    "connection": "連線資訊",
+    "timeout": "逾時"
   },
   "topnav": {
     "title": "工業監控儀表板",

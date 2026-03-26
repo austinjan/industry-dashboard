@@ -201,7 +201,14 @@
     "yamlPreview": "YAML Preview",
     "copyToClipboard": "Copy",
     "copied": "Copied!",
-    "copyFrom": "Copy from..."
+    "copyFrom": "Copy from...",
+    "simulated": "Simulated",
+    "siteLabel": "Site",
+    "noLinesConfigured": "No production lines configured.",
+    "noRegisters": "No registers configured.",
+    "registers": "Registers",
+    "connection": "Connection",
+    "timeout": "Timeout"
   },
   "topnav": {
     "title": "Industry Dashboard",

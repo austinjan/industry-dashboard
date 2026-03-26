@@ -200,7 +200,14 @@
     "basicSettings": "Cài đặt cơ bản",
     "yamlPreview": "Xem trước YAML",
     "copyToClipboard": "Sao chép",
-    "copied": "Đã sao chép!"
+    "copied": "Đã sao chép!",
+    "simulated": "Mô phỏng",
+    "siteLabel": "Nhà máy",
+    "noLinesConfigured": "Chưa cấu hình dây chuyền sản xuất.",
+    "noRegisters": "Chưa cấu hình thanh ghi.",
+    "registers": "Thanh ghi",
+    "connection": "Kết nối",
+    "timeout": "Thời gian chờ"
   },
   "topnav": {
     "title": "Bảng điều khiển công nghiệp",

@@ -200,7 +200,14 @@
     "basicSettings": "การตั้งค่าพื้นฐาน",
     "yamlPreview": "ตัวอย่าง YAML",
     "copyToClipboard": "คัดลอก",
-    "copied": "คัดลอกแล้ว!"
+    "copied": "คัดลอกแล้ว!",
+    "simulated": "จำลอง",
+    "siteLabel": "ไซต์",
+    "noLinesConfigured": "ยังไม่ได้กำหนดค่าสายการผลิต",
+    "noRegisters": "ยังไม่ได้กำหนดค่ารีจิสเตอร์",
+    "registers": "รีจิสเตอร์",
+    "connection": "การเชื่อมต่อ",
+    "timeout": "หมดเวลา"
   },
   "topnav": {
     "title": "แดชบอร์ดอุตสาหกรรม",
