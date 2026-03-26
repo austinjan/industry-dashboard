@@ -26,7 +26,7 @@ function timeAgo(dateStr: string): string {
 }
 
 function formatNanoseconds(ns: number | null | undefined): string {
-  if (!ns) return '—';
+  if (ns == null) return '—';
   const ms = ns / 1_000_000;
   if (ms < 1000) return `${ms}ms`;
   const s = ms / 1000;
@@ -179,7 +179,7 @@ export function WorkerDetail({ workerId }: WorkerDetailProps) {
                         return (
                           <div
                             key={machineKey}
-                            className="bg-slate-800 rounded-lg p-3 min-w-[220px] max-w-[320px]"
+                            className={`bg-slate-800 rounded-lg p-3 min-w-[220px] ${isExpanded ? '' : 'max-w-[320px]'}`}
                           >
                             {/* Machine header */}
                             <div className="flex items-start justify-between">
