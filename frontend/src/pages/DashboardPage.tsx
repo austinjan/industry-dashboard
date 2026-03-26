@@ -1,15 +1,23 @@
 import { useTranslation } from 'react-i18next';
+import { RefreshCw } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useSite } from '@/lib/site-context';
 import { useSiteSummary, useSiteLines, useAlertEvents } from '@/lib/hooks';
 
 export function DashboardPage() {
   const { t } = useTranslation();
   const { currentSite } = useSite();
+  const queryClient = useQueryClient();
   const { data: summary } = useSiteSummary(currentSite?.id);
   const { data: lines } = useSiteLines(currentSite?.id);
   const { data: alertEvents } = useAlertEvents(currentSite?.id, { limit: '5' });
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries();
+  };
 
   if (!currentSite) {
     return <div className="text-slate-500">{t('common.selectSite')}</div>;
@@ -17,7 +25,13 @@ export function DashboardPage() {
 
   return (
     <div>
-      <h2 className="mb-4 text-xl font-bold">{t('dashboard.overview', { siteName: currentSite.name })}</h2>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-xl font-bold">{t('dashboard.overview', { siteName: currentSite.name })}</h2>
+        <Button size="sm" variant="outline" onClick={handleRefresh}>
+          <RefreshCw className="h-4 w-4 mr-1" />
+          {t('common.refresh')}
+        </Button>
+      </div>
       <div className="mb-6 grid grid-cols-4 gap-4">
         <Card className="p-4">
           <p className="text-sm text-slate-500">{t('dashboard.machinesOnline')}</p>

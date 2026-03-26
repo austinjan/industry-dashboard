@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Building2, Cpu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSite } from '@/lib/site-context';
 import { useDashboards } from '@/lib/hooks';
 
-function NavGroup({ label, items }: { label: string; items: { to: string; label: string }[] }) {
+function NavGroup({ label, items }: { label: string; items: { to: string; label: string; icon?: React.ElementType }[] }) {
   return (
     <div className="mb-4">
       <p className="mb-1 text-xs font-semibold uppercase text-slate-400">{label}</p>
@@ -14,11 +15,12 @@ function NavGroup({ label, items }: { label: string; items: { to: string; label:
           to={item.to}
           className={({ isActive }) =>
             cn(
-              'block rounded-md px-3 py-1.5 text-sm',
+              'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm',
               isActive ? 'bg-blue-500 text-white' : 'text-slate-600 hover:bg-slate-100'
             )
           }
         >
+          {item.icon && <item.icon className="h-4 w-4" />}
           {item.label}
         </NavLink>
       ))}
@@ -47,6 +49,8 @@ export function Sidebar() {
       { to: '/admin/users', label: t('nav.userManagement') },
       { to: '/admin/roles', label: t('nav.rbacSettings') },
       { to: '/admin/audit', label: t('nav.auditLog') },
+      { to: '/admin/sites', label: t('nav.sitesAndMachines'), icon: Building2 },
+      { to: '/admin/workers', label: t('nav.workers'), icon: Cpu },
     ]},
   ];
 

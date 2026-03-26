@@ -3,6 +3,9 @@ import { ReactGridLayout, WidthProvider } from 'react-grid-layout/legacy';
 import type { Layout } from 'react-grid-layout/legacy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import { RefreshCw } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { WidgetRenderer } from '@/components/widgets/WidgetRenderer';
 import { useDashboard } from '@/lib/hooks';
@@ -10,6 +13,8 @@ import { useDashboard } from '@/lib/hooks';
 const GridLayout = WidthProvider(ReactGridLayout);
 
 export function DashboardViewPage() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const { id } = useParams<{ id: string }>();
   const { data: dashboard, isLoading } = useDashboard(id);
 
@@ -28,11 +33,17 @@ export function DashboardViewPage() {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-bold">{dashboard.title}</h2>
-        {dashboard.access_level === 'edit' && (
-          <Link to={`/dashboards/${id}/edit`}>
-            <Button size="sm" variant="outline">Edit</Button>
-          </Link>
-        )}
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => queryClient.invalidateQueries()}>
+            <RefreshCw className="h-4 w-4 mr-1" />
+            {t('common.refresh')}
+          </Button>
+          {dashboard.access_level === 'edit' && (
+            <Link to={`/dashboards/${id}/edit`}>
+              <Button size="sm" variant="outline">Edit</Button>
+            </Link>
+          )}
+        </div>
       </div>
       {dashboard.widgets && dashboard.widgets.length > 0 ? (
         <GridLayout
