@@ -410,9 +410,9 @@ func main() {
 			r.Get("/latest", datapointHandler.GetLatestValues)
 			r.With(rbacMW.Require("machine:edit", rbac.SiteFromQuery), auditMW.Log("machine", "update")).Put("/", siteHandler.UpdateMachine)
 			r.With(rbacMW.Require("machine:edit", rbac.SiteFromQuery), auditMW.Log("machine", "delete")).Delete("/", siteHandler.DeleteMachine)
-			r.With(rbacMW.Require("machine:edit", rbac.SiteFromQuery)).Get("/registers", siteHandler.GetRegisters)
-			r.With(rbacMW.Require("machine:edit", rbac.SiteFromQuery), auditMW.Log("machine", "set_registers")).Put("/registers", siteHandler.SetRegisters)
-			r.With(rbacMW.Require("machine:edit", rbac.SiteFromQuery)).Post("/registers/import", siteHandler.ImportRegistersCSV)
+			r.With(rbacMW.Require("machine:edit", globalScope)).Get("/registers", siteHandler.GetRegisters)
+			r.With(rbacMW.Require("machine:edit", globalScope), auditMW.Log("machine", "set_registers")).Put("/registers", siteHandler.SetRegisters)
+			r.With(rbacMW.Require("machine:edit", globalScope)).Post("/registers/import", siteHandler.ImportRegistersCSV)
 		})
 
 		// Dashboards
