@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { useWorkerDetail, useWorkerConfig } from '@/lib/hooks';
+import { useWorkerDetail, useWorkerRunningConfig } from '@/lib/hooks';
 
 interface WorkerDetailProps {
   workerId: string;
@@ -24,6 +23,15 @@ function timeAgo(dateStr: string): string {
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
+}
+
+function formatNanoseconds(ns: number | null | undefined): string {
+  if (!ns) return '—';
+  const ms = ns / 1_000_000;
+  if (ms < 1000) return `${ms}ms`;
+  const s = ms / 1000;
+  if (Number.isInteger(s)) return `${s}s`;
+  return `${parseFloat(s.toFixed(1))}s`;
 }
 
 const machineStatusDot: Record<string, string> = {
@@ -49,8 +57,17 @@ const commandStatusKey: Record<string, string> = {
 export function WorkerDetail({ workerId }: WorkerDetailProps) {
   const { t } = useTranslation();
   const { data, isLoading } = useWorkerDetail(workerId);
-  const { data: configData } = useWorkerConfig(workerId);
-  const [showConfig, setShowConfig] = useState(false);
+  const { data: configData } = useWorkerRunningConfig(workerId);
+  const [expandedMachines, setExpandedMachines] = useState<Set<string>>(new Set());
+
+  const toggleMachine = (key: string) => {
+    setExpandedMachines((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   if (isLoading || !data) {
     return (
@@ -126,24 +143,145 @@ export function WorkerDetail({ workerId }: WorkerDetailProps) {
 
       {/* Running Config */}
       {configData && (
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <p className="text-xs text-muted-foreground">{t('admin.runningConfig')}</p>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-xs"
-              onClick={() => setShowConfig(!showConfig)}
-            >
-              {showConfig ? t('admin.hideConfig') : t('admin.showConfig')}
-            </Button>
+        <div className="space-y-4">
+          <p className="text-xs text-muted-foreground">{t('admin.runningConfig')}</p>
+
+          {/* Config Summary Bar */}
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { label: t('admin.pollInterval'), value: formatNanoseconds(configData.poll_interval) },
+              { label: t('admin.siteLabel'), value: configData.site_name ?? '—' },
+              { label: t('admin.timezone'), value: configData.timezone ?? '—' },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="text-sm font-medium mt-0.5">{value}</p>
+              </div>
+            ))}
           </div>
-          {showConfig && (
-            <div className="bg-slate-950 rounded p-3 overflow-auto max-h-96">
-              <pre className="text-xs text-slate-300 font-mono whitespace-pre-wrap break-all">
-                {JSON.stringify(configData, null, 2)}
-              </pre>
-            </div>
+
+          {/* Production Lines */}
+          {(!configData.lines || configData.lines.length === 0) ? (
+            <p className="text-xs text-muted-foreground">{t('admin.noLinesConfigured')}</p>
+          ) : (
+            [...configData.lines]
+              .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
+              .map((line: any) => (
+                <div key={line.name}>
+                  <p className="text-sm font-semibold mb-2">{line.name}</p>
+                  {(!line.machines || line.machines.length === 0) ? (
+                    <p className="text-xs text-muted-foreground">{t('admin.noMachines')}</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-3">
+                      {line.machines.map((machine: any) => {
+                        const machineKey = `${line.name}::${machine.name}`;
+                        const isExpanded = expandedMachines.has(machineKey);
+                        return (
+                          <div
+                            key={machineKey}
+                            className="bg-slate-800 rounded-lg p-3 min-w-[220px] max-w-[320px]"
+                          >
+                            {/* Machine header */}
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <p className="text-sm font-semibold">{machine.name}</p>
+                                {machine.model && (
+                                  <p className="text-xs text-muted-foreground">{machine.model}</p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => toggleMachine(machineKey)}
+                                aria-expanded={isExpanded}
+                                className="text-muted-foreground hover:text-slate-200 transition-transform p-1"
+                              >
+                                <svg
+                                  className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </button>
+                            </div>
+
+                            {/* Register badges */}
+                            {(!machine.registers || machine.registers.length === 0) ? (
+                              <p className="text-xs text-muted-foreground mt-2">{t('admin.noRegisters')}</p>
+                            ) : (
+                              <div className="flex flex-wrap gap-1.5 mt-2">
+                                {machine.registers.map((reg: any) => (
+                                  <span key={reg.name} className="flex items-center gap-1">
+                                    <Badge variant="secondary" className="text-xs">
+                                      {reg.name}
+                                    </Badge>
+                                    {reg.fake && (
+                                      <Badge className="text-[10px] bg-amber-500/20 text-amber-500 hover:bg-amber-500/20">
+                                        {t('admin.simulated')}
+                                      </Badge>
+                                    )}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Expanded technical details */}
+                            {isExpanded && (
+                              <div className="mt-3 pt-3 border-t border-slate-700 space-y-3">
+                                {/* Connection */}
+                                {machine.connection && (
+                                  <div>
+                                    <p className="text-xs text-muted-foreground mb-1">{t('admin.connection')}</p>
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                      <span className="text-muted-foreground">{t('admin.hostAddress')}</span>
+                                      <span>{machine.connection.host}</span>
+                                      <span className="text-muted-foreground">{t('admin.portLabel')}</span>
+                                      <span>{machine.connection.port}</span>
+                                      <span className="text-muted-foreground">{t('admin.slaveIdLabel')}</span>
+                                      <span>{machine.connection.slave_id}</span>
+                                      <span className="text-muted-foreground">{t('admin.timeout')}</span>
+                                      <span>{formatNanoseconds(machine.connection.timeout)}</span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Registers table */}
+                                {machine.registers && machine.registers.length > 0 && (
+                                  <div>
+                                    <p className="text-xs text-muted-foreground mb-1">{t('admin.registers')}</p>
+                                    <table className="w-full text-xs">
+                                      <thead>
+                                        <tr className="text-muted-foreground">
+                                          <th className="text-left font-normal pr-2">{t('admin.registerName')}</th>
+                                          <th className="text-left font-normal pr-2">{t('admin.registerType')}</th>
+                                          <th className="text-left font-normal pr-2">{t('admin.registerAddress')}</th>
+                                          <th className="text-left font-normal pr-2">{t('admin.registerDataType')}</th>
+                                          <th className="text-left font-normal pr-2">{t('admin.registerByteOrder')}</th>
+                                          <th className="text-left font-normal">{t('admin.registerScale')}</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {machine.registers.map((reg: any) => (
+                                          <tr key={reg.name}>
+                                            <td className="pr-2">{reg.name}</td>
+                                            <td className="pr-2">{reg.type}</td>
+                                            <td className="pr-2">{reg.address}</td>
+                                            <td className="pr-2">{reg.data_type}</td>
+                                            <td className="pr-2">{reg.byte_order}</td>
+                                            <td>{reg.scale}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))
           )}
         </div>
       )}
