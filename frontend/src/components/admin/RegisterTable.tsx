@@ -261,10 +261,11 @@ export function RegisterTable({ machineId, copyFromMachines }: RegisterTableProp
                 <td className="px-2 py-1">
                   {row.fake && (
                     <Input
-                      className="h-7 text-xs w-16"
-                      type="number"
-                      value={row.fake.min}
-                      onChange={e => updateRow(i, 'fake', { ...row.fake, min: parseFloat(e.target.value) || 0 })}
+                      className="h-7 text-xs w-24"
+                      type="text"
+                      inputMode="decimal"
+                      defaultValue={row.fake.min}
+                      onBlur={e => updateRow(i, 'fake', { ...row.fake, min: parseFloat(e.target.value) || 0 })}
                     />
                   )}
                 </td>
@@ -272,9 +273,10 @@ export function RegisterTable({ machineId, copyFromMachines }: RegisterTableProp
                   {row.fake && (
                     <Input
                       className="h-7 text-xs w-16"
-                      type="number"
-                      value={row.fake.max}
-                      onChange={e => updateRow(i, 'fake', { ...row.fake, max: parseFloat(e.target.value) || 0 })}
+                      type="text"
+                      inputMode="decimal"
+                      defaultValue={row.fake.max}
+                      onBlur={e => updateRow(i, 'fake', { ...row.fake, max: parseFloat(e.target.value) || 0 })}
                     />
                   )}
                 </td>
