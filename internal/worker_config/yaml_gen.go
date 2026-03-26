@@ -9,14 +9,21 @@ import (
 
 // register mirrors site.Register for JSONB parsing (avoids import cycle).
 type register struct {
-	Name      string  `json:"name"`
-	Address   int     `json:"address"`
-	Type      string  `json:"type"`
-	DataType  string  `json:"data_type"`
-	Unit      string  `json:"unit"`
-	Scale     float64 `json:"scale"`
-	Offset    float64 `json:"offset"`
-	ByteOrder string  `json:"byte_order"`
+	Name      string      `json:"name"`
+	Address   int         `json:"address"`
+	Type      string      `json:"type"`
+	DataType  string      `json:"data_type"`
+	Unit      string      `json:"unit"`
+	Scale     float64     `json:"scale"`
+	Offset    float64     `json:"offset"`
+	ByteOrder string      `json:"byte_order"`
+	Fake      *fakeConfig `json:"fake,omitempty"`
+}
+
+type fakeConfig struct {
+	Min     float64 `json:"min"`
+	Max     float64 `json:"max"`
+	Pattern string  `json:"pattern"`
 }
 
 type yamlConfig struct {
@@ -48,14 +55,21 @@ type yamlConnection struct {
 }
 
 type yamlRegister struct {
-	Name      string  `yaml:"name"`
-	Address   int     `yaml:"address"`
-	Type      string  `yaml:"type,omitempty"`
-	DataType  string  `yaml:"data_type,omitempty"`
-	Unit      string  `yaml:"unit,omitempty"`
-	Scale     float64 `yaml:"scale,omitempty"`
-	Offset    float64 `yaml:"offset,omitempty"`
-	ByteOrder string  `yaml:"byte_order,omitempty"`
+	Name      string    `yaml:"name"`
+	Address   int       `yaml:"address"`
+	Type      string    `yaml:"type,omitempty"`
+	DataType  string    `yaml:"data_type,omitempty"`
+	Unit      string    `yaml:"unit,omitempty"`
+	Scale     float64   `yaml:"scale,omitempty"`
+	Offset    float64   `yaml:"offset,omitempty"`
+	ByteOrder string    `yaml:"byte_order,omitempty"`
+	Fake      *yamlFake `yaml:"fake,omitempty"`
+}
+
+type yamlFake struct {
+	Min     float64 `yaml:"min"`
+	Max     float64 `yaml:"max"`
+	Pattern string  `yaml:"pattern"`
 }
 
 // GenerateYAML builds a YAML config for the given worker config ID.
@@ -126,6 +140,13 @@ func (s *Store) GenerateYAML(ctx context.Context, configID string) ([]byte, stri
 			}
 			if reg.ByteOrder != "" && reg.ByteOrder != "big" {
 				yr.ByteOrder = reg.ByteOrder
+			}
+			if reg.Fake != nil {
+				yr.Fake = &yamlFake{
+					Min:     reg.Fake.Min,
+					Max:     reg.Fake.Max,
+					Pattern: reg.Fake.Pattern,
+				}
 			}
 			yamlRegs = append(yamlRegs, yr)
 		}

@@ -282,14 +282,22 @@ func (s *Store) DeleteMachine(ctx context.Context, id string) error {
 
 // Register represents a single Modbus register definition.
 type Register struct {
-	Name      string  `json:"name"`
-	Address   int     `json:"address"`
-	Type      string  `json:"type"`
-	DataType  string  `json:"data_type"`
-	Unit      string  `json:"unit"`
-	Scale     float64 `json:"scale"`
-	Offset    float64 `json:"offset"`
-	ByteOrder string  `json:"byte_order"`
+	Name      string       `json:"name"`
+	Address   int          `json:"address"`
+	Type      string       `json:"type"`
+	DataType  string       `json:"data_type"`
+	Unit      string       `json:"unit"`
+	Scale     float64      `json:"scale"`
+	Offset    float64      `json:"offset"`
+	ByteOrder string       `json:"byte_order"`
+	Fake      *FakeConfig  `json:"fake,omitempty"`
+}
+
+// FakeConfig defines fake data generation parameters for testing.
+type FakeConfig struct {
+	Min     float64 `json:"min"`
+	Max     float64 `json:"max"`
+	Pattern string  `json:"pattern"`
 }
 
 // GetMachineRegisters returns the registers array from a machine's modbus_config.

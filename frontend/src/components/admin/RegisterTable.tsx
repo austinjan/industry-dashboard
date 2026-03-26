@@ -14,6 +14,7 @@ interface RegisterTableProps {
 const TYPE_OPTIONS = ['holding', 'input', 'coil', 'discrete'];
 const DATA_TYPE_OPTIONS = ['uint16', 'int16', 'uint32', 'int32', 'float32', 'float64', 'bool', 'string', 'timestamp_unix'];
 const BYTE_ORDER_OPTIONS = ['big', 'little', 'mid-big', 'mid-little'];
+const FAKE_PATTERN_OPTIONS = ['', 'random', 'sine', 'drift', 'monotonic', 'spike'];
 
 function newRow() {
   return {
@@ -25,6 +26,7 @@ function newRow() {
     scale: 1.0,
     offset: 0,
     byte_order: 'big',
+    fake: null as { min: number; max: number; pattern: string } | null,
   };
 }
 
@@ -120,13 +122,17 @@ export function RegisterTable({ machineId }: RegisterTableProps) {
               <th className="px-2 py-2 text-left font-medium text-xs text-muted-foreground whitespace-nowrap">{t('admin.registerScale')}</th>
               <th className="px-2 py-2 text-left font-medium text-xs text-muted-foreground whitespace-nowrap">{t('admin.registerOffset')}</th>
               <th className="px-2 py-2 text-left font-medium text-xs text-muted-foreground whitespace-nowrap">{t('admin.registerByteOrder')}</th>
+              <th className="px-2 py-2 text-left font-medium text-xs text-muted-foreground whitespace-nowrap">Fake</th>
+              <th className="px-2 py-2 text-left font-medium text-xs text-muted-foreground whitespace-nowrap">Min</th>
+              <th className="px-2 py-2 text-left font-medium text-xs text-muted-foreground whitespace-nowrap">Max</th>
+              <th className="px-2 py-2 text-left font-medium text-xs text-muted-foreground whitespace-nowrap">Pattern</th>
               <th className="px-2 py-2 w-8"></th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-3 py-4 text-center text-sm text-muted-foreground">
+                <td colSpan={13} className="px-3 py-4 text-center text-sm text-muted-foreground">
                   {t('admin.noMachines')}
                 </td>
               </tr>
@@ -201,6 +207,51 @@ export function RegisterTable({ machineId }: RegisterTableProps) {
                   >
                     {BYTE_ORDER_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
+                </td>
+                <td className="px-2 py-1">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={!!row.fake}
+                    onChange={e => {
+                      if (e.target.checked) {
+                        updateRow(i, 'fake', { min: 0, max: 100, pattern: 'random' });
+                      } else {
+                        updateRow(i, 'fake', null);
+                      }
+                    }}
+                  />
+                </td>
+                <td className="px-2 py-1">
+                  {row.fake && (
+                    <Input
+                      className="h-7 text-xs w-16"
+                      type="number"
+                      value={row.fake.min}
+                      onChange={e => updateRow(i, 'fake', { ...row.fake, min: parseFloat(e.target.value) || 0 })}
+                    />
+                  )}
+                </td>
+                <td className="px-2 py-1">
+                  {row.fake && (
+                    <Input
+                      className="h-7 text-xs w-16"
+                      type="number"
+                      value={row.fake.max}
+                      onChange={e => updateRow(i, 'fake', { ...row.fake, max: parseFloat(e.target.value) || 0 })}
+                    />
+                  )}
+                </td>
+                <td className="px-2 py-1">
+                  {row.fake && (
+                    <select
+                      className="h-7 rounded border border-input bg-background px-2 text-xs"
+                      value={row.fake.pattern}
+                      onChange={e => updateRow(i, 'fake', { ...row.fake, pattern: e.target.value })}
+                    >
+                      {FAKE_PATTERN_OPTIONS.filter(Boolean).map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  )}
                 </td>
                 <td className="px-2 py-1">
                   <button
