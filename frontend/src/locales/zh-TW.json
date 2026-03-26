@@ -64,6 +64,7 @@
     "severity": "嚴重等級",
     "alert": "警報",
     "machine": "機台",
+    "reading": "讀數",
     "triggered": "觸發時間",
     "status": "狀態",
     "acknowledge": "確認",

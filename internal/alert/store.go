@@ -34,8 +34,12 @@ type AlertEvent struct {
 	AlertID        string     `json:"alert_id"`
 	AlertName      string     `json:"alert_name"`
 	MachineName    string     `json:"machine_name"`
+	MetricName     string     `json:"metric_name"`
+	Condition      string     `json:"condition"`
+	Threshold      float64    `json:"threshold"`
 	Severity       string     `json:"severity"`
 	TriggeredAt    time.Time  `json:"triggered_at"`
+	TriggeredValue *float64   `json:"triggered_value"`
 	ResolvedAt     *time.Time `json:"resolved_at"`
 	AcknowledgedBy *string    `json:"acknowledged_by"`
 }
@@ -67,7 +71,7 @@ func (s *Store) ListAlertEvents(ctx context.Context, siteID string, severity str
 	if limit == 0 {
 		limit = 50
 	}
-	query := `SELECT ae.id, ae.alert_id, a.name, m.name, a.severity, ae.triggered_at, ae.resolved_at, ae.acknowledged_by
+	query := `SELECT ae.id, ae.alert_id, a.name, m.name, a.metric_name, a.condition, a.threshold, a.severity, ae.triggered_at, ae.triggered_value, ae.resolved_at, ae.acknowledged_by
 		FROM alert_events ae
 		JOIN alerts a ON ae.alert_id = a.id
 		JOIN machines m ON a.machine_id = m.id
@@ -90,7 +94,7 @@ func (s *Store) ListAlertEvents(ctx context.Context, siteID string, severity str
 	var events []AlertEvent
 	for rows.Next() {
 		var e AlertEvent
-		if err := rows.Scan(&e.ID, &e.AlertID, &e.AlertName, &e.MachineName, &e.Severity, &e.TriggeredAt, &e.ResolvedAt, &e.AcknowledgedBy); err != nil {
+		if err := rows.Scan(&e.ID, &e.AlertID, &e.AlertName, &e.MachineName, &e.MetricName, &e.Condition, &e.Threshold, &e.Severity, &e.TriggeredAt, &e.TriggeredValue, &e.ResolvedAt, &e.AcknowledgedBy); err != nil {
 			return nil, err
 		}
 		events = append(events, e)

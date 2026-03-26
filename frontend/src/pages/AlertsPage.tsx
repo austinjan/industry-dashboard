@@ -70,6 +70,7 @@ export function AlertsPage() {
               <TableHead>{t('alerts.severity')}</TableHead>
               <TableHead>{t('alerts.alert')}</TableHead>
               <TableHead>{t('alerts.machine')}</TableHead>
+              <TableHead>{t('alerts.reading')}</TableHead>
               <TableHead>{t('alerts.triggered')}</TableHead>
               <TableHead>{t('alerts.status')}</TableHead>
               <TableHead></TableHead>
@@ -77,16 +78,25 @@ export function AlertsPage() {
           </TableHeader>
           <TableBody>
             {isLoading && (
-              <TableRow><TableCell colSpan={6} className="text-center text-slate-400">{t('common.loading')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center text-slate-400">{t('common.loading')}</TableCell></TableRow>
             )}
             {events && events.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="text-center text-slate-400">{t('alerts.noAlerts')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center text-slate-400">{t('alerts.noAlerts')}</TableCell></TableRow>
             )}
             {events?.map((e: any) => (
               <TableRow key={e.id}>
                 <TableCell>{severityBadge(e.severity)}</TableCell>
                 <TableCell className="font-medium">{e.alert_name}</TableCell>
                 <TableCell>{e.machine_name}</TableCell>
+                <TableCell>
+                  <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                    {e.triggered_value != null
+                      ? e.condition === '==' && (e.threshold === 0 || e.threshold === 1)
+                        ? `${e.metric_name} = ${e.triggered_value === 1 ? 'ON' : 'OFF'}`
+                        : `${e.triggered_value} ${e.condition} ${e.threshold}`
+                      : `${e.metric_name} ${e.condition} ${e.threshold}`}
+                  </code>
+                </TableCell>
                 <TableCell className="text-sm text-slate-500">{new Date(e.triggered_at).toLocaleString()}</TableCell>
                 <TableCell>
                   {e.resolved_at ? (

@@ -64,6 +64,7 @@
     "severity": "Mức độ",
     "alert": "Cảnh báo",
     "machine": "Máy",
+    "reading": "Giá trị đọc",
     "triggered": "Thời gian",
     "status": "Trạng thái",
     "acknowledge": "Xác nhận",

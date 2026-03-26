@@ -64,6 +64,7 @@
     "severity": "Severity",
     "alert": "Alert",
     "machine": "Machine",
+    "reading": "Reading",
     "triggered": "Triggered",
     "status": "Status",
     "acknowledge": "Acknowledge",
