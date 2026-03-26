@@ -167,8 +167,6 @@
     "portLabel": "Port",
     "slaveIdLabel": "Slave ID",
     "runningConfig": "Running Config",
-    "showConfig": "Show Config",
-    "hideConfig": "Hide Config",
     "workerConfigs": "Worker Configs",
     "addWorkerConfig": "Add Config",
     "editWorkerConfig": "Edit Config",

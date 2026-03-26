@@ -167,8 +167,6 @@
     "portLabel": "พอร์ต",
     "slaveIdLabel": "Slave ID",
     "runningConfig": "การกำหนดค่าที่ทำงาน",
-    "showConfig": "แสดงการกำหนดค่า",
-    "hideConfig": "ซ่อนการกำหนดค่า",
     "workerConfigs": "การตั้งค่าตัวเก็บข้อมูล",
     "addWorkerConfig": "เพิ่มการตั้งค่า",
     "editWorkerConfig": "แก้ไขการตั้งค่า",

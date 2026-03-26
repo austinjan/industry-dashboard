@@ -167,8 +167,6 @@
     "portLabel": "連接埠",
     "slaveIdLabel": "Slave ID",
     "runningConfig": "執行中配置",
-    "showConfig": "顯示配置",
-    "hideConfig": "隱藏配置",
     "workerConfigs": "採集器配置",
     "addWorkerConfig": "新增配置",
     "editWorkerConfig": "編輯配置",

@@ -167,8 +167,6 @@
     "portLabel": "Cổng",
     "slaveIdLabel": "Slave ID",
     "runningConfig": "Cấu hình đang chạy",
-    "showConfig": "Hiện cấu hình",
-    "hideConfig": "Ẩn cấu hình",
     "workerConfigs": "Cấu hình bộ thu thập",
     "addWorkerConfig": "Thêm cấu hình",
     "editWorkerConfig": "Sửa cấu hình",
