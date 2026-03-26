@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useSite } from '@/lib/site-context';
-import { useAlertEvents, useAcknowledgeAlert } from '@/lib/hooks';
+import { useAlertEvents, useAcknowledgeAlert, useAcknowledgeAllInfo } from '@/lib/hooks';
 
 export function AlertsPage() {
   const { t } = useTranslation();
@@ -17,6 +17,12 @@ export function AlertsPage() {
 
   const { data: events, isLoading } = useAlertEvents(currentSite?.id, params);
   const acknowledge = useAcknowledgeAlert();
+  const ackAllInfo = useAcknowledgeAllInfo();
+
+  // Count unresolved info events
+  const unresolvedInfoCount = events?.filter(
+    (e: any) => e.severity === 'info' && !e.resolved_at && !e.acknowledged_by
+  ).length ?? 0;
 
   if (!currentSite) return <div className="text-slate-500">{t('alerts.selectSite')}</div>;
 
@@ -42,6 +48,20 @@ export function AlertsPage() {
             <SelectItem value="info">{t('alerts.info')}</SelectItem>
           </SelectContent>
         </Select>
+        {unresolvedInfoCount > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (window.confirm(t('alertEvents.ackAllInfoConfirm', { count: unresolvedInfoCount }))) {
+                ackAllInfo.mutate(currentSite!.id);
+              }
+            }}
+            disabled={ackAllInfo.isPending}
+          >
+            {t('alertEvents.ackAllInfo')}
+          </Button>
+        )}
       </div>
       <Card>
         <Table>
