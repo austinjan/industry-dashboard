@@ -280,6 +280,54 @@ func (s *Store) DeleteMachine(ctx context.Context, id string) error {
 	return err
 }
 
+// Register represents a single Modbus register definition.
+type Register struct {
+	Name      string  `json:"name"`
+	Address   int     `json:"address"`
+	Type      string  `json:"type"`
+	DataType  string  `json:"data_type"`
+	Unit      string  `json:"unit"`
+	Scale     float64 `json:"scale"`
+	Offset    float64 `json:"offset"`
+	ByteOrder string  `json:"byte_order"`
+}
+
+// GetMachineRegisters returns the registers array from a machine's modbus_config.
+func (s *Store) GetMachineRegisters(ctx context.Context, machineID string) ([]Register, error) {
+	var registersJSON []byte
+	err := s.db.QueryRow(ctx,
+		`SELECT modbus_config->'registers' FROM machines WHERE id = $1`, machineID,
+	).Scan(&registersJSON)
+	if err != nil {
+		return nil, err
+	}
+	var registers []Register
+	if registersJSON != nil {
+		if err := json.Unmarshal(registersJSON, &registers); err != nil {
+			return nil, err
+		}
+	}
+	if registers == nil {
+		registers = []Register{}
+	}
+	return registers, nil
+}
+
+// SetMachineRegisters merges the registers array into a machine's modbus_config.
+func (s *Store) SetMachineRegisters(ctx context.Context, machineID string, registers []Register) error {
+	regsJSON, err := json.Marshal(registers)
+	if err != nil {
+		return err
+	}
+	_, err = s.db.Exec(ctx, `
+		UPDATE machines
+		SET modbus_config = COALESCE(modbus_config, '{}'::jsonb) || jsonb_build_object('registers', $1::jsonb),
+		    updated_at = NOW()
+		WHERE id = $2
+	`, regsJSON, machineID)
+	return err
+}
+
 type SiteWithCounts struct {
 	Site
 	LineCount    int `json:"line_count"`
