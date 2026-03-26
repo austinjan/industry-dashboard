@@ -80,7 +80,7 @@ export function WorkerDetail({ workerId }: WorkerDetailProps) {
   const recentCommands = (data.recent_commands ?? []).slice(0, 3);
 
   return (
-    <div className="px-6 py-4 space-y-4 bg-slate-900/40">
+    <div className="px-6 py-4 space-y-4 bg-accent/40">
       {/* Metadata grid */}
       <div className="grid grid-cols-4 gap-4">
         {[
@@ -107,7 +107,7 @@ export function WorkerDetail({ workerId }: WorkerDetailProps) {
             {data.machines.map((m: any) => (
               <span
                 key={m.id}
-                className="flex items-center gap-1.5 bg-slate-800 text-slate-200 px-2 py-1 rounded text-xs"
+                className="flex items-center gap-1.5 bg-muted text-foreground px-2 py-1 rounded text-xs"
               >
                 <span
                   className={`inline-block w-1.5 h-1.5 rounded-full ${machineStatusDot[m.status] ?? 'bg-slate-500'}`}
@@ -179,7 +179,7 @@ export function WorkerDetail({ workerId }: WorkerDetailProps) {
                         return (
                           <div
                             key={machineKey}
-                            className={`bg-slate-800 rounded-lg p-3 min-w-[220px] ${isExpanded ? '' : 'max-w-[320px]'}`}
+                            className={`bg-muted rounded-lg p-3 min-w-[220px] ${isExpanded ? '' : 'max-w-[320px]'}`}
                           >
                             {/* Machine header */}
                             <div className="flex items-start justify-between">
@@ -192,7 +192,7 @@ export function WorkerDetail({ workerId }: WorkerDetailProps) {
                               <button
                                 onClick={() => toggleMachine(machineKey)}
                                 aria-expanded={isExpanded}
-                                className="text-muted-foreground hover:text-slate-200 transition-transform p-1"
+                                className="text-muted-foreground hover:text-foreground transition-transform p-1"
                               >
                                 <svg
                                   className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
@@ -225,7 +225,7 @@ export function WorkerDetail({ workerId }: WorkerDetailProps) {
 
                             {/* Expanded technical details */}
                             {isExpanded && (
-                              <div className="mt-3 pt-3 border-t border-slate-700 space-y-3">
+                              <div className="mt-3 pt-3 border-t border-border space-y-3">
                                 {/* Connection */}
                                 {machine.connection && (
                                   <div>

@@ -36,9 +36,9 @@ export function LineChartWidget({ config }: { config: Record<string, unknown> })
       queryKey: ['datapoints', machineId, metric, timeRange],
       queryFn: async () => {
         const res = await apiFetch(`/datapoints?machine_id=${machineId}&metric=${metric}&range=${timeRange}`);
-        if (!res.ok) return [];
+        if (!res.ok) return { metric, data: [] };
         const data = await res.json();
-        return { metric, data: data as { time: string; value: number }[] };
+        return { metric, data: Array.isArray(data) ? data as { time: string; value: number }[] : [] };
       },
       enabled: !!machineId && !!metric,
       refetchInterval: 30000,

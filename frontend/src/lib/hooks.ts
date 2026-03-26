@@ -410,6 +410,11 @@ export function useSendWorkerCommand() {
   });
 }
 
+export function useWorkerRunningConfig(workerId: string | undefined) {
+  const ri = useRefreshIntervalValue();
+  return useQuery({ queryKey: ['worker-running-config', workerId], queryFn: () => fetchJSON<any>(`/workers/${workerId}/config`), enabled: !!workerId, refetchInterval: ri });
+}
+
 // Worker Configs
 export function useWorkerConfigs() {
   return useQuery({ queryKey: ['worker-configs'], queryFn: () => fetchJSON<any[]>('/worker-configs') });
