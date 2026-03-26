@@ -86,15 +86,16 @@ func (c *Coordinator) Register(ctx context.Context) error {
 	defer tx.Rollback(ctx)
 
 	var (
-		existingID          string
-		existingIP          string
+		existingID            string
+		existingIP            string
+		existingStatus        string
 		secondsSinceHeartbeat float64
 	)
 	err = tx.QueryRow(ctx,
-		`SELECT id, COALESCE(ip_address, ''), EXTRACT(EPOCH FROM (NOW() - heartbeat_at))
+		`SELECT id, COALESCE(ip_address, ''), status, EXTRACT(EPOCH FROM (NOW() - heartbeat_at))
 		 FROM workers WHERE name = $1 FOR UPDATE`,
 		c.workerName,
-	).Scan(&existingID, &existingIP, &secondsSinceHeartbeat)
+	).Scan(&existingID, &existingIP, &existingStatus, &secondsSinceHeartbeat)
 
 	if err == pgx.ErrNoRows {
 		// Not found — INSERT new worker
@@ -111,8 +112,8 @@ func (c *Coordinator) Register(ctx context.Context) error {
 		c.workerDBID = newID
 	} else if err != nil {
 		return fmt.Errorf("failed to query existing worker: %w", err)
-	} else if secondsSinceHeartbeat > c.staleThreshold.Seconds() {
-		// Found but stale — take over
+	} else if existingStatus == "offline" || secondsSinceHeartbeat > c.staleThreshold.Seconds() {
+		// Found but offline or stale — take over
 		_, err = tx.Exec(ctx,
 			`UPDATE workers SET
 			   status = 'online',

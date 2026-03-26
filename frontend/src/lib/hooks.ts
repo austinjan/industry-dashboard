@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from './api';
+import { useRefreshIntervalValue } from './refresh-interval';
 
 async function fetchJSON<T>(path: string): Promise<T> {
   const res = await apiFetch(path);
@@ -34,11 +35,12 @@ export function useLineMachines(lineId: string | undefined) {
 }
 
 export function useSiteSummary(siteId: string | undefined) {
+  const ri = useRefreshIntervalValue();
   return useQuery({
     queryKey: ['site-summary', siteId],
     queryFn: () => fetchJSON<any>(`/sites/${siteId}/summary`),
     enabled: !!siteId,
-    refetchInterval: 30000,
+    refetchInterval: ri,
   });
 }
 
@@ -52,12 +54,13 @@ export function useAlerts(siteId: string | undefined, params?: Record<string, st
 }
 
 export function useAlertEvents(siteId: string | undefined, params?: Record<string, string>) {
+  const ri = useRefreshIntervalValue();
   const query = new URLSearchParams({ site_id: siteId ?? '', ...params }).toString();
   return useQuery({
     queryKey: ['alert-events', siteId, params],
     queryFn: () => fetchJSON<any[]>(`/alert-events?${query}`),
     enabled: !!siteId,
-    refetchInterval: 30000,
+    refetchInterval: ri,
   });
 }
 
@@ -258,11 +261,12 @@ export function useUpdateLocale() {
 }
 
 export function useLatestValues(machineId: string | undefined) {
+  const ri = useRefreshIntervalValue();
   return useQuery({
     queryKey: ['machine-latest', machineId],
     queryFn: () => fetchJSON<Record<string, number>>(`/machines/${machineId}/latest`),
     enabled: !!machineId,
-    refetchInterval: 30000,
+    refetchInterval: ri,
   });
 }
 
@@ -373,19 +377,21 @@ export function useDeleteMachine() {
 // Admin: Workers
 
 export function useWorkers() {
+  const ri = useRefreshIntervalValue();
   return useQuery({
     queryKey: ['workers'],
     queryFn: () => fetchJSON<any[]>('/workers'),
-    refetchInterval: 30000,
+    refetchInterval: ri,
   });
 }
 
 export function useWorkerDetail(workerId: string | undefined) {
+  const ri = useRefreshIntervalValue();
   return useQuery({
     queryKey: ['worker-detail', workerId],
     queryFn: () => fetchJSON<any>(`/workers/${workerId}`),
     enabled: !!workerId,
-    refetchInterval: 30000,
+    refetchInterval: ri,
   });
 }
 
@@ -404,10 +410,69 @@ export function useSendWorkerCommand() {
   });
 }
 
-export function useWorkerConfig(workerId: string | undefined) {
-  return useQuery({
-    queryKey: ['worker-config', workerId],
-    queryFn: () => fetchJSON<any>(`/workers/${workerId}/config`),
-    enabled: !!workerId,
+// Worker Configs
+export function useWorkerConfigs() {
+  return useQuery({ queryKey: ['worker-configs'], queryFn: () => fetchJSON<any[]>('/worker-configs') });
+}
+export function useWorkerConfig(id: string | undefined) {
+  return useQuery({ queryKey: ['worker-config', id], queryFn: () => fetchJSON<any>(`/worker-configs/${id}`), enabled: !!id });
+}
+export function useCreateWorkerConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { name: string; site_id: string; poll_interval: string }) => mutateJSON('/worker-configs', { method: 'POST', body: JSON.stringify(data) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['worker-configs'] }),
+  });
+}
+export function useUpdateWorkerConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: string; name: string; site_id: string; poll_interval: string }) => mutateJSON(`/worker-configs/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['worker-configs'] }); qc.invalidateQueries({ queryKey: ['worker-config'] }); },
+  });
+}
+export function useDeleteWorkerConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => mutateJSON(`/worker-configs/${id}`, { method: 'DELETE' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['worker-configs'] }),
+  });
+}
+export function useSetConfigMachines() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ configId, machines }: { configId: string; machines: any[] }) => mutateJSON(`/worker-configs/${configId}/machines`, { method: 'PUT', body: JSON.stringify({ machines }) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['worker-config'] }),
+  });
+}
+export function useMachineRegisters(machineId: string | undefined) {
+  return useQuery({ queryKey: ['machine-registers', machineId], queryFn: () => fetchJSON<any>(`/machines/${machineId}/registers`), enabled: !!machineId });
+}
+export function useSetMachineRegisters() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ machineId, registers }: { machineId: string; registers: any[] }) => mutateJSON(`/machines/${machineId}/registers`, { method: 'PUT', body: JSON.stringify({ registers }) }),
+    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ['machine-registers', vars.machineId] }),
+  });
+}
+export function useImportRegistersCSV() {
+  return useMutation({
+    mutationFn: ({ machineId, csv }: { machineId: string; csv: string }) =>
+      apiFetch(`/machines/${machineId}/registers/import`, { method: 'POST', headers: { 'Content-Type': 'text/csv' }, body: csv })
+        .then(async r => { if (!r.ok) throw new Error(await r.text()); return r.json(); }),
+  });
+}
+export function useDownloadWorkerConfigYAML() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiFetch(`/worker-configs/${id}/yaml`);
+      if (!res.ok) throw new Error(await res.text());
+      const blob = await res.blob();
+      const filename = res.headers.get('content-disposition')?.match(/filename="(.+)"/)?.[1] || 'config.yaml';
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    },
   });
 }

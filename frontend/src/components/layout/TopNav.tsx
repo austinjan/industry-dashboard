@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
 import { useSite } from '@/lib/site-context';
+import { useRefreshInterval } from '@/lib/refresh-interval';
 import { useUpdateLocale } from '@/lib/hooks';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +24,15 @@ export function TopNav() {
   const { user, logout } = useAuth();
   const { sites, currentSite, setCurrentSite } = useSite();
   const updateLocale = useUpdateLocale();
+  const { interval, setInterval: setRefreshInterval } = useRefreshInterval();
+
+  const refreshOptions = [
+    { value: 5000, label: '5s' },
+    { value: 10000, label: '10s' },
+    { value: 30000, label: '30s' },
+    { value: 60000, label: '1m' },
+    { value: 300000, label: '5m' },
+  ];
 
   const handleLanguageChange = (code: string | null) => {
     if (!code) return;
@@ -56,6 +66,18 @@ export function TopNav() {
         )}
       </div>
       <div className="flex items-center gap-3">
+        <Select value={String(interval)} onValueChange={(v) => { if (v) setRefreshInterval(parseInt(v, 10)); }}>
+          <SelectTrigger className="w-24 border-slate-700 bg-slate-800 text-white text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {refreshOptions.map((opt) => (
+              <SelectItem key={opt.value} value={String(opt.value)}>
+                ⟳ {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select value={i18n.language} onValueChange={handleLanguageChange}>
           <SelectTrigger className="w-36 border-slate-700 bg-slate-800 text-white">
             <SelectValue />
