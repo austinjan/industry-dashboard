@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from './api';
+import { getRefreshInterval } from './refresh-interval';
 
 async function fetchJSON<T>(path: string): Promise<T> {
   const res = await apiFetch(path);
@@ -38,7 +39,7 @@ export function useSiteSummary(siteId: string | undefined) {
     queryKey: ['site-summary', siteId],
     queryFn: () => fetchJSON<any>(`/sites/${siteId}/summary`),
     enabled: !!siteId,
-    refetchInterval: 30000,
+    refetchInterval: getRefreshInterval(),
   });
 }
 
@@ -57,7 +58,7 @@ export function useAlertEvents(siteId: string | undefined, params?: Record<strin
     queryKey: ['alert-events', siteId, params],
     queryFn: () => fetchJSON<any[]>(`/alert-events?${query}`),
     enabled: !!siteId,
-    refetchInterval: 30000,
+    refetchInterval: getRefreshInterval(),
   });
 }
 
@@ -262,7 +263,7 @@ export function useLatestValues(machineId: string | undefined) {
     queryKey: ['machine-latest', machineId],
     queryFn: () => fetchJSON<Record<string, number>>(`/machines/${machineId}/latest`),
     enabled: !!machineId,
-    refetchInterval: 30000,
+    refetchInterval: getRefreshInterval(),
   });
 }
 
@@ -376,7 +377,7 @@ export function useWorkers() {
   return useQuery({
     queryKey: ['workers'],
     queryFn: () => fetchJSON<any[]>('/workers'),
-    refetchInterval: 30000,
+    refetchInterval: getRefreshInterval(),
   });
 }
 
@@ -385,7 +386,7 @@ export function useWorkerDetail(workerId: string | undefined) {
     queryKey: ['worker-detail', workerId],
     queryFn: () => fetchJSON<any>(`/workers/${workerId}`),
     enabled: !!workerId,
-    refetchInterval: 30000,
+    refetchInterval: getRefreshInterval(),
   });
 }
 
