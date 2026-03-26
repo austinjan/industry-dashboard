@@ -407,6 +407,9 @@ export function WorkerConfigEditPage() {
                     <RegisterTable
                       machineId={machine.machine_id}
                       machineName={machine.machine_name}
+                      copyFromMachines={selectedMachines
+                        .filter(m => m.machine_id !== machine.machine_id)
+                        .map(m => ({ machineId: m.machine_id, machineName: m.machine_name }))}
                     />
                   </div>
                 )}

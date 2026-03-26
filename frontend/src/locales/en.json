@@ -197,7 +197,8 @@
     "basicSettings": "Basic Settings",
     "yamlPreview": "YAML Preview",
     "copyToClipboard": "Copy",
-    "copied": "Copied!"
+    "copied": "Copied!",
+    "copyFrom": "Copy from..."
   },
   "topnav": {
     "title": "Industry Dashboard",

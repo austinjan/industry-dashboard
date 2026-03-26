@@ -4,11 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Trash2, PlusCircle, Upload } from 'lucide-react';
 import { useMachineRegisters, useSetMachineRegisters } from '@/lib/hooks';
+import { apiFetch } from '@/lib/api';
 import { CsvImportDialog } from './CsvImportDialog';
+
+interface CopySource {
+  machineId: string;
+  machineName: string;
+}
 
 interface RegisterTableProps {
   machineId: string;
   machineName: string;
+  copyFromMachines?: CopySource[];
 }
 
 const TYPE_OPTIONS = ['holding', 'input', 'coil', 'discrete'];
@@ -30,7 +37,7 @@ function newRow() {
   };
 }
 
-export function RegisterTable({ machineId }: RegisterTableProps) {
+export function RegisterTable({ machineId, copyFromMachines }: RegisterTableProps) {
   const { t } = useTranslation();
   const { data, isLoading } = useMachineRegisters(machineId);
   const setRegisters = useSetMachineRegisters();
@@ -98,6 +105,33 @@ export function RegisterTable({ machineId }: RegisterTableProps) {
             <Upload className="h-4 w-4 mr-1" />
             {t('admin.importCsv')}
           </Button>
+          {copyFromMachines && copyFromMachines.length > 0 && (
+            <div className="relative inline-block">
+              <select
+                className="h-8 rounded border border-input bg-background px-2 text-xs appearance-none pr-6 cursor-pointer"
+                value=""
+                onChange={async (e) => {
+                  const srcId = e.target.value;
+                  if (!srcId) return;
+                  try {
+                    const res = await apiFetch(`/machines/${srcId}/registers`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    const regs = data?.registers ?? [];
+                    if (regs.length > 0) {
+                      setRows(regs);
+                    }
+                  } catch {}
+                  e.target.value = '';
+                }}
+              >
+                <option value="">{t('admin.copyFrom')}</option>
+                {copyFromMachines.map(m => (
+                  <option key={m.machineId} value={m.machineId}>{m.machineName}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
         <Button size="sm" onClick={handleSave} disabled={setRegisters.isPending}>
           {t('admin.save')}
