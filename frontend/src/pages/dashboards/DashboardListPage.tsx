@@ -30,8 +30,8 @@ export function DashboardListPage() {
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-bold">My Dashboards</h2>
         <Dialog>
-          <DialogTrigger>
-            <Button>+ New Dashboard</Button>
+          <DialogTrigger render={<Button />}>
+            + New Dashboard
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Create Dashboard</DialogTitle></DialogHeader>
