@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from './api';
-import { getRefreshInterval } from './refresh-interval';
+import { useRefreshIntervalValue } from './refresh-interval';
 
 async function fetchJSON<T>(path: string): Promise<T> {
   const res = await apiFetch(path);
@@ -35,11 +35,12 @@ export function useLineMachines(lineId: string | undefined) {
 }
 
 export function useSiteSummary(siteId: string | undefined) {
+  const ri = useRefreshIntervalValue();
   return useQuery({
     queryKey: ['site-summary', siteId],
     queryFn: () => fetchJSON<any>(`/sites/${siteId}/summary`),
     enabled: !!siteId,
-    refetchInterval: getRefreshInterval(),
+    refetchInterval: ri,
   });
 }
 
@@ -53,12 +54,13 @@ export function useAlerts(siteId: string | undefined, params?: Record<string, st
 }
 
 export function useAlertEvents(siteId: string | undefined, params?: Record<string, string>) {
+  const ri = useRefreshIntervalValue();
   const query = new URLSearchParams({ site_id: siteId ?? '', ...params }).toString();
   return useQuery({
     queryKey: ['alert-events', siteId, params],
     queryFn: () => fetchJSON<any[]>(`/alert-events?${query}`),
     enabled: !!siteId,
-    refetchInterval: getRefreshInterval(),
+    refetchInterval: ri,
   });
 }
 
@@ -259,11 +261,12 @@ export function useUpdateLocale() {
 }
 
 export function useLatestValues(machineId: string | undefined) {
+  const ri = useRefreshIntervalValue();
   return useQuery({
     queryKey: ['machine-latest', machineId],
     queryFn: () => fetchJSON<Record<string, number>>(`/machines/${machineId}/latest`),
     enabled: !!machineId,
-    refetchInterval: getRefreshInterval(),
+    refetchInterval: ri,
   });
 }
 
@@ -374,19 +377,21 @@ export function useDeleteMachine() {
 // Admin: Workers
 
 export function useWorkers() {
+  const ri = useRefreshIntervalValue();
   return useQuery({
     queryKey: ['workers'],
     queryFn: () => fetchJSON<any[]>('/workers'),
-    refetchInterval: getRefreshInterval(),
+    refetchInterval: ri,
   });
 }
 
 export function useWorkerDetail(workerId: string | undefined) {
+  const ri = useRefreshIntervalValue();
   return useQuery({
     queryKey: ['worker-detail', workerId],
     queryFn: () => fetchJSON<any>(`/workers/${workerId}`),
     enabled: !!workerId,
-    refetchInterval: getRefreshInterval(),
+    refetchInterval: ri,
   });
 }
 

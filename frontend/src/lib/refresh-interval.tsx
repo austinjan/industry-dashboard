@@ -44,7 +44,16 @@ export function useRefreshInterval() {
   return useContext(RefreshIntervalContext);
 }
 
-/** Read interval outside of React (for use in hooks.ts) */
+/** Read interval outside of React (fallback for non-component usage) */
 export function getRefreshInterval(): number {
   return loadInterval();
+}
+
+/**
+ * Hook that returns the current interval as a reactive value.
+ * Use this in query hooks so refetchInterval updates immediately.
+ */
+export function useRefreshIntervalValue(): number {
+  const { interval } = useContext(RefreshIntervalContext);
+  return interval;
 }
