@@ -73,7 +73,7 @@ func Provision(ctx context.Context, db *pgxpool.Pool, cfg *WorkerConfig) (*Provi
 			regs := make([]regEntry, len(machineCfg.Registers))
 			for i, r := range machineCfg.Registers {
 				regs[i] = regEntry{
-					Address: r.Address, Name: r.Name, Type: r.DataType,
+					Address: r.Address, Name: r.Name, Type: r.Type,
 					DataType: r.DataType, Scale: r.Scale, Offset: r.Offset, Unit: r.Unit,
 				}
 			}
