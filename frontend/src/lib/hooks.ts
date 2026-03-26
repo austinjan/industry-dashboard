@@ -403,3 +403,11 @@ export function useSendWorkerCommand() {
     },
   });
 }
+
+export function useWorkerConfig(workerId: string | undefined) {
+  return useQuery({
+    queryKey: ['worker-config', workerId],
+    queryFn: () => fetchJSON<any>(`/workers/${workerId}/config`),
+    enabled: !!workerId,
+  });
+}

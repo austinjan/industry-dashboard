@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
-import { useWorkerDetail } from '@/lib/hooks';
+import { Button } from '@/components/ui/button';
+import { useWorkerDetail, useWorkerConfig } from '@/lib/hooks';
 
 interface WorkerDetailProps {
   workerId: string;
@@ -47,6 +49,8 @@ const commandStatusKey: Record<string, string> = {
 export function WorkerDetail({ workerId }: WorkerDetailProps) {
   const { t } = useTranslation();
   const { data, isLoading } = useWorkerDetail(workerId);
+  const { data: configData } = useWorkerConfig(workerId);
+  const [showConfig, setShowConfig] = useState(false);
 
   if (isLoading || !data) {
     return (
@@ -117,6 +121,30 @@ export function WorkerDetail({ workerId }: WorkerDetailProps) {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Running Config */}
+      {configData && (
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-xs text-muted-foreground">{t('admin.runningConfig')}</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs"
+              onClick={() => setShowConfig(!showConfig)}
+            >
+              {showConfig ? t('admin.hideConfig') : t('admin.showConfig')}
+            </Button>
+          </div>
+          {showConfig && (
+            <div className="bg-slate-950 rounded p-3 overflow-auto max-h-96">
+              <pre className="text-xs text-slate-300 font-mono whitespace-pre-wrap break-all">
+                {JSON.stringify(configData, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
       )}
     </div>

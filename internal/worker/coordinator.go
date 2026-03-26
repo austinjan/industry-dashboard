@@ -22,6 +22,7 @@ type Coordinator struct {
 	workerName        string // from config YAML or fallback to workerID
 	workerDBID        string // UUID from workers table, set during Register()
 	configPath        string // frozen config path for reload_config
+	configJSON        []byte // running config as JSON for upload to DB
 	version           string // build version
 	heartbeatInterval time.Duration
 	staleThreshold    time.Duration
@@ -29,7 +30,7 @@ type Coordinator struct {
 	machineCancels    map[string]context.CancelFunc
 }
 
-func NewCoordinator(db *pgxpool.Pool, workerName, configPath, version string) *Coordinator {
+func NewCoordinator(db *pgxpool.Pool, workerName, configPath string, configJSON []byte, version string) *Coordinator {
 	hostname, _ := os.Hostname()
 	workerID := fmt.Sprintf("%s-%d", hostname, os.Getpid())
 	if workerName == "" {
@@ -40,6 +41,7 @@ func NewCoordinator(db *pgxpool.Pool, workerName, configPath, version string) *C
 		workerID:          workerID,
 		workerName:        workerName,
 		configPath:        configPath,
+		configJSON:        configJSON,
 		version:           version,
 		heartbeatInterval: 30 * time.Second,
 		staleThreshold:    90 * time.Second,
@@ -98,10 +100,10 @@ func (c *Coordinator) Register(ctx context.Context) error {
 		// Not found — INSERT new worker
 		var newID string
 		err = tx.QueryRow(ctx,
-			`INSERT INTO workers (name, status, hostname, ip_address, pid, version, config_path, os_info, started_at, heartbeat_at)
-			 VALUES ($1, 'online', $2, $3, $4, $5, $6, $7, NOW(), NOW())
+			`INSERT INTO workers (name, status, hostname, ip_address, pid, version, config_path, config_json, os_info, started_at, heartbeat_at)
+			 VALUES ($1, 'online', $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
 			 RETURNING id`,
-			c.workerName, hostname, ip, pid, c.version, c.configPath, osInfo,
+			c.workerName, hostname, ip, pid, c.version, c.configPath, c.configJSON, osInfo,
 		).Scan(&newID)
 		if err != nil {
 			return fmt.Errorf("failed to insert worker: %w", err)
@@ -119,12 +121,13 @@ func (c *Coordinator) Register(ctx context.Context) error {
 			   pid = $4,
 			   version = $5,
 			   config_path = $6,
-			   os_info = $7,
+			   config_json = $7,
+			   os_info = $8,
 			   started_at = NOW(),
 			   heartbeat_at = NOW(),
 			   updated_at = NOW()
 			 WHERE id = $1`,
-			existingID, hostname, ip, pid, c.version, c.configPath, osInfo,
+			existingID, hostname, ip, pid, c.version, c.configPath, c.configJSON, osInfo,
 		)
 		if err != nil {
 			return fmt.Errorf("failed to take over stale worker: %w", err)

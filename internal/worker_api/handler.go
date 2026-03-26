@@ -137,3 +137,30 @@ func (h *Handler) ListCommands(w http.ResponseWriter, r *http.Request) {
 		"total":    total,
 	})
 }
+
+// GetWorkerConfig returns the running config JSON for a worker.
+func (h *Handler) GetWorkerConfig(w http.ResponseWriter, r *http.Request) {
+	workerID := chi.URLParam(r, "workerID")
+	if _, err := uuid.Parse(workerID); err != nil {
+		http.Error(w, "invalid worker ID", http.StatusBadRequest)
+		return
+	}
+
+	configJSON, err := h.store.GetWorkerConfig(r.Context(), workerID)
+	if err != nil {
+		if errors.Is(err, ErrWorkerNotFound) {
+			http.Error(w, "worker not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	if configJSON == nil {
+		http.Error(w, "no config stored for this worker", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(configJSON)
+}

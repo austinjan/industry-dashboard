@@ -164,7 +164,10 @@
     "modbusConnection": "การเชื่อมต่อ Modbus",
     "hostAddress": "โฮสต์",
     "portLabel": "พอร์ต",
-    "slaveIdLabel": "Slave ID"
+    "slaveIdLabel": "Slave ID",
+    "runningConfig": "การกำหนดค่าที่ทำงาน",
+    "showConfig": "แสดงการกำหนดค่า",
+    "hideConfig": "ซ่อนการกำหนดค่า"
   },
   "topnav": {
     "title": "แดชบอร์ดอุตสาหกรรม",

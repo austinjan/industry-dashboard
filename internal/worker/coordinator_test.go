@@ -8,13 +8,13 @@ import (
 )
 
 func TestCoordinatorWorkerID(t *testing.T) {
-	c := worker.NewCoordinator(nil, "test-worker", "/tmp/config.yaml", "dev")
+	c := worker.NewCoordinator(nil, "test-worker", "/tmp/config.yaml", nil, "dev")
 	assert.NotEmpty(t, c.WorkerID())
 	assert.Equal(t, "test-worker", c.WorkerName())
 }
 
 func TestCoordinatorFallbackName(t *testing.T) {
-	c := worker.NewCoordinator(nil, "", "/tmp/config.yaml", "dev")
+	c := worker.NewCoordinator(nil, "", "/tmp/config.yaml", nil, "dev")
 	assert.NotEmpty(t, c.WorkerName())
 	assert.Contains(t, c.WorkerName(), "-")
 }

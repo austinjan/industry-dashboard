@@ -14,6 +14,8 @@ import (
 	"github.com/industry-dashboard/server/internal/worker"
 )
 
+var version = "dev"
+
 func main() {
 	configPath := flag.String("config", "cmd/fake-worker/config.yaml", "Path to worker config YAML")
 	flag.Parse()
@@ -24,6 +26,12 @@ func main() {
 	}
 	log.Printf("Loaded config: site=%s, lines=%d, poll=%s",
 		workerCfg.SiteCode, len(workerCfg.Lines), workerCfg.PollInterval)
+
+	// Convert config to JSON for upload to DB
+	configJSON, err := workerCfg.ToJSON()
+	if err != nil {
+		log.Fatalf("Failed to serialize config: %v", err)
+	}
 
 	appCfg := config.Load()
 	ctx, cancel := context.WithCancel(context.Background())
@@ -54,7 +62,11 @@ func main() {
 		result.Machines[i].DataSource = ds
 	}
 
-	coordinator := worker.NewCoordinator(pool, workerCfg.WorkerName, *configPath, "dev")
+	coordinator := worker.NewCoordinator(pool, workerCfg.WorkerName, *configPath, configJSON, version)
+	if err := coordinator.Register(ctx); err != nil {
+		log.Fatalf("Failed to register worker: %v", err)
+	}
+
 	machineIDs := make([]string, len(result.Machines))
 	for i, m := range result.Machines {
 		machineIDs[i] = m.ID
@@ -85,6 +97,7 @@ func main() {
 	cancel()
 	wg.Wait()
 	coordinator.ReleaseMachines(context.Background(), machineIDs)
+	coordinator.SetOffline(context.Background())
 	log.Println("Done.")
 }
 

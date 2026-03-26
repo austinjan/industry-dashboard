@@ -445,6 +445,7 @@ func main() {
 				r.With(rbacMW.Require("workers:manage", globalScope)).Get("/", workerAPIHandler.GetWorker)
 				r.With(rbacMW.Require("workers:manage", globalScope), auditMW.Log("worker", "command")).Post("/commands", workerAPIHandler.SendCommand)
 				r.With(rbacMW.Require("workers:manage", globalScope)).Get("/commands", workerAPIHandler.ListCommands)
+				r.With(rbacMW.Require("workers:manage", globalScope)).Get("/config", workerAPIHandler.GetWorkerConfig)
 			})
 		})
 	})

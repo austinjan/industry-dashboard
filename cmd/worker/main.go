@@ -31,6 +31,12 @@ func main() {
 	log.Printf("Loaded config: site=%s, lines=%d, poll=%s",
 		workerCfg.SiteCode, len(workerCfg.Lines), workerCfg.PollInterval)
 
+	// Convert config to JSON for upload to DB
+	configJSON, err := workerCfg.ToJSON()
+	if err != nil {
+		log.Fatalf("Failed to serialize config: %v", err)
+	}
+
 	// Resolve database URL: env var > YAML config > app config fallback
 	dbURL := workerCfg.DatabaseURL
 	if dbURL == "" {
@@ -47,7 +53,7 @@ func main() {
 	}
 	defer pool.Close()
 
-	coordinator := worker.NewCoordinator(pool, workerCfg.WorkerName, absConfigPath, version)
+	coordinator := worker.NewCoordinator(pool, workerCfg.WorkerName, absConfigPath, configJSON, version)
 
 	if err := coordinator.Register(ctx); err != nil {
 		log.Fatalf("Failed to register worker: %v", err)

@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
@@ -9,53 +10,53 @@ import (
 )
 
 type WorkerConfig struct {
-	SiteCode     string        `yaml:"site_code"`
-	SiteName     string        `yaml:"site_name"`
-	Timezone     string        `yaml:"timezone"`
-	PollInterval time.Duration `yaml:"poll_interval"`
-	Lines        []LineConfig  `yaml:"lines"`
-	DatabaseURL  string        `yaml:"database_url"`
-	LogLevel     string        `yaml:"log_level"`
-	WorkerName   string        `yaml:"worker_name"`
+	SiteCode     string        `yaml:"site_code" json:"site_code"`
+	SiteName     string        `yaml:"site_name" json:"site_name"`
+	Timezone     string        `yaml:"timezone" json:"timezone"`
+	PollInterval time.Duration `yaml:"poll_interval" json:"poll_interval"`
+	Lines        []LineConfig  `yaml:"lines" json:"lines"`
+	DatabaseURL  string        `yaml:"database_url" json:"database_url,omitempty"`
+	LogLevel     string        `yaml:"log_level" json:"log_level"`
+	WorkerName   string        `yaml:"worker_name" json:"worker_name"`
 }
 
 type LineConfig struct {
-	Name         string          `yaml:"name"`
-	DisplayOrder int             `yaml:"display_order"`
-	Machines     []MachineConfig `yaml:"machines"`
+	Name         string          `yaml:"name" json:"name"`
+	DisplayOrder int             `yaml:"display_order" json:"display_order"`
+	Machines     []MachineConfig `yaml:"machines" json:"machines"`
 }
 
 type MachineConfig struct {
-	Name       string           `yaml:"name"`
-	Model      string           `yaml:"model"`
-	Connection ConnectionConfig `yaml:"connection"`
-	Registers  []RegisterConfig `yaml:"registers"`
+	Name       string           `yaml:"name" json:"name"`
+	Model      string           `yaml:"model" json:"model,omitempty"`
+	Connection ConnectionConfig `yaml:"connection" json:"connection"`
+	Registers  []RegisterConfig `yaml:"registers" json:"registers"`
 }
 
 type ConnectionConfig struct {
-	Host    string        `yaml:"host"`
-	Port    int           `yaml:"port"`
-	SlaveID int           `yaml:"slave_id"`
-	Timeout time.Duration `yaml:"timeout"`
+	Host    string        `yaml:"host" json:"host"`
+	Port    int           `yaml:"port" json:"port"`
+	SlaveID int           `yaml:"slave_id" json:"slave_id"`
+	Timeout time.Duration `yaml:"timeout" json:"timeout,omitempty"`
 }
 
 type RegisterConfig struct {
-	Name      string      `yaml:"name"`
-	Address   int         `yaml:"address"`
-	Type      string      `yaml:"type"`
-	DataType  string      `yaml:"data_type"`
-	ByteOrder string      `yaml:"byte_order"`
-	Scale     float64     `yaml:"scale"`
-	Offset    float64     `yaml:"offset"`
-	Unit      string      `yaml:"unit"`
-	Length    int         `yaml:"length"`
-	Fake      *FakeConfig `yaml:"fake"`
+	Name      string      `yaml:"name" json:"name"`
+	Address   int         `yaml:"address" json:"address"`
+	Type      string      `yaml:"type" json:"type,omitempty"`
+	DataType  string      `yaml:"data_type" json:"data_type,omitempty"`
+	ByteOrder string      `yaml:"byte_order" json:"byte_order,omitempty"`
+	Scale     float64     `yaml:"scale" json:"scale,omitempty"`
+	Offset    float64     `yaml:"offset" json:"offset,omitempty"`
+	Unit      string      `yaml:"unit" json:"unit,omitempty"`
+	Length    int         `yaml:"length" json:"length,omitempty"`
+	Fake      *FakeConfig `yaml:"fake" json:"fake,omitempty"`
 }
 
 type FakeConfig struct {
-	Min     float64 `yaml:"min"`
-	Max     float64 `yaml:"max"`
-	Pattern string  `yaml:"pattern"`
+	Min     float64 `yaml:"min" json:"min"`
+	Max     float64 `yaml:"max" json:"max"`
+	Pattern string  `yaml:"pattern" json:"pattern"`
 }
 
 func LoadConfig(path string) (*WorkerConfig, error) {
@@ -140,4 +141,9 @@ func applyMachineDefaults(m *MachineConfig) {
 			}
 		}
 	}
+}
+
+// ToJSON returns the config as JSON bytes for storage in the database.
+func (c *WorkerConfig) ToJSON() ([]byte, error) {
+	return json.Marshal(c)
 }

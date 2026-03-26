@@ -309,3 +309,19 @@ func (s *Store) ListCommands(ctx context.Context, workerID string, limit, offset
 
 	return commands, total, nil
 }
+
+// GetWorkerConfig returns the stored config JSON for a worker.
+// Returns ErrWorkerNotFound if the worker does not exist.
+func (s *Store) GetWorkerConfig(ctx context.Context, workerID string) ([]byte, error) {
+	var configJSON []byte
+	err := s.db.QueryRow(ctx,
+		`SELECT config_json FROM workers WHERE id = $1`, workerID,
+	).Scan(&configJSON)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrWorkerNotFound
+		}
+		return nil, err
+	}
+	return configJSON, nil
+}
