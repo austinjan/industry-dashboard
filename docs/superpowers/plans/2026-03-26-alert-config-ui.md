@@ -557,7 +557,7 @@ r.With(rbacMW.Require("alert:acknowledge", rbac.SiteFromQuery), auditMW.Log("ale
 In the `/machines/{machineID}` route group, add:
 
 ```go
-r.With(rbacMW.Require("alert:view", rbac.SiteFromQuery)).Get("/register-metrics", siteHandler.GetRegisterMetrics)
+r.Get("/register-metrics", siteHandler.GetRegisterMetrics)
 ```
 
 Add a site-level machines endpoint (near existing site routes):
