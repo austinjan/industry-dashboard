@@ -2,10 +2,40 @@
 
 # 部署指南
 
+## 快速開始
+
+從 [GitHub Releases](https://github.com/austinjan/industry-dashboard/releases) 下載：
+- `dashboard-server-<平台>` （選擇對應的 OS/架構）
+- `docker-compose.production.yml`
+- `default.env.example`
+
+```bash
+# 1. 設定環境變數
+cp default.env.example .env
+# 編輯 .env — 設定 DB_PASSWORD 和 JWT_SECRET（必填）
+
+# 2. 啟動資料庫
+docker compose -f docker-compose.production.yml up -d db
+
+# 3. 等待資料庫就緒（約 5 秒）
+docker compose -f docker-compose.production.yml logs db | tail -3
+
+# 4. 啟動伺服器（自動執行資料庫遷移）
+source .env
+DATABASE_URL="postgres://${DB_USER:-dashboard}:${DB_PASSWORD}@localhost:${DB_PORT:-5432}/${DB_NAME:-industry_dashboard}?sslmode=disable" \
+JWT_SECRET="${JWT_SECRET}" \
+PORT="${PORT:-8080}" \
+./dashboard-server-linux-amd64
+```
+
+打開 `http://localhost:8080` — 完成。
+
+---
+
 ## 前置需求
 
 - 一台伺服器（Linux、macOS 或 Windows）
-- TimescaleDB（PostgreSQL + 時間序列擴充）
+- Docker（用於 TimescaleDB）或已安裝 TimescaleDB 擴充的 PostgreSQL
 - Release 執行檔（參見[發行指南](release.md)）
 
 ## 方式一：Docker Compose（推薦）
