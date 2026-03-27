@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/industry-dashboard/server/internal/apierr"
+	"github.com/industry-dashboard/server/internal/auth"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -27,9 +28,13 @@ func NewHandler(store *Store) *Handler {
 }
 
 func (h *Handler) ListSites(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	sites, err := h.store.ListSites(r.Context())
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -37,6 +42,10 @@ func (h *Handler) ListSites(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateSite(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	var body struct {
 		Name     string `json:"name"`
 		Code     string `json:"code"`
@@ -44,11 +53,11 @@ func (h *Handler) CreateSite(w http.ResponseWriter, r *http.Request) {
 		Address  string `json:"address"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "invalid request", userID, nil)
 		return
 	}
 	if body.Name == "" || body.Code == "" {
-		http.Error(w, "name and code are required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "name and code are required", userID, nil)
 		return
 	}
 	if body.Timezone == "" {
@@ -57,11 +66,10 @@ func (h *Handler) CreateSite(w http.ResponseWriter, r *http.Request) {
 	site, err := h.store.CreateSite(r.Context(), body.Name, body.Code, body.Timezone, body.Address)
 	if err != nil {
 		if isDuplicateKey(err) {
-			http.Error(w, "site code already exists", http.StatusConflict)
+			apierr.Write(w, r, http.StatusConflict, "site.code_exists", "site code already exists", userID, nil)
 			return
 		}
-		log.Printf("CreateSite error: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -70,10 +78,14 @@ func (h *Handler) CreateSite(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListLines(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	siteID := chi.URLParam(r, "siteID")
 	lines, err := h.store.ListLinesBySite(r.Context(), siteID)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -81,10 +93,14 @@ func (h *Handler) ListLines(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetSite(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	siteID := chi.URLParam(r, "siteID")
 	site, err := h.store.GetSite(r.Context(), siteID)
 	if err != nil {
-		http.Error(w, "site not found", http.StatusNotFound)
+		apierr.Write(w, r, http.StatusNotFound, "site.not_found", "site not found", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -92,10 +108,14 @@ func (h *Handler) GetSite(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetSiteSummary(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	siteID := chi.URLParam(r, "siteID")
 	summary, err := h.store.GetSiteSummary(r.Context(), siteID)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -103,10 +123,14 @@ func (h *Handler) GetSiteSummary(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListMachines(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	lineID := chi.URLParam(r, "lineID")
 	machines, err := h.store.ListMachinesByLine(r.Context(), lineID)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -114,9 +138,13 @@ func (h *Handler) ListMachines(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListAllSites(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	sites, err := h.store.ListAllSites(r.Context())
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -124,6 +152,10 @@ func (h *Handler) ListAllSites(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateSite(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	siteID := chi.URLParam(r, "siteID")
 	var body struct {
 		Name     string `json:"name"`
@@ -131,20 +163,20 @@ func (h *Handler) UpdateSite(w http.ResponseWriter, r *http.Request) {
 		Address  string `json:"address"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "invalid request", userID, nil)
 		return
 	}
 	if body.Name == "" {
-		http.Error(w, "name is required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "name is required", userID, nil)
 		return
 	}
 	site, err := h.store.UpdateSite(r.Context(), siteID, body.Name, body.Timezone, body.Address)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			http.Error(w, "site not found", http.StatusNotFound)
+			apierr.Write(w, r, http.StatusNotFound, "site.not_found", "site not found", userID, nil)
 			return
 		}
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -152,23 +184,31 @@ func (h *Handler) UpdateSite(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteSite(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	siteID := chi.URLParam(r, "siteID")
 	if err := h.store.DeleteSite(r.Context(), siteID); err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) GetSiteDetail(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	siteID := chi.URLParam(r, "siteID")
 	detail, err := h.store.GetSiteDetail(r.Context(), siteID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			http.Error(w, "site not found", http.StatusNotFound)
+			apierr.Write(w, r, http.StatusNotFound, "site.not_found", "site not found", userID, nil)
 			return
 		}
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -176,22 +216,26 @@ func (h *Handler) GetSiteDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateLine(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	siteID := chi.URLParam(r, "siteID")
 	var body struct {
 		Name         string `json:"name"`
 		DisplayOrder int    `json:"display_order"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "invalid request", userID, nil)
 		return
 	}
 	if body.Name == "" {
-		http.Error(w, "name is required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "name is required", userID, nil)
 		return
 	}
 	line, err := h.store.CreateLine(r.Context(), siteID, body.Name, body.DisplayOrder)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -200,26 +244,30 @@ func (h *Handler) CreateLine(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateLine(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	lineID := chi.URLParam(r, "lineID")
 	var body struct {
 		Name         string `json:"name"`
 		DisplayOrder int    `json:"display_order"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "invalid request", userID, nil)
 		return
 	}
 	if body.Name == "" {
-		http.Error(w, "name is required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "name is required", userID, nil)
 		return
 	}
 	line, err := h.store.UpdateLine(r.Context(), lineID, body.Name, body.DisplayOrder)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			http.Error(w, "line not found", http.StatusNotFound)
+			apierr.Write(w, r, http.StatusNotFound, "site.not_found", "line not found", userID, nil)
 			return
 		}
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -227,15 +275,23 @@ func (h *Handler) UpdateLine(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteLine(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	lineID := chi.URLParam(r, "lineID")
 	if err := h.store.DeleteLine(r.Context(), lineID); err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) CreateMachine(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	lineID := chi.URLParam(r, "lineID")
 	var body struct {
 		Name    string `json:"name"`
@@ -245,11 +301,11 @@ func (h *Handler) CreateMachine(w http.ResponseWriter, r *http.Request) {
 		SlaveID int    `json:"slave_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "invalid request", userID, nil)
 		return
 	}
 	if body.Name == "" {
-		http.Error(w, "name is required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "name is required", userID, nil)
 		return
 	}
 	var conn *MachineConnection
@@ -258,7 +314,7 @@ func (h *Handler) CreateMachine(w http.ResponseWriter, r *http.Request) {
 	}
 	machine, err := h.store.CreateMachine(r.Context(), lineID, body.Name, body.Model, conn)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -267,6 +323,10 @@ func (h *Handler) CreateMachine(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateMachine(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	machineID := chi.URLParam(r, "machineID")
 	var body struct {
 		Name    string `json:"name"`
@@ -276,11 +336,11 @@ func (h *Handler) UpdateMachine(w http.ResponseWriter, r *http.Request) {
 		SlaveID int    `json:"slave_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "invalid request", userID, nil)
 		return
 	}
 	if body.Name == "" {
-		http.Error(w, "name is required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "name is required", userID, nil)
 		return
 	}
 	var conn *MachineConnection
@@ -290,10 +350,10 @@ func (h *Handler) UpdateMachine(w http.ResponseWriter, r *http.Request) {
 	machine, err := h.store.UpdateMachine(r.Context(), machineID, body.Name, body.Model, conn)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			http.Error(w, "machine not found", http.StatusNotFound)
+			apierr.Write(w, r, http.StatusNotFound, "site.not_found", "machine not found", userID, nil)
 			return
 		}
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -301,9 +361,13 @@ func (h *Handler) UpdateMachine(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteMachine(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	machineID := chi.URLParam(r, "machineID")
 	if err := h.store.DeleteMachine(r.Context(), machineID); err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -317,14 +381,14 @@ var validRegTypes = map[string]bool{
 }
 
 var validDataTypes = map[string]bool{
-	"uint16":        true,
-	"int16":         true,
-	"uint32":        true,
-	"int32":         true,
-	"float32":       true,
-	"float64":       true,
-	"bool":          true,
-	"string":        true,
+	"uint16":         true,
+	"int16":          true,
+	"uint32":         true,
+	"int32":          true,
+	"float32":        true,
+	"float64":        true,
+	"bool":           true,
+	"string":         true,
 	"timestamp_unix": true,
 }
 
@@ -370,15 +434,18 @@ func validateRegister(r *Register) error {
 }
 
 func (h *Handler) GetRegisters(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	machineID := chi.URLParam(r, "machineID")
 	registers, err := h.store.GetMachineRegisters(r.Context(), machineID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			http.Error(w, "machine not found", http.StatusNotFound)
+			apierr.Write(w, r, http.StatusNotFound, "site.not_found", "machine not found", userID, nil)
 			return
 		}
-		log.Printf("GetRegisters error: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -386,24 +453,27 @@ func (h *Handler) GetRegisters(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) SetRegisters(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	machineID := chi.URLParam(r, "machineID")
 	var body struct {
 		Registers []Register `json:"registers"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "invalid request", userID, nil)
 		return
 	}
 	for i := range body.Registers {
 		applyRegisterDefaults(&body.Registers[i])
 		if err := validateRegister(&body.Registers[i]); err != nil {
-			http.Error(w, fmt.Sprintf("register[%d]: %v", i, err), http.StatusBadRequest)
+			apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", fmt.Sprintf("register[%d]: %v", i, err), userID, nil)
 			return
 		}
 	}
 	if err := h.store.SetMachineRegisters(r.Context(), machineID, body.Registers); err != nil {
-		log.Printf("SetRegisters error: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -411,14 +481,18 @@ func (h *Handler) SetRegisters(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListSiteMachines(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	siteID := r.URL.Query().Get("site_id")
 	if siteID == "" {
-		http.Error(w, "site_id is required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "site_id is required", userID, nil)
 		return
 	}
 	machines, err := h.store.ListMachinesBySite(r.Context(), siteID)
 	if err != nil {
-		http.Error(w, "failed to list machines", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "failed to list machines", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -436,9 +510,13 @@ func (h *Handler) GetRegisterMetrics(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ImportRegistersCSV(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "failed to read body", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "failed to read body", userID, nil)
 		return
 	}
 
@@ -447,7 +525,7 @@ func (h *Handler) ImportRegistersCSV(w http.ResponseWriter, r *http.Request) {
 
 	headers, err := reader.Read()
 	if err != nil {
-		http.Error(w, "failed to parse CSV header", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", "failed to parse CSV header", userID, nil)
 		return
 	}
 
@@ -467,7 +545,7 @@ func (h *Handler) ImportRegistersCSV(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		if err != nil {
-			http.Error(w, fmt.Sprintf("CSV parse error: %v", err), http.StatusBadRequest)
+			apierr.Write(w, r, http.StatusBadRequest, "site.invalid_input", fmt.Sprintf("CSV parse error: %v", err), userID, nil)
 			return
 		}
 		rowNum++

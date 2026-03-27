@@ -2,11 +2,12 @@ package worker_config
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/industry-dashboard/server/internal/apierr"
+	"github.com/industry-dashboard/server/internal/auth"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -23,10 +24,13 @@ func NewHandler(store *Store) *Handler {
 }
 
 func (h *Handler) ListConfigs(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	configs, err := h.store.ListConfigs(r.Context())
 	if err != nil {
-		log.Printf("ListConfigs error: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -34,17 +38,21 @@ func (h *Handler) ListConfigs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateConfig(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	var body struct {
 		Name         string `json:"name"`
 		SiteID       string `json:"site_id"`
 		PollInterval string `json:"poll_interval"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "worker.invalid_input", "invalid request", userID, nil)
 		return
 	}
 	if body.Name == "" {
-		http.Error(w, "name is required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "worker.invalid_input", "name is required", userID, nil)
 		return
 	}
 	if body.PollInterval == "" {
@@ -53,11 +61,10 @@ func (h *Handler) CreateConfig(w http.ResponseWriter, r *http.Request) {
 	cfg, err := h.store.CreateConfig(r.Context(), body.Name, body.SiteID, body.PollInterval)
 	if err != nil {
 		if isDuplicateKey(err) {
-			http.Error(w, "config name already exists for this site", http.StatusConflict)
+			apierr.Write(w, r, http.StatusConflict, "worker.invalid_input", "config name already exists for this site", userID, nil)
 			return
 		}
-		log.Printf("CreateConfig error: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -66,15 +73,18 @@ func (h *Handler) CreateConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetConfig(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	configID := chi.URLParam(r, "configID")
 	cfg, err := h.store.GetConfig(r.Context(), configID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			http.Error(w, "config not found", http.StatusNotFound)
+			apierr.Write(w, r, http.StatusNotFound, "worker.not_found", "config not found", userID, nil)
 			return
 		}
-		log.Printf("GetConfig error: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -82,6 +92,10 @@ func (h *Handler) GetConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateConfig(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	configID := chi.URLParam(r, "configID")
 	var body struct {
 		Name         string `json:"name"`
@@ -89,11 +103,11 @@ func (h *Handler) UpdateConfig(w http.ResponseWriter, r *http.Request) {
 		PollInterval string `json:"poll_interval"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "worker.invalid_input", "invalid request", userID, nil)
 		return
 	}
 	if body.Name == "" {
-		http.Error(w, "name is required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "worker.invalid_input", "name is required", userID, nil)
 		return
 	}
 	if body.PollInterval == "" {
@@ -102,15 +116,14 @@ func (h *Handler) UpdateConfig(w http.ResponseWriter, r *http.Request) {
 	cfg, err := h.store.UpdateConfig(r.Context(), configID, body.Name, body.SiteID, body.PollInterval)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			http.Error(w, "config not found", http.StatusNotFound)
+			apierr.Write(w, r, http.StatusNotFound, "worker.not_found", "config not found", userID, nil)
 			return
 		}
 		if isDuplicateKey(err) {
-			http.Error(w, "config name already exists for this site", http.StatusConflict)
+			apierr.Write(w, r, http.StatusConflict, "worker.invalid_input", "config name already exists for this site", userID, nil)
 			return
 		}
-		log.Printf("UpdateConfig error: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -118,39 +131,44 @@ func (h *Handler) UpdateConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteConfig(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	configID := chi.URLParam(r, "configID")
 	if err := h.store.DeleteConfig(r.Context(), configID); err != nil {
-		log.Printf("DeleteConfig error: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) SetConfigMachines(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	configID := chi.URLParam(r, "configID")
 	var body struct {
 		Machines []ConfigMachineInput `json:"machines"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "worker.invalid_input", "invalid request", userID, nil)
 		return
 	}
 	for _, m := range body.Machines {
 		if m.Host == "" {
-			http.Error(w, "host is required for each machine", http.StatusBadRequest)
+			apierr.Write(w, r, http.StatusBadRequest, "worker.invalid_input", "host is required for each machine", userID, nil)
 			return
 		}
 	}
 	if err := h.store.SetConfigMachines(r.Context(), configID, body.Machines); err != nil {
-		log.Printf("SetConfigMachines error: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	cfg, err := h.store.GetConfig(r.Context(), configID)
 	if err != nil {
-		log.Printf("GetConfig after SetConfigMachines error: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -158,15 +176,18 @@ func (h *Handler) SetConfigMachines(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ExportYAML(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	configID := chi.URLParam(r, "configID")
 	yamlBytes, workerName, err := h.store.GenerateYAML(r.Context(), configID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			http.Error(w, "config not found", http.StatusNotFound)
+			apierr.Write(w, r, http.StatusNotFound, "worker.not_found", "config not found", userID, nil)
 			return
 		}
-		log.Printf("ExportYAML error: %v", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 

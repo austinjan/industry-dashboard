@@ -8,6 +8,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/industry-dashboard/server/internal/apierr"
+	"github.com/industry-dashboard/server/internal/auth"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -28,9 +30,13 @@ var validCommands = map[string]bool{
 
 // ListWorkers returns all workers as a JSON array.
 func (h *Handler) ListWorkers(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	workers, err := h.store.ListWorkers(r.Context())
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -39,19 +45,23 @@ func (h *Handler) ListWorkers(w http.ResponseWriter, r *http.Request) {
 
 // GetWorker returns a single worker by ID with machines and recent commands.
 func (h *Handler) GetWorker(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	workerID := chi.URLParam(r, "workerID")
 	if _, err := uuid.Parse(workerID); err != nil {
-		http.Error(w, "invalid worker ID", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "worker.invalid_input", "invalid worker ID", userID, nil)
 		return
 	}
 
 	detail, err := h.store.GetWorker(r.Context(), workerID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			http.Error(w, "worker not found", http.StatusNotFound)
+			apierr.Write(w, r, http.StatusNotFound, "worker.not_found", "worker not found", userID, nil)
 			return
 		}
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -60,9 +70,13 @@ func (h *Handler) GetWorker(w http.ResponseWriter, r *http.Request) {
 
 // SendCommand sends a command to a worker.
 func (h *Handler) SendCommand(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	workerID := chi.URLParam(r, "workerID")
 	if _, err := uuid.Parse(workerID); err != nil {
-		http.Error(w, "invalid worker ID", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "worker.invalid_input", "invalid worker ID", userID, nil)
 		return
 	}
 
@@ -70,26 +84,26 @@ func (h *Handler) SendCommand(w http.ResponseWriter, r *http.Request) {
 		Command string `json:"command"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "worker.invalid_input", "invalid request body", userID, nil)
 		return
 	}
 
 	if !validCommands[body.Command] {
-		http.Error(w, "invalid command", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "worker.invalid_input", "invalid command", userID, nil)
 		return
 	}
 
 	cmd, err := h.store.SendCommand(r.Context(), workerID, body.Command)
 	if err != nil {
 		if errors.Is(err, ErrWorkerNotFound) {
-			http.Error(w, "worker not found", http.StatusNotFound)
+			apierr.Write(w, r, http.StatusNotFound, "worker.not_found", "worker not found", userID, nil)
 			return
 		}
 		if errors.Is(err, ErrWorkerOffline) {
-			http.Error(w, "worker is offline, cannot send commands", http.StatusBadRequest)
+			apierr.Write(w, r, http.StatusBadRequest, "worker.invalid_input", "worker is offline, cannot send commands", userID, nil)
 			return
 		}
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 
@@ -100,9 +114,13 @@ func (h *Handler) SendCommand(w http.ResponseWriter, r *http.Request) {
 
 // ListCommands returns paginated commands for a worker.
 func (h *Handler) ListCommands(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	workerID := chi.URLParam(r, "workerID")
 	if _, err := uuid.Parse(workerID); err != nil {
-		http.Error(w, "invalid worker ID", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "worker.invalid_input", "invalid worker ID", userID, nil)
 		return
 	}
 
@@ -127,7 +145,7 @@ func (h *Handler) ListCommands(w http.ResponseWriter, r *http.Request) {
 
 	commands, total, err := h.store.ListCommands(r.Context(), workerID, limit, offset)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 
@@ -140,24 +158,28 @@ func (h *Handler) ListCommands(w http.ResponseWriter, r *http.Request) {
 
 // GetWorkerConfig returns the running config JSON for a worker.
 func (h *Handler) GetWorkerConfig(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	workerID := chi.URLParam(r, "workerID")
 	if _, err := uuid.Parse(workerID); err != nil {
-		http.Error(w, "invalid worker ID", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "worker.invalid_input", "invalid worker ID", userID, nil)
 		return
 	}
 
 	configJSON, err := h.store.GetWorkerConfig(r.Context(), workerID)
 	if err != nil {
 		if errors.Is(err, ErrWorkerNotFound) {
-			http.Error(w, "worker not found", http.StatusNotFound)
+			apierr.Write(w, r, http.StatusNotFound, "worker.not_found", "worker not found", userID, nil)
 			return
 		}
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 
 	if configJSON == nil {
-		http.Error(w, "no config stored for this worker", http.StatusNotFound)
+		apierr.Write(w, r, http.StatusNotFound, "worker.not_found", "no config stored for this worker", userID, nil)
 		return
 	}
 
