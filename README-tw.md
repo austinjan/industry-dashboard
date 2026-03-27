@@ -57,6 +57,62 @@ cd frontend && npm install && npm run dev
 | `AZURE_TENANT_ID` | | Azure AD 租戶 ID |
 | `JWT_SECRET` | `dev-secret-change-in-production` | JWT 簽名密鑰 |
 
+## 部署
+
+### 編譯
+
+```bash
+# 編譯所有（伺服器含前端 + CLI + Worker）
+make build
+
+# 或個別編譯
+make build-server    # bin/dashboard-server（13MB，內含前端）
+make build-cli       # bin/dashboard-cli
+make build-worker    # bin/dashboard-worker
+```
+
+### Docker
+
+```bash
+# 編譯並啟動完整服務（伺服器 + TimescaleDB）
+make docker-run
+
+# 僅編譯映像檔
+make docker-build
+```
+
+Docker 映像包含 3 個執行檔 + 資料庫遷移檔。伺服器內嵌前端，不需要額外的 Web 伺服器。
+
+### 跨平台編譯（Release）
+
+```bash
+make release    # 編譯至 dist/ 目錄
+```
+
+產出：
+- `dashboard-server-linux-{amd64,arm64}` — 伺服器
+- `dashboard-cli-{linux,darwin,windows}-{amd64,arm64}` — 各平台 CLI
+- `dashboard-worker-linux-{amd64,arm64}` — Worker
+
+### 正式環境部署
+
+```bash
+# 1. 執行資料庫遷移
+make migrate
+
+# 2. 啟動伺服器（單一執行檔，同時提供 API + 前端，port 8080）
+PORT=8080 DATABASE_URL=postgres://... JWT_SECRET=... ./bin/dashboard-server
+
+# 3. 將 Worker 部署到工廠邊緣設備
+./bin/dashboard-worker -config /etc/dashboard/worker.yaml
+```
+
+### 透過 `go install` 安裝 CLI
+
+```bash
+go install github.com/austinjan/industry-dashboard/cmd/dashboard-cli@latest
+```
+
 ## 模擬 Worker
 
 模擬 Worker 在沒有真實 Modbus 硬體的情況下產生模擬感測器資料。透過 YAML 設定檔建立廠區、產線和機台，並按照輪詢間隔寫入隨機資料到 TimescaleDB。
