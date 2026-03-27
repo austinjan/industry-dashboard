@@ -57,9 +57,10 @@ build-worker:
 	CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=$$(git describe --tags --always --dirty 2>/dev/null || echo dev)" -o bin/dashboard-worker ./cmd/worker
 
 # Cross-compilation for releases
-release:
+release: build-frontend
 	@echo "Building release binaries..."
-	@mkdir -p dist
+	@mkdir -p dist cmd/server/frontend_dist
+	cp -r frontend/dist/* cmd/server/frontend_dist/
 	# Server (linux only - for Docker/server deployment)
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=$$(git describe --tags --always 2>/dev/null || echo dev)" -o dist/dashboard-server-linux-amd64 ./cmd/server
 	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=$$(git describe --tags --always 2>/dev/null || echo dev)" -o dist/dashboard-server-linux-arm64 ./cmd/server
@@ -72,6 +73,7 @@ release:
 	# Worker (linux - for factory edge devices)
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-worker-linux-amd64 ./cmd/worker
 	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-worker-linux-arm64 ./cmd/worker
+	rm -rf cmd/server/frontend_dist
 	@echo "Release binaries in dist/"
 
 # Docker
