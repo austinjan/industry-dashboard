@@ -128,6 +128,16 @@ func (s *Store) Revoke(ctx context.Context, id string) error {
 	return err
 }
 
+// ValidateKeyName validates a full API key and returns just the key's name.
+// It satisfies the auth.APIKeyValidator interface.
+func (s *Store) ValidateKeyName(ctx context.Context, fullKey string) (string, error) {
+	key, err := s.ValidateKey(ctx, fullKey)
+	if err != nil {
+		return "", err
+	}
+	return key.Name, nil
+}
+
 // HasAnyKey returns true if there is at least one active API key.
 func (s *Store) HasAnyKey(ctx context.Context) (bool, error) {
 	var exists bool
