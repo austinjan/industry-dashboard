@@ -69,7 +69,7 @@ func (s *Store) List(ctx context.Context, params ListParams) ([]AuditLog, error)
 	if params.Limit == 0 {
 		params.Limit = 50
 	}
-	query := `SELECT id, user_id, action, resource_type, resource_id, details, ip_address, timestamp
+	query := `SELECT id, user_id, action, resource_type, resource_id, details, host(ip_address), timestamp
 		FROM audit_logs WHERE 1=1`
 	args := []interface{}{}
 	argIdx := 1
