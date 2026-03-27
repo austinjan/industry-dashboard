@@ -321,6 +321,7 @@ Key changes:
 - Add `SetAPIKeyStore(store)` method to the `Middleware` struct
 - In `Authenticate()`, after extracting the token string, check `strings.HasPrefix(token, "dk_")`
 - If API key: validate via `apiKeyStore.ValidateKey()`, create Claims with `UserID: "llm:" + key.Name`, `Email: "llm:" + key.Name + "@api"`, `TokenType: "api_key"`
+- **Read-only enforcement:** After setting claims for API key auth, check `r.Method != "GET"`. If non-GET, allow only if the path starts with `/api/llm/keys` (admin key management). Otherwise return 403 "API keys are read-only".
 - If JWT: continue with existing flow
 
 - [ ] **Step 3: Verify compilation**
@@ -388,7 +389,8 @@ if !params.Since.IsZero() {
 
 Also add a total count query (same pattern as alert store's `AlertEventListResult`):
 - Run `SELECT COUNT(*)` with same filters before the main query
-- Return a struct `AuditListResult { Logs []AuditLog, Total int }`
+- Return a struct `AuditListResult { Logs []AuditLog `json:"logs"`, Total int `json:"total"` }`
+- **Breaking API change:** The `/api/audit-logs` response changes from `[...]` to `{"logs":[...],"total":N}`. Update `frontend/src/pages/admin/AuditLogPage.tsx` to read `data?.logs` instead of `data` directly, and update the `useAuditLogs` hook return type in `frontend/src/lib/hooks.ts`.
 
 - [ ] **Step 2: Update audit handler to parse `since`**
 
@@ -777,17 +779,11 @@ func (c *Client) getJSON(path string, v interface{}) error {
 }
 
 func (c *Client) post(path string, body interface{}) ([]byte, error) {
-	var bodyReader io.Reader
+	var buf bytes.Buffer
 	if body != nil {
-		data, _ := json.Marshal(body)
-		bodyReader = io.NopCloser(io.Reader(nil))
-		_ = data
-		// Simple implementation: encode to JSON
-		import_buf := new(bytes.Buffer)
-		json.NewEncoder(import_buf).Encode(body)
-		bodyReader = import_buf
+		json.NewEncoder(&buf).Encode(body)
 	}
-	req, err := http.NewRequest("POST", c.baseURL+"/api"+path, bodyReader)
+	req, err := http.NewRequest("POST", c.baseURL+"/api"+path, &buf)
 	if err != nil {
 		return nil, err
 	}
@@ -806,7 +802,7 @@ func (c *Client) post(path string, body interface{}) ([]byte, error) {
 }
 ```
 
-**Note:** The implementer should clean up the `post` method — the above has a rough sketch. Use `bytes.Buffer` + `json.NewEncoder` properly.
+**Note:** The `bytes` package must be added to the import list alongside `encoding/json`, `fmt`, `io`, `net/http`, `os`, `time`.
 
 - [ ] **Step 2: Create output.go**
 
