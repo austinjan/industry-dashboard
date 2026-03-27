@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/industry-dashboard/server/internal/apierr"
 	"github.com/industry-dashboard/server/internal/auth"
 )
 
@@ -27,23 +28,24 @@ type updatePreferencesRequest struct {
 func (h *PreferenceHandler) UpdatePreferences(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaims(r.Context())
 	if claims == nil {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		apierr.Write(w, r, http.StatusUnauthorized, "user.invalid_input", "unauthorized", "", nil)
 		return
 	}
+	userID := claims.UserID
 
 	var req updatePreferencesRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "user.invalid_input", "invalid request", userID, nil)
 		return
 	}
 
 	if !ValidLocales[req.Locale] {
-		http.Error(w, "invalid locale", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "user.invalid_input", "invalid locale", userID, nil)
 		return
 	}
 
 	if err := h.store.UpdateUserLocale(r.Context(), claims.UserID, req.Locale); err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 

@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/industry-dashboard/server/internal/apierr"
+	"github.com/industry-dashboard/server/internal/auth"
 )
 
 type Handler struct {
@@ -16,11 +18,15 @@ func NewHandler(store *Store) *Handler {
 }
 
 func (h *Handler) GetTimeSeries(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	machineID := r.URL.Query().Get("machine_id")
 	metric := r.URL.Query().Get("metric")
 	timeRange := r.URL.Query().Get("range")
 	if machineID == "" || metric == "" {
-		http.Error(w, "machine_id and metric required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "datapoint.invalid_input", "machine_id and metric required", userID, nil)
 		return
 	}
 	if timeRange == "" {
@@ -28,7 +34,7 @@ func (h *Handler) GetTimeSeries(w http.ResponseWriter, r *http.Request) {
 	}
 	points, err := h.store.GetTimeSeries(r.Context(), machineID, metric, timeRange)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -36,10 +42,14 @@ func (h *Handler) GetTimeSeries(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetMachineMetrics(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	machineID := chi.URLParam(r, "machineID")
 	metrics, err := h.store.GetMachineMetrics(r.Context(), machineID)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -47,10 +57,14 @@ func (h *Handler) GetMachineMetrics(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetLatestValues(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	machineID := chi.URLParam(r, "machineID")
 	values, err := h.store.GetLatestValues(r.Context(), machineID)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

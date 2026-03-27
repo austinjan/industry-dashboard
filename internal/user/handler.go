@@ -3,6 +3,9 @@ package user
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/industry-dashboard/server/internal/apierr"
+	"github.com/industry-dashboard/server/internal/auth"
 )
 
 type Handler struct {
@@ -14,9 +17,13 @@ func NewHandler(store *Store) *Handler {
 }
 
 func (h *Handler) ListUsers(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	users, err := h.store.ListUsers(r.Context())
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

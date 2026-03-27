@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/industry-dashboard/server/internal/apierr"
+	"github.com/industry-dashboard/server/internal/auth"
 )
 
 type Handler struct {
@@ -17,21 +19,25 @@ func NewHandler(store *Store) *Handler {
 
 // CreateKey handles POST requests to create a new API key.
 func (h *Handler) CreateKey(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	var req struct {
 		Name string `json:"name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "llm.invalid_input", "invalid request body", userID, nil)
 		return
 	}
 	if req.Name == "" {
-		http.Error(w, "name is required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "llm.invalid_input", "name is required", userID, nil)
 		return
 	}
 
 	key, fullKey, err := h.store.Create(r.Context(), req.Name)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 
@@ -52,9 +58,13 @@ func (h *Handler) CreateKey(w http.ResponseWriter, r *http.Request) {
 
 // ListKeys handles GET requests to list all API keys.
 func (h *Handler) ListKeys(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	keys, err := h.store.List(r.Context())
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -63,14 +73,18 @@ func (h *Handler) ListKeys(w http.ResponseWriter, r *http.Request) {
 
 // RevokeKey handles DELETE requests to revoke an API key.
 func (h *Handler) RevokeKey(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	keyID := chi.URLParam(r, "keyID")
 	if keyID == "" {
-		http.Error(w, "keyID is required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "llm.invalid_input", "keyID is required", userID, nil)
 		return
 	}
 
 	if err := h.store.Revoke(r.Context(), keyID); err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
