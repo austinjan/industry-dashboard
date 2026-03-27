@@ -27,7 +27,7 @@ export function ApiKeysPage() {
       { name: keyName.trim() },
       {
         onSuccess: (data: any) => {
-          setCreatedKey(data.api_key);
+          setCreatedKey(data.full_key);
           setKeyName('');
         },
       }
