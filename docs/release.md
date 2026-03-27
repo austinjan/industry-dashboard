@@ -78,7 +78,7 @@ When distributing to users, include:
 ├── dashboard-cli-<platform>
 ├── dashboard-worker-<platform>
 ├── docker-compose.production.yml
-└── .env.example
+└── default.env.example
 ```
 
 See [Deploy Guide](deploy.md) | [部署指南](deploy-tw.md) for setup instructions.

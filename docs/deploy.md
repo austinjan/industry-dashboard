@@ -25,7 +25,7 @@ You need 3 files from the release:
 ### Step 2: Configure environment
 
 ```bash
-cp .env.example .env
+cp default.env.example .env
 ```
 
 Edit `.env`:

@@ -25,7 +25,7 @@
 ### 步驟 2：設定環境變數
 
 ```bash
-cp .env.example .env
+cp default.env.example .env
 ```
 
 編輯 `.env`：
