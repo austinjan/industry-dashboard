@@ -11,7 +11,7 @@ Requirements for milestone v0.0.3: Local Auth, Error Handling & Release Validati
 
 - [x] **AUTH-01**: User can register with email and password (guest role assigned)
 - [x] **AUTH-02**: User can login with email and password (JWT issued)
-- [ ] **AUTH-03**: Auth endpoints are rate-limited to prevent brute force
+- [x] **AUTH-03**: Auth endpoints are rate-limited to prevent brute force
 
 ### SSO Binding
 
@@ -55,7 +55,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | AUTH-01 | Phase 1 | Complete |
 | AUTH-02 | Phase 1 | Complete |
-| AUTH-03 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Complete |
 | SSO-01 | Phase 4 | Pending |
 | SSO-02 | Phase 4 | Pending |
 | ERR-01 | Phase 2 | Pending |

@@ -12,7 +12,7 @@ This milestone adds local email/password authentication alongside the existing M
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Backend Local Auth** - Register and login with email/password, rate limiting, Guest role migration
+- [x] **Phase 1: Backend Local Auth** - Register and login with email/password, rate limiting, Guest role migration (completed 2026-03-27)
 - [ ] **Phase 2: Error Handling** - Structured JSON errors across all backend handlers and structured logging
 - [ ] **Phase 3: Frontend Auth UI** - Login and registration pages wired to backend, inline error display
 - [ ] **Phase 4: SSO Binding** - User-initiated Microsoft account linking from account settings page
@@ -30,11 +30,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Login with wrong password returns 401 with no timing difference compared to a non-existent email (dummy bcrypt applied)
   4. More than 5 login attempts per minute from the same IP are rejected with 429
   5. GET /api/auth/providers returns the list of available auth methods so the frontend knows what to render
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [x] 01-01-PLAN.md — Foundation: dependencies, password utilities, error helper, migration 022
 - [x] 01-02-PLAN.md — Auth handlers: RegisterLocal, LoginLocal, Providers, nil-safe handler, SeedDefaultAdmin
-- [ ] 01-03-PLAN.md — Wiring: main.go routes with rate limiting, dead code removal, comprehensive tests
+- [x] 01-03-PLAN.md — Wiring: main.go routes with rate limiting, dead code removal, comprehensive tests
 
 ### Phase 2: Error Handling
 **Goal**: Backend returns structured JSON errors everywhere and all errors appear in system logs with full request context
@@ -88,7 +88,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Backend Local Auth | 2/3 | In Progress|  |
+| 1. Backend Local Auth | 3/3 | Complete   | 2026-03-27 |
 | 2. Error Handling | 0/? | Not started | - |
 | 3. Frontend Auth UI | 0/? | Not started | - |
 | 4. SSO Binding | 0/? | Not started | - |
