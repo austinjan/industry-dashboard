@@ -45,10 +45,11 @@ build-frontend:
 	cd frontend && npm ci && npm run build
 
 build-server: build-frontend
-	mkdir -p cmd/server/frontend_dist
+	mkdir -p cmd/server/frontend_dist cmd/server/migrations
 	cp -r frontend/dist/* cmd/server/frontend_dist/
+	cp migrations/*.sql cmd/server/migrations/
 	CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=$$(git describe --tags --always --dirty 2>/dev/null || echo dev)" -o bin/dashboard-server ./cmd/server
-	rm -rf cmd/server/frontend_dist
+	rm -rf cmd/server/frontend_dist cmd/server/migrations
 
 build-cli:
 	CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=$$(git describe --tags --always --dirty 2>/dev/null || echo dev)" -o bin/dashboard-cli ./cmd/dashboard-cli
@@ -59,8 +60,9 @@ build-worker:
 # Cross-compilation for releases
 release: build-frontend
 	@echo "Building release binaries..."
-	@mkdir -p dist cmd/server/frontend_dist
+	@mkdir -p dist cmd/server/frontend_dist cmd/server/migrations
 	cp -r frontend/dist/* cmd/server/frontend_dist/
+	cp migrations/*.sql cmd/server/migrations/
 	# Server
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=$$(git describe --tags --always 2>/dev/null || echo dev)" -o dist/dashboard-server-linux-amd64 ./cmd/server
 	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=$$(git describe --tags --always 2>/dev/null || echo dev)" -o dist/dashboard-server-linux-arm64 ./cmd/server
@@ -79,7 +81,7 @@ release: build-frontend
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-worker-darwin-amd64 ./cmd/worker
 	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-worker-darwin-arm64 ./cmd/worker
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-worker-windows-amd64.exe ./cmd/worker
-	rm -rf cmd/server/frontend_dist
+	rm -rf cmd/server/frontend_dist cmd/server/migrations
 	@echo "Release binaries in dist/"
 
 # Docker

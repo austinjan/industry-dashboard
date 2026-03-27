@@ -31,5 +31,8 @@ bin/
 dashboard-cli
 
 # Build artifacts
-cmd/server/frontend_dist/
+cmd/server/frontend_dist/*
+!cmd/server/frontend_dist/.gitkeep
+cmd/server/migrations/*
+!cmd/server/migrations/.gitkeep
 dist/

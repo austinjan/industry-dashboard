@@ -88,7 +88,7 @@ make docker-build
 docker build -t industry-dashboard .
 ```
 
-The image includes all 3 binaries and migration files. Default entrypoint is `dashboard-server`.
+The image includes all 3 binaries. Migrations are embedded in the server binary. Default entrypoint is `dashboard-server`.
 
 ### Run Full Stack
 
@@ -98,28 +98,7 @@ make docker-run
 docker compose up
 ```
 
-This starts TimescaleDB + the server. Server is available at `http://localhost:8080`.
-
-### Run Migrations in Docker
-
-```bash
-docker compose exec server sh -c \
-  'migrate -path /migrations -database "$DATABASE_URL" up'
-```
-
-The `migrate` CLI is not included in the image. Run migrations using:
-
-```bash
-# From host machine (requires Go)
-make migrate
-
-# Or use the migrate Docker image
-docker run --rm --network host \
-  -v $(pwd)/migrations:/migrations \
-  migrate/migrate \
-  -path /migrations \
-  -database "postgres://dashboard:dashboard@localhost:5432/industry_dashboard?sslmode=disable" up
-```
+This starts TimescaleDB + the server. Server is available at `http://localhost:8080`. **Migrations run automatically on startup** — no separate step needed.
 
 ## Version Tagging
 
@@ -147,12 +126,23 @@ make release
 4. Upload `dist/*` as release assets
 5. Users download the binary for their platform
 
+## Database & Migrations
+
+**Migrations run automatically when the server starts.** The server binary embeds all migration files — no external migration tool or files needed.
+
+On startup the server:
+1. Connects to the database
+2. Runs any pending migrations (skips if already up to date)
+3. Logs the current migration version
+4. Starts serving requests
+
+If you prefer manual control, you can still run `make migrate` from the source tree, or set `AUTO_MIGRATE=false` (not yet implemented) to disable auto-migration.
+
 ## Deployment Checklist
 
-- [ ] Database is running (TimescaleDB/PostgreSQL)
-- [ ] Migrations applied (`make migrate`)
+- [ ] Database is running (TimescaleDB/PostgreSQL with `timescaledb` extension)
 - [ ] Environment variables set (`DATABASE_URL`, `JWT_SECRET`, `PORT`)
 - [ ] Azure AD configured (if using SSO: `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TENANT_ID`)
-- [ ] Server binary started
+- [ ] Server binary started (migrations run automatically)
 - [ ] Worker deployed with config YAML pointing to the correct database
 - [ ] API key created via Admin UI for CLI/LLM access

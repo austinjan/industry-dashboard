@@ -32,6 +32,9 @@ func main() {
 	cfg := config.Load()
 	ctx := context.Background()
 
+	// Auto-migrate before connecting pool
+	autoMigrate(cfg.DatabaseURL)
+
 	pool, err := database.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)

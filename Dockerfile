@@ -13,8 +13,9 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-# Copy frontend build output for embedding
+# Copy frontend build + migrations for embedding
 COPY --from=frontend /app/frontend/dist cmd/server/frontend_dist
+RUN cp -r migrations cmd/server/migrations
 # Build server
 RUN CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=$(git describe --tags --always 2>/dev/null || echo docker)" -o /bin/dashboard-server ./cmd/server
 # Build CLI
@@ -28,6 +29,5 @@ RUN apk add --no-cache ca-certificates tzdata
 COPY --from=builder /bin/dashboard-server /usr/local/bin/
 COPY --from=builder /bin/dashboard-cli /usr/local/bin/
 COPY --from=builder /bin/dashboard-worker /usr/local/bin/
-COPY migrations /migrations
 EXPOSE 8080
 ENTRYPOINT ["dashboard-server"]
