@@ -109,6 +109,14 @@ The worktree was initialized on an older branch and needed `git merge main` to p
 - GET /api/auth/providers enables frontend to show available login methods dynamically
 - All 26 auth tests pass; `make test` green; `go build ./...` clean
 
+## Self-Check: PASSED
+
+- cmd/server/main.go: FOUND
+- internal/auth/local_test.go: FOUND
+- 01-03-SUMMARY.md: FOUND
+- Commit 3a9914c (Task 1): FOUND
+- Commit e7efdb3 (Task 2): FOUND
+
 ---
 *Phase: 01-backend-local-auth*
 *Completed: 2026-03-27*
