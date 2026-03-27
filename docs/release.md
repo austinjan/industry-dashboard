@@ -90,7 +90,7 @@ docker build -t industry-dashboard .
 
 The image includes all 3 binaries. Migrations are embedded in the server binary. Default entrypoint is `dashboard-server`.
 
-### Run Full Stack
+### Development (docker-compose.yml)
 
 ```bash
 make docker-run
@@ -98,7 +98,52 @@ make docker-run
 docker compose up
 ```
 
-This starts TimescaleDB + the server. Server is available at `http://localhost:8080`. **Migrations run automatically on startup** — no separate step needed.
+### Production (docker-compose.production.yml)
+
+```bash
+# 1. Copy the example env file and edit
+cp .env.example .env
+# Edit .env — set DB_PASSWORD and JWT_SECRET at minimum
+
+# 2. Start
+docker compose -f docker-compose.production.yml up -d
+```
+
+Production compose includes:
+- **Required secrets** — `DB_PASSWORD` and `JWT_SECRET` must be set (will error if missing)
+- **Health checks** — server waits for DB to be ready before starting
+- **Auto-restart** — both services restart on failure
+- **Persistent volume** — `pgdata` survives container restarts
+
+**Migrations run automatically on server startup** — no separate step needed.
+
+### Release Package
+
+When distributing to users without the source code, include:
+
+```
+release/
+├── dashboard-server-linux-amd64    # (or appropriate platform)
+├── docker-compose.production.yml
+└── .env.example
+```
+
+Users just need:
+```bash
+cp .env.example .env
+# Edit .env
+docker compose -f docker-compose.production.yml up -d
+```
+
+Or without Docker (bring your own TimescaleDB):
+```bash
+cp .env.example .env
+# Edit .env
+source .env
+DATABASE_URL="postgres://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME?sslmode=disable" \
+JWT_SECRET="$JWT_SECRET" \
+./dashboard-server-linux-amd64
+```
 
 ## Version Tagging
 
