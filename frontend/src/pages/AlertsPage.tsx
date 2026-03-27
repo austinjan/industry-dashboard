@@ -190,14 +190,21 @@ export function AlertsPage() {
                     {e.triggered_value != null
                       ? e.condition === '==' && (e.threshold === 0 || e.threshold === 1)
                         ? `${e.metric_name} = ${e.triggered_value === 1 ? 'ON' : 'OFF'}`
-                        : `${e.triggered_value} ${e.condition} ${e.threshold}`
-                      : `${e.metric_name} ${e.condition} ${e.threshold}`}
+                        : `${Number(e.triggered_value).toFixed(2)} ${e.condition} ${Number(e.threshold).toFixed(2)}`
+                      : `${e.metric_name} ${e.condition} ${Number(e.threshold).toFixed(2)}`}
                   </code>
                 </TableCell>
                 <TableCell className="text-sm text-slate-500">{new Date(e.triggered_at).toLocaleString()}</TableCell>
                 <TableCell>
                   {e.resolved_at ? (
-                    <Badge variant="outline" className="text-green-600">{t('alerts.resolved')}</Badge>
+                    <Badge
+                      variant="outline"
+                      className="text-green-600 cursor-pointer"
+                      title={new Date(e.resolved_at).toLocaleString()}
+                      onClick={() => alert(`${t('alerts.resolved')}: ${new Date(e.resolved_at).toLocaleString()}`)}
+                    >
+                      {t('alerts.resolved')}
+                    </Badge>
                   ) : e.acknowledged_by ? (
                     <Badge variant="outline" className="text-blue-600">{t('alerts.acknowledged')}</Badge>
                   ) : (
