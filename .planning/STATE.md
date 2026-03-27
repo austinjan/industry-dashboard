@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.0.3
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-27T11:11:18.020Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-03-27T11:21:19.236Z"
 last_activity: 2026-03-27
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 02 (error-handling) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-03-27
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-backend-local-auth P02 | 4min | 2 tasks | 3 files |
 | Phase 01-backend-local-auth P03 | 20min | 2 tasks | 2 files |
 | Phase 02-error-handling P01 | 15min | 2 tasks | 5 files |
+| Phase 02-error-handling P02 | 20min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,8 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 01-backend-local-auth]: Dev-mode /api/auth fallback removed — real handlers cover all paths now authHandler is always non-nil
 - [Phase 02-error-handling]: apierr does not import internal/auth — userID passed as string to avoid circular import
 - [Phase 02-error-handling]: RBAC errors include userID from claims for log correlation; rbac.internal_error code for HasPermission DB failures
+- [Phase 02-error-handling]: writeError/apiError in auth package deleted entirely (clean cut D-11) — no shim left behind
+- [Phase 02-error-handling]: alert.invalid_request used for unauthorized access in alert handlers (vs alert.invalid_input for body parsing)
 
 ### Pending Todos
 
@@ -88,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T11:11:18.018Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-03-27T11:21:19.234Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None

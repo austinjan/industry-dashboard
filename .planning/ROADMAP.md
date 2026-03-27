@@ -47,7 +47,7 @@ Plans:
 **Plans:** 1/3 plans executed
 Plans:
 - [x] 02-01-PLAN.md — Foundation: shared apierr package with Write() + slog, RequestID middleware, auth/rbac middleware conversion
-- [ ] 02-02-PLAN.md — Auth package migration + 5 large domain handlers (site, alert, worker_config, worker_api, dashboard)
+- [x] 02-02-PLAN.md — Auth package migration + 5 large domain handlers (site, alert, worker_config, worker_api, dashboard)
 - [ ] 02-03-PLAN.md — Remaining handlers (rbac, llmauth, datapoint, user, audit) + main.go dev routes + verification sweep
 
 ### Phase 3: Frontend Auth UI
