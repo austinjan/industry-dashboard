@@ -122,7 +122,7 @@ The existing auth middleware is extended to accept API keys alongside JWT:
 |--------|-------|------|-------------|
 | POST | `/api/llm/keys` | JWT (admin) | Create new API key |
 | GET | `/api/llm/keys` | JWT (admin) | List keys (prefix, name, created_at, active) |
-| DELETE | `/api/llm/keys/{prefix}` | JWT (admin) | Revoke key |
+| DELETE | `/api/llm/keys/{id}` | JWT/API key (admin) | Revoke key |
 
 ### CLI Configuration
 
@@ -170,6 +170,8 @@ doc
 ├── sites           — site listing and summaries
 ├── workers         — worker fleet status
 ├── auth            — API key setup and configuration
+├── admin           — API key management (create, list, revoke)
+├── configure       — CLI configuration setup
 └── output          — understanding XML output format and pagination
 ```
 
@@ -179,7 +181,7 @@ doc
 dashboard-cli sites [--head N]
 ```
 
-Calls `GET /api/sites` then `GET /api/sites/{id}/summary` for each site.
+Calls `GET /api/sites` to list sites, then `GET /api/sites/{id}/summary` for each. Note: this is N+1 calls. Acceptable for small site counts (typically < 10). If performance becomes an issue, add a batch summary endpoint later.
 
 Output:
 ```xml
@@ -266,7 +268,7 @@ dashboard-cli metrics --machine ID [--metric NAME] [--last 1h|6h|24h|7d|30d] [--
 
 Without `--metric`: calls `GET /api/machines/X/latest` to show latest values for all metrics.
 
-With `--metric`: calls `GET /api/datapoints?machine_id=X&metric_name=Y&time_range=Z` for time-series.
+With `--metric`: calls `GET /api/datapoints?machine_id=X&metric=Y&range=Z` for time-series.
 
 Output (latest):
 ```xml
@@ -341,13 +343,20 @@ dashboard-cli admin create-key --name "claude-agent"
 dashboard-cli admin list-keys
 # XML list of keys (prefix, name, created_at, active)
 
-dashboard-cli admin revoke-key --prefix dk_a3f29b
+dashboard-cli admin revoke-key --id <key-uuid>
 # Confirms revocation
 ```
 
-Admin commands require JWT auth (login flow) or an existing API key with admin scope (future).
+Admin commands authenticate via `--token` flag (pass a JWT directly) or via an existing API key in the config.
 
-For initial bootstrap: the first key can be created via environment variable `DASHBOARD_BOOTSTRAP_KEY=true` which auto-generates a key on server startup and prints it to stdout.
+**Bootstrap flow for first key:**
+1. Server checks `DASHBOARD_BOOTSTRAP_KEY` env var on startup
+2. If set to `true` and no keys exist in `llm_api_keys`, auto-generates one key named "bootstrap"
+3. Prints the key to server stdout: `[BOOTSTRAP] API key created: dk_...`
+4. Admin copies this key to `~/.dashboard-cli.yaml`
+5. Subsequent keys can be created via `dashboard-cli admin create-key --name X`
+
+The `admin` subcommands bypass the read-only method check for API key auth (they call POST/DELETE on `/api/llm/keys`).
 
 ## Backend Changes
 
@@ -363,15 +372,24 @@ For initial bootstrap: the first key can be created via environment variable `DA
 | File | Change |
 |------|--------|
 | `cmd/server/main.go` | Register `/api/llm/keys` routes, add API key auth to middleware chain |
-| `internal/audit/store.go` | Add `since` filter parameter to `ListParams` and `List()` query |
+| `internal/audit/store.go` | Add `since` filter parameter to `ListParams` and `List()` query, return total count |
+| `internal/audit/handler.go` | Pass `since` param from query string |
+| `internal/alert/store.go` | Add `Since` field to `AlertEventListParams` and filter in query |
+| `internal/alert/handler.go` | Pass `since` param from query string |
+| `internal/auth/middleware.go` | Extend to accept `dk_` prefixed API keys alongside JWT |
+| `internal/rbac/middleware.go` | Grant all read permissions for `llm:` user IDs |
 
 ### Auth middleware change
 
 The existing JWT auth middleware in `internal/auth/middleware.go` is extended:
 - If `Authorization: Bearer dk_...` (dk_ prefix), delegate to llmauth middleware
 - If valid API key, inject synthetic claims: `UserID = "llm:<key_name>"`, `Email = "llm:<key_name>@api"`
-- Continue to next handler (RBAC middleware will see a valid user context)
+- Continue to next handler
 - Reject non-GET methods for API key auth (read-only)
+
+### RBAC bypass for API keys
+
+API key users do not exist in the `users` table and have no `user_site_roles`. The RBAC middleware is extended: if the claims `UserID` starts with `llm:`, **grant all read permissions** (any permission containing `:view` or `:manage` for read-only access). Write permissions are already blocked by the read-only HTTP method check above.
 
 ## CLI Binary Structure
 
