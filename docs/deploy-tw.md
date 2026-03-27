@@ -10,14 +10,14 @@
 - `default.env.example`
 
 ```bash
-# 1. 設定環境變數
+# 1. 設定環境變數 — 只需改 2 個值
 cp default.env.example .env
-# 編輯 .env — 修改 DB_PASSWORD、JWT_SECRET，以及 DATABASE_URL 中的密碼（需一致）
+# 編輯 .env — 修改 DB_PASSWORD 和 JWT_SECRET
 
 # 2. 啟動資料庫
 docker compose -f docker-compose.production.yml up -d db
 
-# 3. 啟動伺服器（等待 DB 就緒，自動執行遷移）
+# 3. 啟動伺服器（自動從 DB_* 變數建立連線，自動執行遷移）
 source .env
 ./dashboard-server-linux-amd64
 ```

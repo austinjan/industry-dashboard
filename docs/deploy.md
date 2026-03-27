@@ -10,14 +10,14 @@ Download from [GitHub Releases](https://github.com/austinjan/industry-dashboard/
 - `default.env.example`
 
 ```bash
-# 1. Set up config
+# 1. Set up config — only 2 values to change
 cp default.env.example .env
-# Edit .env — change DB_PASSWORD, JWT_SECRET, and DATABASE_URL password to match
+# Edit .env — change DB_PASSWORD and JWT_SECRET
 
 # 2. Start database
 docker compose -f docker-compose.production.yml up -d db
 
-# 3. Start server (waits for DB, auto-migrates)
+# 3. Start server (auto-builds DATABASE_URL from DB_* vars, auto-migrates)
 source .env
 ./dashboard-server-linux-amd64
 ```

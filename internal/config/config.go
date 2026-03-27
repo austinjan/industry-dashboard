@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 type Config struct {
 	Port        string
@@ -17,7 +20,7 @@ type Config struct {
 func Load() *Config {
 	return &Config{
 		Port:               getEnv("PORT", "8080"),
-		DatabaseURL:        getEnv("DATABASE_URL", "postgres://dashboard:dashboard@localhost:5432/industry_dashboard?sslmode=disable"),
+		DatabaseURL:        getDatabaseURL(),
 		AzureClientID:      getEnv("AZURE_CLIENT_ID", ""),
 		AzureClientSecret:  getEnv("AZURE_CLIENT_SECRET", ""),
 		AzureTenantID:      getEnv("AZURE_TENANT_ID", ""),
@@ -33,4 +36,19 @@ func getEnv(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func getDatabaseURL() string {
+	// If DATABASE_URL is set explicitly, use it
+	if v := os.Getenv("DATABASE_URL"); v != "" {
+		return v
+	}
+	// Otherwise build from individual vars
+	user := getEnv("DB_USER", "dashboard")
+	pass := getEnv("DB_PASSWORD", "dashboard")
+	host := getEnv("DB_HOST", "localhost")
+	port := getEnv("DB_PORT", "5432")
+	name := getEnv("DB_NAME", "industry_dashboard")
+	sslmode := getEnv("DB_SSLMODE", "disable")
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", user, pass, host, port, name, sslmode)
 }
