@@ -60,7 +60,10 @@ Plans:
   3. Wrong password on login shows an inline error message directly on the form — no toast, no redirect
   4. All new form labels, error messages, and button text appear correctly in EN, zh-TW, th, and vi
   5. A 401 returned by the login endpoint does not trigger the apiFetch refresh interceptor loop
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 03-01-PLAN.md — Fix apiFetch 401 interceptor, add auth i18n keys to all 4 locales
+- [ ] 03-02-PLAN.md — Rewrite LoginPage, create RegisterPage, wire /register route, visual verification
 **UI hint**: yes
 
 ### Phase 4: SSO Binding
@@ -94,6 +97,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Backend Local Auth | 3/3 | Complete   | 2026-03-27 |
 | 2. Error Handling | 1/3 | In Progress|  |
-| 3. Frontend Auth UI | 0/? | Not started | - |
+| 3. Frontend Auth UI | 0/2 | Not started | - |
 | 4. SSO Binding | 0/? | Not started | - |
 | 5. Release Validation | 0/? | Not started | - |
