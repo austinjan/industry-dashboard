@@ -27,7 +27,7 @@ Real-time visibility into factory operations with customizable dashboards that a
 - [x] Local authentication (email/password registration and login) — Validated in Phase 1: Backend Local Auth
 - [x] Self-registration with guest role — Validated in Phase 1: Backend Local Auth (Viewer role assigned on register)
 - [ ] Optional Microsoft SSO binding to local accounts
-- [ ] Error handling review (clear frontend messages, accurate descriptions, system logging)
+- [x] Error handling review (clear frontend messages, accurate descriptions, system logging) — Validated in Phase 2: Error Handling (apierr package, structured JSON errors, slog logging)
 - [ ] End-to-end release validation (build, download, deploy per deploy.md)
 
 ### Out of Scope
@@ -87,4 +87,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-27 after Phase 1 (Backend Local Auth) complete*
+*Last updated: 2026-03-27 after Phase 2 (Error Handling) complete*
