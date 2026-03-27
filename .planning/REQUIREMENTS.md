@@ -53,22 +53,22 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | — | Pending |
-| AUTH-02 | — | Pending |
-| AUTH-03 | — | Pending |
-| SSO-01 | — | Pending |
-| SSO-02 | — | Pending |
-| ERR-01 | — | Pending |
-| ERR-02 | — | Pending |
-| ERR-03 | — | Pending |
-| REL-01 | — | Pending |
-| REL-02 | — | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| SSO-01 | Phase 4 | Pending |
+| SSO-02 | Phase 4 | Pending |
+| ERR-01 | Phase 2 | Pending |
+| ERR-02 | Phase 3 | Pending |
+| ERR-03 | Phase 2 | Pending |
+| REL-01 | Phase 5 | Pending |
+| REL-02 | Phase 5 | Pending |
 
 **Coverage:**
 - v0.0.3 requirements: 10 total
-- Mapped to phases: 0
-- Unmapped: 10 ⚠️
+- Mapped to phases: 10
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-27 after milestone v0.0.3 start*
+*Last updated: 2026-03-27 after roadmap creation*

@@ -1,0 +1,91 @@
+# Roadmap: Industry Dashboard v0.0.3
+
+## Overview
+
+This milestone adds local email/password authentication alongside the existing Microsoft Entra ID SSO, standardizes error handling across the backend and frontend, and validates the full release pipeline. Phases are ordered by hard dependency: database schema first, then backend handlers, then error infrastructure, then frontend UI, then the highest-risk feature (SSO binding), and finally end-to-end release validation.
+
+## Phases
+
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+
+Decimal phases appear between their surrounding integers in numeric order.
+
+- [ ] **Phase 1: Backend Local Auth** - Register and login with email/password, rate limiting, Guest role migration
+- [ ] **Phase 2: Error Handling** - Structured JSON errors across all backend handlers and structured logging
+- [ ] **Phase 3: Frontend Auth UI** - Login and registration pages wired to backend, inline error display
+- [ ] **Phase 4: SSO Binding** - User-initiated Microsoft account linking from account settings page
+- [ ] **Phase 5: Release Validation** - End-to-end release pipeline verified, dev login confirmed absent in production
+
+## Phase Details
+
+### Phase 1: Backend Local Auth
+**Goal**: Users can register and log in with a local email and password, producing valid JWTs accepted by the existing RBAC middleware
+**Depends on**: Nothing (first phase)
+**Requirements**: AUTH-01, AUTH-02, AUTH-03
+**Success Criteria** (what must be TRUE):
+  1. A new user can POST to /api/auth/register with email and password and receive a JWT session cookie
+  2. A registered user can POST to /api/auth/login/local with correct credentials and receive a JWT session cookie
+  3. Login with wrong password returns 401 with no timing difference compared to a non-existent email (dummy bcrypt applied)
+  4. More than 5 login attempts per minute from the same IP are rejected with 429
+  5. GET /api/auth/providers returns the list of available auth methods so the frontend knows what to render
+**Plans**: TBD
+
+### Phase 2: Error Handling
+**Goal**: Backend returns structured JSON errors everywhere and all errors appear in system logs with full request context
+**Depends on**: Phase 1
+**Requirements**: ERR-01, ERR-03
+**Success Criteria** (what must be TRUE):
+  1. Every API error response uses the shape {code, message} — no plain-text errors remain in any handler
+  2. Machine-readable error codes are consistent (e.g., invalid_credentials, email_taken, not_found) across all handlers
+  3. Every error logged by slog includes request ID and user ID where available — no errors are swallowed silently
+**Plans**: TBD
+
+### Phase 3: Frontend Auth UI
+**Goal**: Users can register, log in, and see clear inline error messages in all four supported languages
+**Depends on**: Phase 2
+**Requirements**: ERR-02
+**Success Criteria** (what must be TRUE):
+  1. The login page shows a local email/password form in addition to the Microsoft SSO button (button visible only when providers response includes Microsoft)
+  2. A new user can navigate to /register, fill in the form, and land on the dashboard as a guest
+  3. Wrong password on login shows an inline error message directly on the form — no toast, no redirect
+  4. All new form labels, error messages, and button text appear correctly in EN, zh-TW, th, and vi
+  5. A 401 returned by the login endpoint does not trigger the apiFetch refresh interceptor loop
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 4: SSO Binding
+**Goal**: A locally-registered user can link their Microsoft account from the account settings page, without risk of account takeover via email matching
+**Depends on**: Phase 3
+**Requirements**: SSO-01, SSO-02
+**Success Criteria** (what must be TRUE):
+  1. An authenticated local user can click "Link Microsoft Account" on the account page and complete the OIDC flow to bind their Microsoft identity
+  2. The account page displays which auth methods are active (local password set, Microsoft linked or not)
+  3. A user who visits the login page with a Microsoft account that matches an existing local email sees a guided message to log in locally first — no silent auto-link occurs
+  4. The SSO bind action is recorded in the audit log
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 5: Release Validation
+**Goal**: The full release pipeline works end-to-end and the dev login bypass cannot appear in a production build
+**Depends on**: Phase 4
+**Requirements**: REL-01, REL-02
+**Success Criteria** (what must be TRUE):
+  1. Following deploy.md exactly from a clean environment produces a running instance — no undocumented steps required
+  2. The complete registration → login → SSO bind flow works on a deployed instance
+  3. The /dev/login endpoint returns 404 when DEV_MODE is not set, and is absent from the production binary
+**Plans**: TBD
+
+## Progress
+
+**Execution Order:**
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Backend Local Auth | 0/? | Not started | - |
+| 2. Error Handling | 0/? | Not started | - |
+| 3. Frontend Auth UI | 0/? | Not started | - |
+| 4. SSO Binding | 0/? | Not started | - |
+| 5. Release Validation | 0/? | Not started | - |
