@@ -159,6 +159,7 @@
     "user": "User",
     "action": "Action",
     "resource": "Resource",
+    "details": "Details",
     "ip": "IP",
     "previous": "Previous",
     "next": "Next",
