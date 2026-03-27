@@ -4,7 +4,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER:-dashboard}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dashboard}
       POSTGRES_DB: ${DB_NAME:-industry_dashboard}
     ports:
       - "${DB_PORT:-5432}:5432"
@@ -23,8 +23,8 @@ services:
     ports:
       - "${PORT:-8080}:8080"
     environment:
-      DATABASE_URL: postgres://${DB_USER:-dashboard}:${DB_PASSWORD}@db:5432/${DB_NAME:-industry_dashboard}?sslmode=disable
-      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      DATABASE_URL: postgres://${DB_USER:-dashboard}:${DB_PASSWORD:-dashboard}@db:5432/${DB_NAME:-industry_dashboard}?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET:-dashboard-dev-secret}
       PORT: "8080"
       AZURE_CLIENT_ID: ${AZURE_CLIENT_ID:-}
       AZURE_CLIENT_SECRET: ${AZURE_CLIENT_SECRET:-}

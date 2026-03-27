@@ -4,33 +4,66 @@
 
 ## 快速開始
 
-從 [GitHub Releases](https://github.com/austinjan/industry-dashboard/releases) 下載：
-- `dashboard-server-<平台>` （選擇對應的 OS/架構）
+### 步驟 1：下載
+
+前往 [GitHub Releases](https://github.com/austinjan/industry-dashboard/releases) 下載以下 3 個檔案：
+- `dashboard-server-<平台>` （選擇你的系統：linux-amd64、darwin-arm64 等）
 - `docker-compose.production.yml`
 - `default.env.example`
 
+放在同一個目錄下。
+
+### 步驟 2：設定執行權限
+
 ```bash
-# 1. 設定執行權限
 chmod +x ./dashboard-server-*
-
-# 2. 設定環境變數 — 只需改 2 個值
-cp default.env.example .env
-# 編輯 .env — 修改 DB_PASSWORD 和 JWT_SECRET
-
-# 3. 啟動資料庫
-docker compose -f docker-compose.production.yml up -d db
-
-# 4. 啟動伺服器（自動從 DB_* 變數建立連線，自動執行遷移）
-source .env
-./dashboard-server-linux-amd64
 ```
 
-打開 `http://localhost:8080` — 完成。
-
-> **macOS 使用者：** 如果出現「無法打開，因為它來自未識別的開發者」，請執行：
+> **macOS 使用者：** 如果出現「無法打開，因為它來自未識別的開發者」：
 > ```bash
 > xattr -d com.apple.quarantine ./dashboard-server-darwin-arm64
 > ```
+
+### 步驟 3：建立設定檔
+
+```bash
+cp default.env.example .env
+```
+
+**預設值可以直接使用。** 測試階段不需要修改。正式環境請將 `DB_PASSWORD` 和 `JWT_SECRET` 改為安全的隨機值。
+
+### 步驟 4：啟動資料庫
+
+```bash
+docker compose -f docker-compose.production.yml up -d db
+```
+
+等待幾秒讓資料庫就緒：
+```bash
+docker compose -f docker-compose.production.yml logs db 2>&1 | grep "ready to accept"
+```
+
+### 步驟 5：啟動伺服器
+
+```bash
+source .env
+./dashboard-server-linux-amd64    # 或 darwin-arm64 等
+```
+
+你應該會看到：
+```
+dashboard-server version v0.0.2
+Database migrations up to date (version 21, dirty=false)
+Server starting on :8080
+```
+
+### 步驟 6：打開瀏覽器
+
+前往 `http://localhost:8080` — 完成！
+
+> **注意：** 如果你修改了 `.env` 中的 `DB_PASSWORD`，請確認資料庫也是用相同密碼建立的。如果你已經用預設密碼啟動了 DB，之後又改了 `.env`，請：
+> - 重建 DB：`docker compose -f docker-compose.production.yml down -v && docker compose -f docker-compose.production.yml up -d db`
+> - 或將 `.env` 改回與現有 DB 一致的密碼
 
 ---
 

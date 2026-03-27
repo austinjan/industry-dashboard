@@ -4,33 +4,66 @@
 
 ## Quick Start
 
-Download from [GitHub Releases](https://github.com/austinjan/industry-dashboard/releases):
-- `dashboard-server-<platform>` (choose your OS/arch)
+### Step 1: Download
+
+Go to [GitHub Releases](https://github.com/austinjan/industry-dashboard/releases) and download these 3 files:
+- `dashboard-server-<platform>` (choose your OS: linux-amd64, darwin-arm64, etc.)
 - `docker-compose.production.yml`
 - `default.env.example`
 
+Put them in the same directory.
+
+### Step 2: Make binary executable
+
 ```bash
-# 1. Make binary executable
 chmod +x ./dashboard-server-*
-
-# 2. Set up config — only 2 values to change
-cp default.env.example .env
-# Edit .env — change DB_PASSWORD and JWT_SECRET
-
-# 3. Start database
-docker compose -f docker-compose.production.yml up -d db
-
-# 4. Start server (auto-builds DATABASE_URL from DB_* vars, auto-migrates)
-source .env
-./dashboard-server-linux-amd64
 ```
 
-Open `http://localhost:8080` — done.
-
-> **macOS users:** If you see "cannot be opened because it is from an unidentified developer", run:
+> **macOS users:** If you see "cannot be opened because it is from an unidentified developer":
 > ```bash
 > xattr -d com.apple.quarantine ./dashboard-server-darwin-arm64
 > ```
+
+### Step 3: Create config file
+
+```bash
+cp default.env.example .env
+```
+
+**The defaults work out of the box.** No editing needed for testing. For production, change `DB_PASSWORD` and `JWT_SECRET` to secure values.
+
+### Step 4: Start database
+
+```bash
+docker compose -f docker-compose.production.yml up -d db
+```
+
+Wait a few seconds for the database to be ready:
+```bash
+docker compose -f docker-compose.production.yml logs db 2>&1 | grep "ready to accept"
+```
+
+### Step 5: Start server
+
+```bash
+source .env
+./dashboard-server-linux-amd64    # or darwin-arm64, etc.
+```
+
+You should see:
+```
+dashboard-server version v0.0.2
+Database migrations up to date (version 21, dirty=false)
+Server starting on :8080
+```
+
+### Step 6: Open browser
+
+Go to `http://localhost:8080` — done!
+
+> **Note:** If you change `DB_PASSWORD` in `.env`, make sure the database was created with the same password. If you already started the DB with the default password and then changed `.env`, either:
+> - Reset the DB: `docker compose -f docker-compose.production.yml down -v && docker compose -f docker-compose.production.yml up -d db`
+> - Or change `.env` back to match the existing DB password
 
 ---
 
