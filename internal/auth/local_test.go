@@ -14,6 +14,104 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// --- Password utility tests ---
+
+func TestHashAndCheckPassword(t *testing.T) {
+	hash, err := auth.HashPassword("testpassword")
+	require.NoError(t, err)
+	assert.True(t, auth.CheckPassword(hash, "testpassword"))
+	assert.False(t, auth.CheckPassword(hash, "wrongpassword"))
+}
+
+func TestDummyCheckPassword(t *testing.T) {
+	// Should not panic and should take measurable time (bcrypt cost 12 ~ 200-400ms)
+	start := time.Now()
+	auth.DummyCheckPassword("anypassword")
+	elapsed := time.Since(start)
+	assert.Greater(t, elapsed, 100*time.Millisecond, "DummyCheckPassword should take bcrypt time")
+}
+
+// --- Table-driven validation tests ---
+
+func TestRegisterLocalValidation(t *testing.T) {
+	jwtSvc := auth.NewJWTService("test-secret", 15*time.Minute, 7*24*time.Hour)
+	handler := auth.NewHandler(nil, jwtSvc, nil) // nil db — validation returns before DB call
+
+	tests := []struct {
+		name       string
+		body       string
+		wantStatus int
+		wantCode   string
+	}{
+		{"empty body", `{}`, 400, "auth.invalid_input"},
+		{"missing email", `{"password":"test"}`, 400, "auth.invalid_input"},
+		{"missing password", `{"email":"test@example.com"}`, 400, "auth.invalid_input"},
+		{"empty email", `{"email":"","password":"test"}`, 400, "auth.invalid_input"},
+		{"empty password", `{"email":"test@example.com","password":""}`, 400, "auth.invalid_input"},
+		{"email without @", `{"email":"noemail","password":"test"}`, 400, "auth.invalid_input"},
+		{"password too long", `{"email":"test@example.com","password":"` + strings.Repeat("a", 73) + `"}`, 400, "auth.password_too_long"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(tt.body))
+			req.Header.Set("Content-Type", "application/json")
+			rec := httptest.NewRecorder()
+			handler.RegisterLocal(rec, req)
+			assert.Equal(t, tt.wantStatus, rec.Code)
+			var errResp struct {
+				Code string `json:"code"`
+			}
+			json.NewDecoder(rec.Body).Decode(&errResp)
+			assert.Equal(t, tt.wantCode, errResp.Code)
+		})
+	}
+}
+
+func TestLoginLocalValidation(t *testing.T) {
+	jwtSvc := auth.NewJWTService("test-secret", 15*time.Minute, 7*24*time.Hour)
+	handler := auth.NewHandler(nil, jwtSvc, nil) // nil db — validation fails first
+
+	tests := []struct {
+		name       string
+		body       string
+		wantStatus int
+		wantCode   string
+	}{
+		{"empty body", `{}`, 400, "auth.invalid_input"},
+		{"missing email", `{"password":"test"}`, 400, "auth.invalid_input"},
+		{"missing password", `{"email":"test@example.com"}`, 400, "auth.invalid_input"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest("POST", "/api/auth/login/local", strings.NewReader(tt.body))
+			req.Header.Set("Content-Type", "application/json")
+			rec := httptest.NewRecorder()
+			handler.LoginLocal(rec, req)
+			assert.Equal(t, tt.wantStatus, rec.Code)
+			var errResp struct {
+				Code string `json:"code"`
+			}
+			json.NewDecoder(rec.Body).Decode(&errResp)
+			assert.Equal(t, tt.wantCode, errResp.Code)
+		})
+	}
+}
+
+func TestProviders(t *testing.T) {
+	t.Run("without OIDC", func(t *testing.T) {
+		handler := auth.NewHandler(nil, nil, nil)
+		req := httptest.NewRequest("GET", "/api/auth/providers", nil)
+		rec := httptest.NewRecorder()
+		handler.Providers(rec, req)
+		assert.Equal(t, 200, rec.Code)
+		var resp map[string][]string
+		json.NewDecoder(rec.Body).Decode(&resp)
+		assert.Equal(t, []string{"local"}, resp["providers"])
+	})
+	// Note: testing with non-nil OIDC requires a real OIDCClient which needs Azure config.
+	// The nil path is the critical test — non-nil just appends "microsoft" to the slice.
+}
+
 // newTestHandler creates a Handler with nil OIDCClient and a test JWT service.
 // No DB is wired — only validation-path tests (no DB access needed) run here.
 func newTestHandler() *auth.Handler {
