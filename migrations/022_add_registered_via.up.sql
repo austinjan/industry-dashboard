@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN IF NOT EXISTS registered_via VARCHAR(20) NOT NULL DEFAULT 'microsoft';
