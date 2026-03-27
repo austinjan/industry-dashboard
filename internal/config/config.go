@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -18,6 +20,9 @@ type Config struct {
 }
 
 func Load() *Config {
+	// Load .env file if it exists (silently ignore if not found)
+	godotenv.Load()
+	
 	return &Config{
 		Port:               getEnv("PORT", "8080"),
 		DatabaseURL:        getDatabaseURL(),
