@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/industry-dashboard/server/internal/apierr"
 	"github.com/industry-dashboard/server/internal/auth"
 )
 
@@ -36,7 +37,7 @@ func (m *RBACMiddleware) Require(permission string, extractSite SiteExtractor) f
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims := auth.GetClaims(r.Context())
 			if claims == nil {
-				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				apierr.Write(w, r, http.StatusUnauthorized, "rbac.unauthorized", "Unauthorized", "", nil)
 				return
 			}
 			// API key users bypass RBAC — read-only enforcement is handled in auth middleware
@@ -44,14 +45,15 @@ func (m *RBACMiddleware) Require(permission string, extractSite SiteExtractor) f
 				next.ServeHTTP(w, r)
 				return
 			}
+			userID := claims.UserID
 			siteID := extractSite(r)
-			allowed, err := m.checker.HasPermission(r.Context(), claims.UserID, siteID, permission)
+			allowed, err := m.checker.HasPermission(r.Context(), userID, siteID, permission)
 			if err != nil {
-				http.Error(w, "internal error", http.StatusInternalServerError)
+				apierr.Write(w, r, http.StatusInternalServerError, "rbac.internal_error", "Internal server error", userID, err)
 				return
 			}
 			if !allowed {
-				http.Error(w, "forbidden", http.StatusForbidden)
+				apierr.Write(w, r, http.StatusForbidden, "rbac.forbidden", "Forbidden", userID, nil)
 				return
 			}
 			next.ServeHTTP(w, r)

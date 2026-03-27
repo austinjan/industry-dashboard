@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/industry-dashboard/server/internal/apierr"
 	"github.com/industry-dashboard/server/internal/auth"
 )
 
@@ -19,14 +20,18 @@ func NewHandler(store *Store) *Handler {
 }
 
 func (h *Handler) ListAlerts(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	siteID := r.URL.Query().Get("site_id")
 	if siteID == "" {
-		http.Error(w, "site_id required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "alert.invalid_input", "site_id required", userID, nil)
 		return
 	}
 	alerts, err := h.store.ListAlerts(r.Context(), siteID)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -34,9 +39,13 @@ func (h *Handler) ListAlerts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListAlertEvents(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	siteID := r.URL.Query().Get("site_id")
 	if siteID == "" {
-		http.Error(w, "site_id required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "alert.invalid_input", "site_id required", userID, nil)
 		return
 	}
 	q := r.URL.Query()
@@ -60,7 +69,7 @@ func (h *Handler) ListAlertEvents(w http.ResponseWriter, r *http.Request) {
 	}
 	result, err := h.store.ListAlertEvents(r.Context(), p)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -68,6 +77,10 @@ func (h *Handler) ListAlertEvents(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateAlert(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	var body struct {
 		Name       string  `json:"name"`
 		MachineID  string  `json:"machine_id"`
@@ -77,16 +90,16 @@ func (h *Handler) CreateAlert(w http.ResponseWriter, r *http.Request) {
 		Severity   string  `json:"severity"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "alert.invalid_input", "invalid request", userID, nil)
 		return
 	}
 	if body.Name == "" || body.MachineID == "" || body.MetricName == "" {
-		http.Error(w, "name, machine_id, and metric_name are required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "alert.invalid_input", "name, machine_id, and metric_name are required", userID, nil)
 		return
 	}
 	alert, err := h.store.CreateAlert(r.Context(), body.Name, body.MachineID, body.MetricName, body.Condition, body.Threshold, body.Severity)
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -95,20 +108,24 @@ func (h *Handler) CreateAlert(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) AcknowledgeAlertEvent(w http.ResponseWriter, r *http.Request) {
-	eventID := chi.URLParam(r, "eventID")
 	claims := auth.GetClaims(r.Context())
 	if claims == nil {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		apierr.Write(w, r, http.StatusUnauthorized, "alert.invalid_request", "unauthorized", "", nil)
 		return
 	}
+	eventID := chi.URLParam(r, "eventID")
 	if err := h.store.AcknowledgeAlertEvent(r.Context(), eventID, claims.UserID); err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "internal error", claims.UserID, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) UpdateAlert(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	id := chi.URLParam(r, "alertID")
 	var body struct {
 		Name       string  `json:"name"`
@@ -119,16 +136,16 @@ func (h *Handler) UpdateAlert(w http.ResponseWriter, r *http.Request) {
 		IsActive   bool    `json:"is_active"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "alert.invalid_input", "invalid request body", userID, nil)
 		return
 	}
 	if body.Name == "" {
-		http.Error(w, "name is required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "alert.invalid_input", "name is required", userID, nil)
 		return
 	}
 	alert, err := h.store.UpdateAlert(r.Context(), id, body.Name, body.MetricName, body.Condition, body.Threshold, body.Severity, body.IsActive)
 	if err != nil {
-		http.Error(w, "failed to update alert", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "failed to update alert", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -136,25 +153,33 @@ func (h *Handler) UpdateAlert(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteAlert(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	id := chi.URLParam(r, "alertID")
 	if err := h.store.DeleteAlert(r.Context(), id); err != nil {
-		http.Error(w, "failed to delete alert", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "failed to delete alert", userID, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) BulkAlertAction(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.UserID
+	}
 	var body struct {
 		IDs    []string `json:"ids"`
 		Action string   `json:"action"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "alert.invalid_input", "invalid request body", userID, nil)
 		return
 	}
 	if len(body.IDs) == 0 {
-		http.Error(w, "ids is required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "alert.invalid_input", "ids is required", userID, nil)
 		return
 	}
 	var count int64
@@ -167,11 +192,11 @@ func (h *Handler) BulkAlertAction(w http.ResponseWriter, r *http.Request) {
 	case "delete":
 		count, err = h.store.BulkDeleteAlerts(r.Context(), body.IDs)
 	default:
-		http.Error(w, "invalid action: must be enable, disable, or delete", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "alert.invalid_input", "invalid action: must be enable, disable, or delete", userID, nil)
 		return
 	}
 	if err != nil {
-		http.Error(w, "bulk action failed", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "bulk action failed", userID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -179,19 +204,23 @@ func (h *Handler) BulkAlertAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) AcknowledgeInfoEvents(w http.ResponseWriter, r *http.Request) {
+	claims := auth.GetClaims(r.Context())
+	userID := ""
+	if claims != nil {
+		userID = claims.UserID
+	}
 	siteID := r.URL.Query().Get("site_id")
 	if siteID == "" {
-		http.Error(w, "site_id is required", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "alert.invalid_input", "site_id is required", userID, nil)
 		return
 	}
-	claims := auth.GetClaims(r.Context())
 	if claims == nil {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		apierr.Write(w, r, http.StatusUnauthorized, "alert.invalid_request", "unauthorized", "", nil)
 		return
 	}
 	count, err := h.store.AcknowledgeInfoEvents(r.Context(), siteID, claims.UserID)
 	if err != nil {
-		http.Error(w, "failed to acknowledge info events", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "failed to acknowledge info events", claims.UserID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
