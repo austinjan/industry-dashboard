@@ -1,3 +1,5 @@
+[English](README.md) | [繁體中文](README-tw.md)
+
 # Industry Dashboard
 
 A customizable industrial monitoring dashboard for tracking production lines, machine status, and operational metrics. Users can configure what data to monitor and how it's displayed through AI-generated dynamic layouts powered by [json-render](https://github.com/vercel-labs/json-render).
