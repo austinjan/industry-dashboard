@@ -56,6 +56,62 @@ cd frontend && npm install && npm run dev
 | `AZURE_TENANT_ID` | | Azure AD tenant ID |
 | `JWT_SECRET` | `dev-secret-change-in-production` | JWT signing secret |
 
+## Deployment
+
+### Build Binaries
+
+```bash
+# Build everything (server with embedded frontend + CLI + worker)
+make build
+
+# Or individually
+make build-server    # bin/dashboard-server (13MB, includes frontend)
+make build-cli       # bin/dashboard-cli
+make build-worker    # bin/dashboard-worker
+```
+
+### Docker
+
+```bash
+# Build and run the full stack (server + TimescaleDB)
+make docker-run
+
+# Or build the image only
+make docker-build
+```
+
+The Docker image includes all 3 binaries + migration files. The server embeds the frontend — no separate web server needed.
+
+### Cross-Compilation (Release Builds)
+
+```bash
+make release    # builds for linux/mac/windows → dist/
+```
+
+Produces:
+- `dashboard-server-linux-{amd64,arm64}` — server binary
+- `dashboard-cli-{linux,darwin,windows}-{amd64,arm64}` — CLI for all platforms
+- `dashboard-worker-linux-{amd64,arm64}` — worker binary
+
+### Production Setup
+
+```bash
+# 1. Run migrations
+make migrate
+
+# 2. Start server (single binary, serves API + frontend on :8080)
+PORT=8080 DATABASE_URL=postgres://... JWT_SECRET=... ./bin/dashboard-server
+
+# 3. Deploy worker to factory edge device
+./bin/dashboard-worker -config /etc/dashboard/worker.yaml
+```
+
+### Install CLI via `go install`
+
+```bash
+go install github.com/austinjan/industry-dashboard/cmd/dashboard-cli@latest
+```
+
 ## Fake Worker
 
 The fake worker generates simulated sensor data for testing without real Modbus hardware. It provisions sites, lines, and machines from a YAML config, then writes random data points to TimescaleDB on a polling interval.
