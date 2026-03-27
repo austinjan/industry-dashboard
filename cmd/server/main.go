@@ -104,6 +104,7 @@ func main() {
 
 	// Router
 	r := chi.NewRouter()
+	r.Use(chiMiddleware.RequestID)
 	r.Use(chiMiddleware.Logger)
 	r.Use(chiMiddleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{

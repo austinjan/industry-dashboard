@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"strings"
+
+	"github.com/industry-dashboard/server/internal/apierr"
 )
 
 type contextKey string
@@ -16,7 +18,7 @@ type APIKeyValidator interface {
 }
 
 type Middleware struct {
-	jwt          *JWTService
+	jwt             *JWTService
 	apiKeyValidator APIKeyValidator
 }
 
@@ -41,7 +43,7 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 			// Fall back to cookie
 			cookie, err := r.Cookie("access_token")
 			if err != nil || cookie.Value == "" {
-				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				apierr.Write(w, r, http.StatusUnauthorized, "auth.unauthorized", "Unauthorized", "", nil)
 				return
 			}
 			tokenString = cookie.Value
@@ -50,12 +52,12 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 		// API key path: tokens prefixed with "dk_"
 		if strings.HasPrefix(tokenString, "dk_") {
 			if m.apiKeyValidator == nil {
-				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				apierr.Write(w, r, http.StatusUnauthorized, "auth.unauthorized", "Unauthorized", "", nil)
 				return
 			}
 			name, err := m.apiKeyValidator.ValidateKeyName(r.Context(), tokenString)
 			if err != nil {
-				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				apierr.Write(w, r, http.StatusUnauthorized, "auth.unauthorized", "Unauthorized", "", nil)
 				return
 			}
 			claims := &Claims{
@@ -65,7 +67,7 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 			}
 			// API keys are read-only; only allow writes to /api/llm/ admin routes
 			if r.Method != http.MethodGet && !strings.HasPrefix(r.URL.Path, "/api/llm/") {
-				http.Error(w, "API keys are read-only", http.StatusForbidden)
+				apierr.Write(w, r, http.StatusForbidden, "auth.read_only_key", "API keys are read-only", "", nil)
 				return
 			}
 			ctx := context.WithValue(r.Context(), claimsKey, claims)
@@ -76,7 +78,7 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 		// Standard JWT path
 		claims, err := m.jwt.ValidateToken(tokenString)
 		if err != nil || claims.TokenType != "access" {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			apierr.Write(w, r, http.StatusUnauthorized, "auth.unauthorized", "Unauthorized", "", nil)
 			return
 		}
 		ctx := context.WithValue(r.Context(), claimsKey, claims)
