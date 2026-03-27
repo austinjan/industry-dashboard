@@ -16,6 +16,7 @@ import { SitesPage } from '@/pages/admin/SitesPage';
 import { WorkersPage } from '@/pages/admin/WorkersPage';
 import { WorkerConfigsPage } from '@/pages/admin/WorkerConfigsPage';
 import { WorkerConfigEditPage } from '@/pages/admin/WorkerConfigEditPage';
+import { ApiKeysPage } from '@/pages/admin/ApiKeysPage';
 import { DashboardListPage } from '@/pages/dashboards/DashboardListPage';
 import { DashboardViewPage } from '@/pages/dashboards/DashboardViewPage';
 import { DashboardEditorPage } from '@/pages/dashboards/DashboardEditorPage';
@@ -71,6 +72,7 @@ export default function App() {
               <Route path="/admin/worker-configs" element={<WorkerConfigsPage />} />
               <Route path="/admin/worker-configs/new" element={<WorkerConfigEditPage />} />
               <Route path="/admin/worker-configs/:id" element={<WorkerConfigEditPage />} />
+              <Route path="/admin/api-keys" element={<ApiKeysPage />} />
               </Route>
             </Route>
           </Routes>

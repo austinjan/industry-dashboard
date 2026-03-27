@@ -214,6 +214,34 @@ export function useAuditLogs(params?: Record<string, string>) {
   });
 }
 
+export function useApiKeys() {
+  return useQuery({
+    queryKey: ['api-keys'],
+    queryFn: () => fetchJSON<any[]>('/llm/keys'),
+  });
+}
+
+export function useCreateApiKey() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { name: string }) =>
+      mutateJSON<any>('/llm/keys', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['api-keys'] }),
+  });
+}
+
+export function useRevokeApiKey() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      mutateJSON('/llm/keys/' + id, { method: 'DELETE' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['api-keys'] }),
+  });
+}
+
 export function useCreateRole() {
   const qc = useQueryClient();
   return useMutation({

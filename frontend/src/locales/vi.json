@@ -19,7 +19,8 @@
     "admin": "Quản trị",
     "sitesAndMachines": "Nhà máy & Máy móc",
     "workers": "Bộ thu thập",
-    "workerConfigs": "Cấu hình bộ thu thập"
+    "workerConfigs": "Cấu hình bộ thu thập",
+    "apiKeys": "Khóa API"
   },
   "dashboard": {
     "machinesOnline": "Máy đang hoạt động",
@@ -261,7 +262,17 @@
     "noRegisters": "Chưa cấu hình thanh ghi.",
     "registers": "Thanh ghi",
     "connection": "Kết nối",
-    "timeout": "Thời gian chờ"
+    "timeout": "Thời gian chờ",
+    "apiKeys": "Khóa API",
+    "createKey": "Tạo khóa",
+    "keyName": "Tên khóa",
+    "keyPrefix": "Tiền tố khóa",
+    "createdAt": "Ngày tạo",
+    "revokeKey": "Thu hồi",
+    "confirmRevoke": "Bạn có chắc chắn muốn thu hồi khóa này? Hành động này không thể hoàn tác.",
+    "keyCreated": "Tạo khóa thành công. Sao chép ngay — khóa sẽ không hiển thị lại.",
+    "copyKey": "Sao chép",
+    "revoked": "Đã thu hồi"
   },
   "topnav": {
     "title": "Bảng điều khiển công nghiệp",
