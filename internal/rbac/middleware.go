@@ -3,6 +3,7 @@ package rbac
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/industry-dashboard/server/internal/auth"
@@ -36,6 +37,11 @@ func (m *RBACMiddleware) Require(permission string, extractSite SiteExtractor) f
 			claims := auth.GetClaims(r.Context())
 			if claims == nil {
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
+			// API key users bypass RBAC — read-only enforcement is handled in auth middleware
+			if strings.HasPrefix(claims.UserID, "llm:") {
+				next.ServeHTTP(w, r)
 				return
 			}
 			siteID := extractSite(r)

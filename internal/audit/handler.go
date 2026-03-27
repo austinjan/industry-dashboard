@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type Handler struct {
@@ -24,11 +25,16 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		Limit:        limit,
 		Offset:       offset,
 	}
-	logs, err := h.store.List(r.Context(), params)
+	if sinceStr := r.URL.Query().Get("since"); sinceStr != "" {
+		if t, err := time.Parse(time.RFC3339, sinceStr); err == nil {
+			params.Since = t
+		}
+	}
+	result, err := h.store.List(r.Context(), params)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(logs)
+	json.NewEncoder(w).Encode(result)
 }

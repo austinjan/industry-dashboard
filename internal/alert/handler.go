@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/industry-dashboard/server/internal/auth"
@@ -41,7 +42,7 @@ func (h *Handler) ListAlertEvents(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	limit, _ := strconv.Atoi(q.Get("limit"))
 	offset, _ := strconv.Atoi(q.Get("offset"))
-	result, err := h.store.ListAlertEvents(r.Context(), AlertEventListParams{
+	p := AlertEventListParams{
 		SiteID:    siteID,
 		Severity:  q.Get("severity"),
 		Status:    q.Get("status"),
@@ -51,7 +52,13 @@ func (h *Handler) ListAlertEvents(w http.ResponseWriter, r *http.Request) {
 		SortOrder: q.Get("sort_order"),
 		Limit:     limit,
 		Offset:    offset,
-	})
+	}
+	if sinceStr := q.Get("since"); sinceStr != "" {
+		if t, err := time.Parse(time.RFC3339, sinceStr); err == nil {
+			p.Since = t
+		}
+	}
+	result, err := h.store.ListAlertEvents(r.Context(), p)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return

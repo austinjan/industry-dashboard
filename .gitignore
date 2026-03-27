@@ -27,3 +27,5 @@ pgdata/
 
 # OS
 .DS_Store
+bin/
+dashboard-cli

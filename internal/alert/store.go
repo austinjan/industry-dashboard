@@ -53,6 +53,7 @@ type AlertEventListParams struct {
 	Status    string // "open", "acknowledged", "resolved", ""
 	LineID    string
 	MachineID string
+	Since     time.Time
 	SortBy    string // "triggered_at", "severity", "alert_name", "machine_name"
 	SortOrder string // "asc", "desc"
 	Limit     int
@@ -122,6 +123,11 @@ func (s *Store) ListAlertEvents(ctx context.Context, p AlertEventListParams) (*A
 		baseFrom += ` AND ae.acknowledged_by IS NOT NULL AND ae.resolved_at IS NULL`
 	case "resolved":
 		baseFrom += ` AND ae.resolved_at IS NOT NULL`
+	}
+	if !p.Since.IsZero() {
+		baseFrom += ` AND ae.triggered_at >= $` + strconv.Itoa(argIdx)
+		args = append(args, p.Since)
+		argIdx++
 	}
 
 	// Count total

@@ -1,4 +1,4 @@
-.PHONY: dev db-up db-down migrate test fake-worker worker worker-config
+.PHONY: dev db-up db-down migrate test fake-worker worker worker-config dashboard-cli
 
 db-up:
 	docker compose up -d db
@@ -34,3 +34,6 @@ worker:
 
 worker-config:
 	go run -ldflags "-X main.version=$$(git describe --tags --always --dirty 2>/dev/null || echo dev)" ./cmd/worker -config $(CONFIG)
+
+dashboard-cli:
+	go build -ldflags "-X main.version=$$(git describe --tags --always --dirty 2>/dev/null || echo dev)" -o bin/dashboard-cli ./cmd/dashboard-cli
