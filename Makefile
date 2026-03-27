@@ -61,18 +61,24 @@ release: build-frontend
 	@echo "Building release binaries..."
 	@mkdir -p dist cmd/server/frontend_dist
 	cp -r frontend/dist/* cmd/server/frontend_dist/
-	# Server (linux only - for Docker/server deployment)
+	# Server
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=$$(git describe --tags --always 2>/dev/null || echo dev)" -o dist/dashboard-server-linux-amd64 ./cmd/server
 	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=$$(git describe --tags --always 2>/dev/null || echo dev)" -o dist/dashboard-server-linux-arm64 ./cmd/server
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=$$(git describe --tags --always 2>/dev/null || echo dev)" -o dist/dashboard-server-darwin-amd64 ./cmd/server
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=$$(git describe --tags --always 2>/dev/null || echo dev)" -o dist/dashboard-server-darwin-arm64 ./cmd/server
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=$$(git describe --tags --always 2>/dev/null || echo dev)" -o dist/dashboard-server-windows-amd64.exe ./cmd/server
 	# CLI (cross-platform)
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-cli-linux-amd64 ./cmd/dashboard-cli
 	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-cli-linux-arm64 ./cmd/dashboard-cli
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-cli-darwin-amd64 ./cmd/dashboard-cli
 	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-cli-darwin-arm64 ./cmd/dashboard-cli
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-cli-windows-amd64.exe ./cmd/dashboard-cli
-	# Worker (linux - for factory edge devices)
+	# Worker
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-worker-linux-amd64 ./cmd/worker
 	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-worker-linux-arm64 ./cmd/worker
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-worker-darwin-amd64 ./cmd/worker
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-worker-darwin-arm64 ./cmd/worker
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/dashboard-worker-windows-amd64.exe ./cmd/worker
 	rm -rf cmd/server/frontend_dist
 	@echo "Release binaries in dist/"
 
