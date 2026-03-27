@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httprate"
 	"github.com/industry-dashboard/server/internal/alert"
+	"github.com/industry-dashboard/server/internal/apierr"
 	"github.com/industry-dashboard/server/internal/audit"
 	"github.com/industry-dashboard/server/internal/auth"
 	"github.com/industry-dashboard/server/internal/config"
@@ -154,7 +155,7 @@ func main() {
 				 ON CONFLICT (microsoft_id) DO UPDATE SET email = EXCLUDED.email
 				 RETURNING id`).Scan(&userID)
 			if err != nil {
-				http.Error(w, "failed to create user: "+err.Error(), 500)
+				apierr.Write(w, r, http.StatusInternalServerError, "internal", "failed to create user", "", err)
 				return
 			}
 			// Assign admin role (global)
@@ -206,7 +207,7 @@ func main() {
 			// Get all machine IDs
 			rows, err := pool.Query(ctx, `SELECT id FROM machines`)
 			if err != nil {
-				http.Error(w, "failed to query machines: "+err.Error(), 500)
+				apierr.Write(w, r, http.StatusInternalServerError, "internal", "failed to query machines", "", err)
 				return
 			}
 			defer rows.Close()
@@ -217,7 +218,7 @@ func main() {
 				machineIDs = append(machineIDs, id)
 			}
 			if len(machineIDs) == 0 {
-				http.Error(w, "run /dev/seed first", 400)
+				apierr.Write(w, r, http.StatusBadRequest, "internal", "run /dev/seed first", "", nil)
 				return
 			}
 
@@ -295,7 +296,7 @@ func main() {
 			var userID, email string
 			err := pool.QueryRow(ctx, `SELECT id, email FROM users WHERE microsoft_id = 'dev-local'`).Scan(&userID, &email)
 			if err != nil {
-				http.Error(w, "run /dev/seed first", 400)
+				apierr.Write(w, r, http.StatusBadRequest, "internal", "run /dev/seed first", "", nil)
 				return
 			}
 			accessToken, _ := jwtService.CreateAccessToken(userID, email)
@@ -311,6 +312,65 @@ func main() {
 			http.Redirect(w, r, "http://localhost:5173/", http.StatusTemporaryRedirect)
 		})
 
+		// Dev /api/auth/me fallback (when OIDC not configured)
+		if authHandler == nil {
+			r.Route("/api/auth", func(r chi.Router) {
+				r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
+					cookie, err := r.Cookie("access_token")
+					if err != nil || cookie.Value == "" {
+						apierr.Write(w, r, http.StatusUnauthorized, "internal", "unauthorized", "", nil)
+						return
+					}
+					claims, err := jwtService.ValidateToken(cookie.Value)
+					if err != nil {
+						apierr.Write(w, r, http.StatusUnauthorized, "internal", "unauthorized", "", err)
+						return
+					}
+					var u struct {
+						ID     string  `json:"id"`
+						Email  string  `json:"email"`
+						Name   string  `json:"name"`
+						Locale *string `json:"locale"`
+					}
+					err = pool.QueryRow(r.Context(), "SELECT id, email, name, locale FROM users WHERE id = $1", claims.UserID).Scan(&u.ID, &u.Email, &u.Name, &u.Locale)
+					if err != nil {
+						apierr.Write(w, r, http.StatusNotFound, "internal", "user not found", claims.UserID, err)
+						return
+					}
+					w.Header().Set("Content-Type", "application/json")
+					json.NewEncoder(w).Encode(u)
+				})
+				r.Post("/refresh", func(w http.ResponseWriter, r *http.Request) {
+					cookie, err := r.Cookie("refresh_token")
+					if err != nil || cookie.Value == "" {
+						apierr.Write(w, r, http.StatusUnauthorized, "internal", "no refresh token", "", nil)
+						return
+					}
+					claims, err := jwtService.ValidateToken(cookie.Value)
+					if err != nil || claims.TokenType != "refresh" {
+						apierr.Write(w, r, http.StatusUnauthorized, "internal", "invalid refresh token", "", err)
+						return
+					}
+					accessToken, _ := jwtService.CreateAccessToken(claims.UserID, claims.Email)
+					refreshToken, _ := jwtService.CreateRefreshToken(claims.UserID, claims.Email)
+					http.SetCookie(w, &http.Cookie{
+						Name: "access_token", Value: accessToken, Path: "/",
+						HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: 900,
+					})
+					http.SetCookie(w, &http.Cookie{
+						Name: "refresh_token", Value: refreshToken, Path: "/api/auth",
+						HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: 604800,
+					})
+					w.Header().Set("Content-Type", "application/json")
+					json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+				})
+				r.Post("/logout", func(w http.ResponseWriter, r *http.Request) {
+					http.SetCookie(w, &http.Cookie{Name: "access_token", Value: "", Path: "/", MaxAge: -1, HttpOnly: true})
+					http.SetCookie(w, &http.Cookie{Name: "refresh_token", Value: "", Path: "/api/auth", MaxAge: -1, HttpOnly: true})
+					w.WriteHeader(http.StatusNoContent)
+				})
+			})
+		}
 	}
 
 	// Protected API routes
