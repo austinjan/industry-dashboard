@@ -17,7 +17,8 @@ export function AuditLogPage() {
   if (action) params.action = action;
   if (resourceType) params.resource_type = resourceType;
 
-  const { data: logs, isLoading } = useAuditLogs(params);
+  const { data, isLoading } = useAuditLogs(params);
+  const logs = data?.logs;
 
   return (
     <div>
@@ -81,7 +82,7 @@ export function AuditLogPage() {
       <div className="mt-3 flex items-center justify-between">
         <Button variant="outline" size="sm" onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0}>{t('admin.previous')}</Button>
         <span className="text-sm text-slate-500">{t('admin.page', { page: page + 1 })}</span>
-        <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={!logs || logs.length < limit}>{t('admin.next')}</Button>
+        <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={!data || (page + 1) * limit >= data.total}>{t('admin.next')}</Button>
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ import (
 	"github.com/industry-dashboard/server/internal/dashboard"
 	"github.com/industry-dashboard/server/internal/database"
 	"github.com/industry-dashboard/server/internal/datapoint"
+	"github.com/industry-dashboard/server/internal/llmauth"
 	"github.com/industry-dashboard/server/internal/rbac"
 	"github.com/industry-dashboard/server/internal/site"
 	"github.com/industry-dashboard/server/internal/user"
@@ -79,6 +80,22 @@ func main() {
 
 	workerConfigStore := worker_config.NewStore(pool)
 	workerConfigHandler := worker_config.NewHandler(workerConfigStore)
+
+	llmKeyStore := llmauth.NewStore(pool)
+	llmKeyHandler := llmauth.NewHandler(llmKeyStore)
+	authMW.SetAPIKeyValidator(llmKeyStore)
+
+	// Bootstrap API key if env var set and no active keys exist
+	if os.Getenv("DASHBOARD_BOOTSTRAP_KEY") == "true" {
+		hasKey, _ := llmKeyStore.HasAnyKey(context.Background())
+		if !hasKey {
+			key, fullKey, err := llmKeyStore.Create(context.Background(), "bootstrap")
+			if err == nil {
+				log.Printf("[BOOTSTRAP] API key created: %s", fullKey)
+				log.Printf("[BOOTSTRAP] Key name: %s, prefix: %s", key.Name, key.KeyPrefix)
+			}
+		}
+	}
 
 	// OIDC client (optional — skip if Azure not configured)
 	var authHandler *auth.Handler
@@ -477,6 +494,13 @@ func main() {
 				r.With(rbacMW.Require("workers:manage", globalScope)).Get("/commands", workerAPIHandler.ListCommands)
 				r.With(rbacMW.Require("workers:manage", globalScope)).Get("/config", workerAPIHandler.GetWorkerConfig)
 			})
+		})
+
+		// LLM API keys
+		r.Route("/llm/keys", func(r chi.Router) {
+			r.With(rbacMW.Require("role:manage", rbac.SiteFromQuery)).Get("/", llmKeyHandler.ListKeys)
+			r.With(rbacMW.Require("role:manage", rbac.SiteFromQuery)).Post("/", llmKeyHandler.CreateKey)
+			r.With(rbacMW.Require("role:manage", rbac.SiteFromQuery)).Delete("/{keyID}", llmKeyHandler.RevokeKey)
 		})
 	})
 

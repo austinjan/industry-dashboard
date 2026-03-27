@@ -63,43 +63,61 @@ type ListParams struct {
 	UserID       string
 	Action       string
 	ResourceType string
+	Since        time.Time
 	Limit        int
 	Offset       int
 }
 
-func (s *Store) List(ctx context.Context, params ListParams) ([]AuditLog, error) {
+type AuditListResult struct {
+	Logs  []AuditLog `json:"logs"`
+	Total int        `json:"total"`
+}
+
+func (s *Store) List(ctx context.Context, params ListParams) (*AuditListResult, error) {
 	if params.Limit == 0 {
 		params.Limit = 50
 	}
-	query := `SELECT al.id, al.user_id, COALESCE(u.name, ''), COALESCE(u.email, ''), al.action, al.resource_type, al.resource_id, al.details, host(al.ip_address), al.timestamp
-		FROM audit_logs al
+	baseWhere := ` FROM audit_logs al
 		LEFT JOIN users u ON al.user_id = u.id
 		WHERE 1=1`
 	args := []interface{}{}
 	argIdx := 1
 	if params.UserID != "" {
-		query += ` AND al.user_id = $` + strconv.Itoa(argIdx)
+		baseWhere += ` AND al.user_id = $` + strconv.Itoa(argIdx)
 		args = append(args, params.UserID)
 		argIdx++
 	}
 	if params.Action != "" {
-		query += ` AND al.action = $` + strconv.Itoa(argIdx)
+		baseWhere += ` AND al.action = $` + strconv.Itoa(argIdx)
 		args = append(args, params.Action)
 		argIdx++
 	}
 	if params.ResourceType != "" {
-		query += ` AND al.resource_type = $` + strconv.Itoa(argIdx)
+		baseWhere += ` AND al.resource_type = $` + strconv.Itoa(argIdx)
 		args = append(args, params.ResourceType)
 		argIdx++
 	}
-	query += ` ORDER BY al.timestamp DESC LIMIT $` + strconv.Itoa(argIdx) + ` OFFSET $` + strconv.Itoa(argIdx+1)
+	if !params.Since.IsZero() {
+		baseWhere += ` AND al.timestamp >= $` + strconv.Itoa(argIdx)
+		args = append(args, params.Since)
+		argIdx++
+	}
+
+	// Count total
+	var total int
+	if err := s.db.QueryRow(ctx, `SELECT COUNT(*)`+baseWhere, args...).Scan(&total); err != nil {
+		return nil, err
+	}
+
+	query := `SELECT al.id, al.user_id, COALESCE(u.name, ''), COALESCE(u.email, ''), al.action, al.resource_type, al.resource_id, al.details, host(al.ip_address), al.timestamp` +
+		baseWhere + ` ORDER BY al.timestamp DESC LIMIT $` + strconv.Itoa(argIdx) + ` OFFSET $` + strconv.Itoa(argIdx+1)
 	args = append(args, params.Limit, params.Offset)
 	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var logs []AuditLog
+	logs := make([]AuditLog, 0)
 	for rows.Next() {
 		var l AuditLog
 		var details []byte
@@ -115,5 +133,5 @@ func (s *Store) List(ctx context.Context, params ListParams) ([]AuditLog, error)
 		}
 		logs = append(logs, l)
 	}
-	return logs, nil
+	return &AuditListResult{Logs: logs, Total: total}, nil
 }

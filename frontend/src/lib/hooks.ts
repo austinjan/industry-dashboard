@@ -210,7 +210,7 @@ export function useAuditLogs(params?: Record<string, string>) {
   const query = new URLSearchParams(params).toString();
   return useQuery({
     queryKey: ['audit-logs', params],
-    queryFn: () => fetchJSON<any[]>(`/audit-logs?${query}`),
+    queryFn: () => fetchJSON<{ logs: any[]; total: number }>(`/audit-logs?${query}`),
   });
 }
 
