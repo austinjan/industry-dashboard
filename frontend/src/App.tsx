@@ -1,32 +1,43 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { SiteProvider } from '@/lib/site-context';
 import { RefreshIntervalProvider } from '@/lib/refresh-interval';
 import { AppShell } from '@/components/layout/AppShell';
+
+// Eager: login + main dashboard (first paint)
 import { LoginPage } from '@/pages/LoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
-import { MachineListPage } from '@/pages/MachineListPage';
-import { MachineDetailPage } from '@/pages/MachineDetailPage';
-import { AlertsPage } from '@/pages/AlertsPage';
-import { UsersPage } from '@/pages/admin/UsersPage';
-import { RolesPage } from '@/pages/admin/RolesPage';
-import { AuditLogPage } from '@/pages/admin/AuditLogPage';
-import { SitesPage } from '@/pages/admin/SitesPage';
-import { WorkersPage } from '@/pages/admin/WorkersPage';
-import { WorkerConfigsPage } from '@/pages/admin/WorkerConfigsPage';
-import { WorkerConfigEditPage } from '@/pages/admin/WorkerConfigEditPage';
-import { ApiKeysPage } from '@/pages/admin/ApiKeysPage';
-import { DashboardListPage } from '@/pages/dashboards/DashboardListPage';
-import { DashboardViewPage } from '@/pages/dashboards/DashboardViewPage';
-import { DashboardEditorPage } from '@/pages/dashboards/DashboardEditorPage';
-import AlertRulesPage from '@/pages/AlertRulesPage';
+
+// Lazy: everything else
+const MachineListPage = lazy(() => import('@/pages/MachineListPage').then(m => ({ default: m.MachineListPage })));
+const MachineDetailPage = lazy(() => import('@/pages/MachineDetailPage').then(m => ({ default: m.MachineDetailPage })));
+const AlertsPage = lazy(() => import('@/pages/AlertsPage').then(m => ({ default: m.AlertsPage })));
+const AlertRulesPage = lazy(() => import('@/pages/AlertRulesPage'));
+const DashboardListPage = lazy(() => import('@/pages/dashboards/DashboardListPage').then(m => ({ default: m.DashboardListPage })));
+const DashboardViewPage = lazy(() => import('@/pages/dashboards/DashboardViewPage').then(m => ({ default: m.DashboardViewPage })));
+const DashboardEditorPage = lazy(() => import('@/pages/dashboards/DashboardEditorPage').then(m => ({ default: m.DashboardEditorPage })));
+
+// Lazy: admin pages
+const UsersPage = lazy(() => import('@/pages/admin/UsersPage').then(m => ({ default: m.UsersPage })));
+const RolesPage = lazy(() => import('@/pages/admin/RolesPage').then(m => ({ default: m.RolesPage })));
+const AuditLogPage = lazy(() => import('@/pages/admin/AuditLogPage').then(m => ({ default: m.AuditLogPage })));
+const SitesPage = lazy(() => import('@/pages/admin/SitesPage').then(m => ({ default: m.SitesPage })));
+const WorkersPage = lazy(() => import('@/pages/admin/WorkersPage').then(m => ({ default: m.WorkersPage })));
+const WorkerConfigsPage = lazy(() => import('@/pages/admin/WorkerConfigsPage').then(m => ({ default: m.WorkerConfigsPage })));
+const WorkerConfigEditPage = lazy(() => import('@/pages/admin/WorkerConfigEditPage').then(m => ({ default: m.WorkerConfigEditPage })));
+const ApiKeysPage = lazy(() => import('@/pages/admin/ApiKeysPage').then(m => ({ default: m.ApiKeysPage })));
 
 const queryClient = new QueryClient();
 
+function Loading() {
+  return <div className="flex h-screen items-center justify-center text-muted-foreground">Loading...</div>;
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  if (loading) return <Loading />;
   if (!user) return <Navigate to="/login" />;
   return <>{children}</>;
 }
@@ -37,6 +48,7 @@ export default function App() {
       <RefreshIntervalProvider>
       <AuthProvider>
         <BrowserRouter>
+          <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
 
@@ -76,6 +88,7 @@ export default function App() {
               </Route>
             </Route>
           </Routes>
+          </Suspense>
         </BrowserRouter>
       </AuthProvider>
       </RefreshIntervalProvider>
