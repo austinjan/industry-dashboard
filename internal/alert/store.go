@@ -158,7 +158,7 @@ func (s *Store) ListAlertEvents(ctx context.Context, p AlertEventListParams) (*A
 		return nil, err
 	}
 	defer rows.Close()
-	var events []AlertEvent
+	events := make([]AlertEvent, 0)
 	for rows.Next() {
 		var e AlertEvent
 		if err := rows.Scan(&e.ID, &e.AlertID, &e.AlertName, &e.LineID, &e.LineName, &e.MachineID, &e.MachineName, &e.MetricName, &e.Condition, &e.Threshold, &e.Severity, &e.TriggeredAt, &e.TriggeredValue, &e.ResolvedAt, &e.AcknowledgedBy); err != nil {
