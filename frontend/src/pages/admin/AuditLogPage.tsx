@@ -53,16 +53,15 @@ export function AuditLogPage() {
               <TableHead>{t('admin.user')}</TableHead>
               <TableHead>{t('admin.action')}</TableHead>
               <TableHead>{t('admin.resource')}</TableHead>
-              <TableHead>{t('admin.details')}</TableHead>
               <TableHead>{t('admin.ip')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
-              <TableRow><TableCell colSpan={6} className="text-center text-slate-400">{t('common.loading')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-slate-400">{t('common.loading')}</TableCell></TableRow>
             )}
             {logs && logs.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="text-center text-slate-400">{t('admin.noAuditLogs')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center text-slate-400">{t('admin.noAuditLogs')}</TableCell></TableRow>
             )}
             {logs?.map((log: any) => (
               <TableRow key={log.id}>
@@ -72,17 +71,6 @@ export function AuditLogPage() {
                 <TableCell className="text-sm">
                   {log.resource_type}
                   {log.resource_id && <span className="text-slate-400"> #{log.resource_id.slice(0, 8)}</span>}
-                </TableCell>
-                <TableCell className="text-xs text-slate-500 max-w-xs truncate">
-                  {log.details ? (
-                    <code
-                      className="bg-muted px-1.5 py-0.5 rounded cursor-pointer"
-                      title={JSON.stringify(log.details, null, 2)}
-                      onClick={() => alert(JSON.stringify(log.details, null, 2))}
-                    >
-                      {JSON.stringify(log.details).slice(0, 60)}{JSON.stringify(log.details).length > 60 ? '…' : ''}
-                    </code>
-                  ) : '—'}
                 </TableCell>
                 <TableCell className="text-sm text-slate-400">{log.ip_address ?? '—'}</TableCell>
               </TableRow>
