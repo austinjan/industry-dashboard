@@ -12,6 +12,7 @@ import (
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/industry-dashboard/server/internal/alert"
+	"github.com/industry-dashboard/server/internal/apierr"
 	"github.com/industry-dashboard/server/internal/audit"
 	"github.com/industry-dashboard/server/internal/auth"
 	"github.com/industry-dashboard/server/internal/config"
@@ -143,7 +144,7 @@ func main() {
 				 ON CONFLICT (microsoft_id) DO UPDATE SET email = EXCLUDED.email
 				 RETURNING id`).Scan(&userID)
 			if err != nil {
-				http.Error(w, "failed to create user: "+err.Error(), 500)
+				apierr.Write(w, r, http.StatusInternalServerError, "internal", "failed to create user", "", err)
 				return
 			}
 			// Assign admin role (global)
@@ -195,7 +196,7 @@ func main() {
 			// Get all machine IDs
 			rows, err := pool.Query(ctx, `SELECT id FROM machines`)
 			if err != nil {
-				http.Error(w, "failed to query machines: "+err.Error(), 500)
+				apierr.Write(w, r, http.StatusInternalServerError, "internal", "failed to query machines", "", err)
 				return
 			}
 			defer rows.Close()
@@ -206,7 +207,7 @@ func main() {
 				machineIDs = append(machineIDs, id)
 			}
 			if len(machineIDs) == 0 {
-				http.Error(w, "run /dev/seed first", 400)
+				apierr.Write(w, r, http.StatusBadRequest, "internal", "run /dev/seed first", "", nil)
 				return
 			}
 
@@ -284,7 +285,7 @@ func main() {
 			var userID, email string
 			err := pool.QueryRow(ctx, `SELECT id, email FROM users WHERE microsoft_id = 'dev-local'`).Scan(&userID, &email)
 			if err != nil {
-				http.Error(w, "run /dev/seed first", 400)
+				apierr.Write(w, r, http.StatusBadRequest, "internal", "run /dev/seed first", "", nil)
 				return
 			}
 			accessToken, _ := jwtService.CreateAccessToken(userID, email)
@@ -306,12 +307,12 @@ func main() {
 				r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
 					cookie, err := r.Cookie("access_token")
 					if err != nil || cookie.Value == "" {
-						http.Error(w, "unauthorized", http.StatusUnauthorized)
+						apierr.Write(w, r, http.StatusUnauthorized, "internal", "unauthorized", "", nil)
 						return
 					}
 					claims, err := jwtService.ValidateToken(cookie.Value)
 					if err != nil {
-						http.Error(w, "unauthorized", http.StatusUnauthorized)
+						apierr.Write(w, r, http.StatusUnauthorized, "internal", "unauthorized", "", err)
 						return
 					}
 					var u struct {
@@ -322,7 +323,7 @@ func main() {
 					}
 					err = pool.QueryRow(r.Context(), "SELECT id, email, name, locale FROM users WHERE id = $1", claims.UserID).Scan(&u.ID, &u.Email, &u.Name, &u.Locale)
 					if err != nil {
-						http.Error(w, "user not found", http.StatusNotFound)
+						apierr.Write(w, r, http.StatusNotFound, "internal", "user not found", claims.UserID, err)
 						return
 					}
 					w.Header().Set("Content-Type", "application/json")
@@ -331,12 +332,12 @@ func main() {
 				r.Post("/refresh", func(w http.ResponseWriter, r *http.Request) {
 					cookie, err := r.Cookie("refresh_token")
 					if err != nil || cookie.Value == "" {
-						http.Error(w, "no refresh token", http.StatusUnauthorized)
+						apierr.Write(w, r, http.StatusUnauthorized, "internal", "no refresh token", "", nil)
 						return
 					}
 					claims, err := jwtService.ValidateToken(cookie.Value)
 					if err != nil || claims.TokenType != "refresh" {
-						http.Error(w, "invalid refresh token", http.StatusUnauthorized)
+						apierr.Write(w, r, http.StatusUnauthorized, "internal", "invalid refresh token", "", err)
 						return
 					}
 					accessToken, _ := jwtService.CreateAccessToken(claims.UserID, claims.Email)
