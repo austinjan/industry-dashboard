@@ -26,6 +26,8 @@ import (
 	"github.com/industry-dashboard/server/internal/worker_config"
 )
 
+var version = "dev"
+
 func main() {
 	cfg := config.Load()
 	ctx := context.Background()
@@ -493,6 +495,9 @@ func main() {
 		})
 	})
 
+	serveFrontend(r)
+
+	log.Printf("dashboard-server version %s", version)
 	log.Printf("Server starting on :%s", cfg.Port)
 	if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
 		log.Fatalf("Server failed: %v", err)

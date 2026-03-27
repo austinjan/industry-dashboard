@@ -29,3 +29,7 @@ pgdata/
 .DS_Store
 bin/
 dashboard-cli
+
+# Build artifacts
+cmd/server/frontend_dist/
+dist/
