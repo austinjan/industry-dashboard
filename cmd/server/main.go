@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-chi/httprate"
 	"github.com/industry-dashboard/server/internal/alert"
 	"github.com/industry-dashboard/server/internal/audit"
 	"github.com/industry-dashboard/server/internal/auth"
@@ -91,16 +92,20 @@ func main() {
 	authMW.SetAPIKeyValidator(llmKeyStore)
 
 
-	// OIDC client (optional — skip if Azure not configured)
-	var authHandler *auth.Handler
+	// OIDC client (optional — local auth always works without it)
+	var oidcClient *auth.OIDCClient
 	if cfg.AzureClientID != "" {
-		oidcClient, err := auth.NewOIDCClient(ctx, cfg.AzureTenantID, cfg.AzureClientID, cfg.AzureClientSecret, cfg.AzureRedirectURL)
+		var err error
+		oidcClient, err = auth.NewOIDCClient(ctx, cfg.AzureTenantID, cfg.AzureClientID, cfg.AzureClientSecret, cfg.AzureRedirectURL)
 		if err != nil {
-			log.Printf("Warning: OIDC client setup failed: %v (auth endpoints disabled)", err)
-		} else {
-			authHandler = auth.NewHandler(oidcClient, jwtService, pool)
+			log.Printf("Warning: OIDC client setup failed: %v (SSO endpoints will return 501)", err)
 		}
 	}
+	// Always construct handler — local auth works without OIDC
+	authHandler := auth.NewHandler(oidcClient, jwtService, pool)
+
+	// Seed default admin on first run (per D-07, D-08)
+	auth.SeedDefaultAdmin(ctx, pool)
 
 	// Router
 	r := chi.NewRouter()
@@ -118,15 +123,21 @@ func main() {
 		w.Write([]byte("ok"))
 	})
 
-	// Auth routes (public)
-	if authHandler != nil {
-		r.Route("/api/auth", func(r chi.Router) {
-			r.Get("/login", authHandler.Login)
-			r.Get("/callback", authHandler.Callback)
-			r.Post("/refresh", authHandler.Refresh)
-			r.Post("/logout", authHandler.Logout)
-		})
-	}
+	// Public auth routes — always registered
+	r.Route("/api/auth", func(r chi.Router) {
+		// Local auth (always available)
+		r.With(httprate.LimitByIP(5, time.Minute)).Post("/login/local", authHandler.LoginLocal)
+		r.With(httprate.LimitByIP(3, time.Hour)).Post("/register", authHandler.RegisterLocal)
+		r.Get("/providers", authHandler.Providers)
+
+		// SSO routes (Login/Callback have nil-guards that return 501 when OIDC not configured)
+		r.Get("/login", authHandler.Login)
+		r.Get("/callback", authHandler.Callback)
+
+		// Shared (token management)
+		r.Post("/refresh", authHandler.Refresh)
+		r.Post("/logout", authHandler.Logout)
+	})
 
 	// Dev mode: seed data + bypass auth
 	if os.Getenv("DEV_MODE") == "1" {
@@ -299,65 +310,6 @@ func main() {
 			http.Redirect(w, r, "http://localhost:5173/", http.StatusTemporaryRedirect)
 		})
 
-		// Dev /api/auth/me fallback (when OIDC not configured)
-		if authHandler == nil {
-			r.Route("/api/auth", func(r chi.Router) {
-				r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
-					cookie, err := r.Cookie("access_token")
-					if err != nil || cookie.Value == "" {
-						http.Error(w, "unauthorized", http.StatusUnauthorized)
-						return
-					}
-					claims, err := jwtService.ValidateToken(cookie.Value)
-					if err != nil {
-						http.Error(w, "unauthorized", http.StatusUnauthorized)
-						return
-					}
-					var u struct {
-						ID     string  `json:"id"`
-						Email  string  `json:"email"`
-						Name   string  `json:"name"`
-						Locale *string `json:"locale"`
-					}
-					err = pool.QueryRow(r.Context(), "SELECT id, email, name, locale FROM users WHERE id = $1", claims.UserID).Scan(&u.ID, &u.Email, &u.Name, &u.Locale)
-					if err != nil {
-						http.Error(w, "user not found", http.StatusNotFound)
-						return
-					}
-					w.Header().Set("Content-Type", "application/json")
-					json.NewEncoder(w).Encode(u)
-				})
-				r.Post("/refresh", func(w http.ResponseWriter, r *http.Request) {
-					cookie, err := r.Cookie("refresh_token")
-					if err != nil || cookie.Value == "" {
-						http.Error(w, "no refresh token", http.StatusUnauthorized)
-						return
-					}
-					claims, err := jwtService.ValidateToken(cookie.Value)
-					if err != nil || claims.TokenType != "refresh" {
-						http.Error(w, "invalid refresh token", http.StatusUnauthorized)
-						return
-					}
-					accessToken, _ := jwtService.CreateAccessToken(claims.UserID, claims.Email)
-					refreshToken, _ := jwtService.CreateRefreshToken(claims.UserID, claims.Email)
-					http.SetCookie(w, &http.Cookie{
-						Name: "access_token", Value: accessToken, Path: "/",
-						HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: 900,
-					})
-					http.SetCookie(w, &http.Cookie{
-						Name: "refresh_token", Value: refreshToken, Path: "/api/auth",
-						HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: 604800,
-					})
-					w.Header().Set("Content-Type", "application/json")
-					json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-				})
-				r.Post("/logout", func(w http.ResponseWriter, r *http.Request) {
-					http.SetCookie(w, &http.Cookie{Name: "access_token", Value: "", Path: "/", MaxAge: -1, HttpOnly: true})
-					http.SetCookie(w, &http.Cookie{Name: "refresh_token", Value: "", Path: "/api/auth", MaxAge: -1, HttpOnly: true})
-					w.WriteHeader(http.StatusNoContent)
-				})
-			})
-		}
 	}
 
 	// Protected API routes
@@ -365,9 +317,7 @@ func main() {
 		r.Use(authMW.Authenticate)
 
 		// Current user
-		if authHandler != nil {
-			r.Get("/auth/me", authHandler.Me)
-		}
+		r.Get("/auth/me", authHandler.Me)
 
 		// User preferences (no RBAC — users update their own)
 		r.Patch("/me/preferences", prefHandler.UpdatePreferences)
