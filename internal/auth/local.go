@@ -3,10 +3,10 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"strings"
 
+	"github.com/industry-dashboard/server/internal/apierr"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -22,21 +22,21 @@ func (h *Handler) RegisterLocal(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "auth.invalid_input", "Invalid request body")
+		apierr.Write(w, r, http.StatusBadRequest, "auth.invalid_input", "Invalid request body", "", nil)
 		return
 	}
 
 	// Validate inputs
 	if req.Email == "" || !strings.Contains(req.Email, "@") {
-		writeError(w, http.StatusBadRequest, "auth.invalid_input", "Valid email is required")
+		apierr.Write(w, r, http.StatusBadRequest, "auth.invalid_input", "Valid email is required", "", nil)
 		return
 	}
 	if req.Password == "" {
-		writeError(w, http.StatusBadRequest, "auth.invalid_input", "Password is required")
+		apierr.Write(w, r, http.StatusBadRequest, "auth.invalid_input", "Password is required", "", nil)
 		return
 	}
 	if len(req.Password) > 72 {
-		writeError(w, http.StatusBadRequest, "auth.password_too_long", "Password must be 72 characters or fewer")
+		apierr.Write(w, r, http.StatusBadRequest, "auth.password_too_long", "Password must be 72 characters or fewer", "", nil)
 		return
 	}
 
@@ -46,8 +46,7 @@ func (h *Handler) RegisterLocal(w http.ResponseWriter, r *http.Request) {
 	// Hash password
 	hash, err := HashPassword(req.Password)
 	if err != nil {
-		log.Printf("RegisterLocal: failed to hash password: %v", err)
-		writeError(w, http.StatusInternalServerError, "internal", "Failed to process registration")
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "Failed to process registration", "", err)
 		return
 	}
 
@@ -68,15 +67,14 @@ func (h *Handler) RegisterLocal(w http.ResponseWriter, r *http.Request) {
 				`SELECT microsoft_id FROM users WHERE email=$1`, req.Email,
 			).Scan(&microsoftID)
 			if microsoftID != nil {
-				writeError(w, http.StatusConflict, "auth.email_taken",
-					"Email already in use. Log in via SSO to link your account.")
+				apierr.Write(w, r, http.StatusConflict, "auth.email_taken",
+					"Email already in use. Log in via SSO to link your account.", "", nil)
 			} else {
-				writeError(w, http.StatusConflict, "auth.email_taken", "Email already registered")
+				apierr.Write(w, r, http.StatusConflict, "auth.email_taken", "Email already registered", "", nil)
 			}
 			return
 		}
-		log.Printf("RegisterLocal: failed to insert user: %v", err)
-		writeError(w, http.StatusInternalServerError, "internal", "Failed to create account")
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "Failed to create account", "", err)
 		return
 	}
 
@@ -86,8 +84,7 @@ func (h *Handler) RegisterLocal(w http.ResponseWriter, r *http.Request) {
 		`SELECT id FROM roles WHERE name='Viewer'`,
 	).Scan(&viewerRoleID)
 	if err != nil {
-		log.Printf("RegisterLocal: Viewer role not found: %v", err)
-		writeError(w, http.StatusInternalServerError, "internal", "System misconfigured")
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "System misconfigured", userID, err)
 		return
 	}
 	_, err = h.db.Exec(r.Context(),
@@ -95,15 +92,13 @@ func (h *Handler) RegisterLocal(w http.ResponseWriter, r *http.Request) {
 		userID, viewerRoleID,
 	)
 	if err != nil {
-		log.Printf("RegisterLocal: failed to assign Viewer role: %v", err)
-		writeError(w, http.StatusInternalServerError, "internal", "Failed to assign role")
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "Failed to assign role", userID, err)
 		return
 	}
 
 	// Create JWT tokens and set cookies
 	if err := h.setAuthCookies(w, userID, req.Email); err != nil {
-		log.Printf("RegisterLocal: failed to set auth cookies: %v", err)
-		writeError(w, http.StatusInternalServerError, "internal", "Failed to create session")
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "Failed to create session", userID, err)
 		return
 	}
 
@@ -126,13 +121,13 @@ func (h *Handler) LoginLocal(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "auth.invalid_input", "Invalid request body")
+		apierr.Write(w, r, http.StatusBadRequest, "auth.invalid_input", "Invalid request body", "", nil)
 		return
 	}
 
 	// Validate inputs — no @ check per Pitfall 5 (admin has no @)
 	if req.Email == "" || req.Password == "" {
-		writeError(w, http.StatusBadRequest, "auth.invalid_input", "Email and password required")
+		apierr.Write(w, r, http.StatusBadRequest, "auth.invalid_input", "Email and password required", "", nil)
 		return
 	}
 
@@ -151,33 +146,32 @@ func (h *Handler) LoginLocal(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// User not found — run dummy check for timing safety
 		DummyCheckPassword(req.Password)
-		writeError(w, http.StatusUnauthorized, "auth.invalid_credentials", "Invalid email or password")
+		apierr.Write(w, r, http.StatusUnauthorized, "auth.invalid_credentials", "Invalid email or password", "", nil)
 		return
 	}
 
 	// SSO-only user (no password set)
 	if passwordHash == nil {
 		DummyCheckPassword(req.Password)
-		writeError(w, http.StatusUnauthorized, "auth.invalid_credentials", "Invalid email or password")
+		apierr.Write(w, r, http.StatusUnauthorized, "auth.invalid_credentials", "Invalid email or password", "", nil)
 		return
 	}
 
 	// Verify password
 	if !CheckPassword(*passwordHash, req.Password) {
-		writeError(w, http.StatusUnauthorized, "auth.invalid_credentials", "Invalid email or password")
+		apierr.Write(w, r, http.StatusUnauthorized, "auth.invalid_credentials", "Invalid email or password", "", nil)
 		return
 	}
 
 	// Check account status AFTER password check (don't reveal disabled status to unauthenticated users)
 	if !isActive {
-		writeError(w, http.StatusForbidden, "auth.account_disabled", "Account is disabled")
+		apierr.Write(w, r, http.StatusForbidden, "auth.account_disabled", "Account is disabled", userID, nil)
 		return
 	}
 
 	// Create JWT tokens and set cookies
 	if err := h.setAuthCookies(w, userID, email); err != nil {
-		log.Printf("LoginLocal: failed to set auth cookies: %v", err)
-		writeError(w, http.StatusInternalServerError, "internal", "Failed to create session")
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "Failed to create session", userID, err)
 		return
 	}
 

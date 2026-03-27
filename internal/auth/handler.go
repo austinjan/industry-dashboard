@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/industry-dashboard/server/internal/apierr"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -23,7 +24,7 @@ func NewHandler(oidc *OIDCClient, jwt *JWTService, db *pgxpool.Pool) *Handler {
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	if h.oidc == nil {
-		writeError(w, http.StatusNotImplemented, "auth.sso_not_configured", "SSO is not configured")
+		apierr.Write(w, r, http.StatusNotImplemented, "auth.sso_not_configured", "SSO is not configured", "", nil)
 		return
 	}
 	state := generateState()
@@ -39,32 +40,32 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Callback(w http.ResponseWriter, r *http.Request) {
 	if h.oidc == nil {
-		writeError(w, http.StatusNotImplemented, "auth.sso_not_configured", "SSO is not configured")
+		apierr.Write(w, r, http.StatusNotImplemented, "auth.sso_not_configured", "SSO is not configured", "", nil)
 		return
 	}
 	cookie, err := r.Cookie("oauth_state")
 	if err != nil || cookie.Value != r.URL.Query().Get("state") {
-		http.Error(w, "invalid state", http.StatusBadRequest)
+		apierr.Write(w, r, http.StatusBadRequest, "auth.invalid_input", "invalid state", "", nil)
 		return
 	}
 	oidcUser, err := h.oidc.Exchange(r.Context(), r.URL.Query().Get("code"))
 	if err != nil {
-		http.Error(w, "authentication failed", http.StatusUnauthorized)
+		apierr.Write(w, r, http.StatusUnauthorized, "auth.unauthorized", "authentication failed", "", err)
 		return
 	}
 	user, err := h.upsertUser(r.Context(), oidcUser)
 	if err != nil {
-		http.Error(w, "failed to provision user", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "failed to provision user", "", err)
 		return
 	}
 	accessToken, err := h.jwt.CreateAccessToken(user.ID, user.Email)
 	if err != nil {
-		http.Error(w, "failed to create token", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "failed to create token", user.ID, err)
 		return
 	}
 	refreshToken, err := h.jwt.CreateRefreshToken(user.ID, user.Email)
 	if err != nil {
-		http.Error(w, "failed to create token", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "failed to create token", user.ID, err)
 		return
 	}
 
@@ -90,23 +91,23 @@ func (h *Handler) Callback(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil || cookie.Value == "" {
-		http.Error(w, "no refresh token", http.StatusUnauthorized)
+		apierr.Write(w, r, http.StatusUnauthorized, "auth.unauthorized", "no refresh token", "", nil)
 		return
 	}
 
 	claims, err := h.jwt.ValidateToken(cookie.Value)
 	if err != nil || claims.TokenType != "refresh" {
-		http.Error(w, "invalid refresh token", http.StatusUnauthorized)
+		apierr.Write(w, r, http.StatusUnauthorized, "auth.unauthorized", "invalid refresh token", "", err)
 		return
 	}
 	accessToken, err := h.jwt.CreateAccessToken(claims.UserID, claims.Email)
 	if err != nil {
-		http.Error(w, "failed to create token", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "failed to create token", claims.UserID, err)
 		return
 	}
 	refreshToken, err := h.jwt.CreateRefreshToken(claims.UserID, claims.Email)
 	if err != nil {
-		http.Error(w, "failed to create token", http.StatusInternalServerError)
+		apierr.Write(w, r, http.StatusInternalServerError, "internal", "failed to create token", claims.UserID, err)
 		return
 	}
 
@@ -152,7 +153,7 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 	claims := GetClaims(r.Context())
 	if claims == nil {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		apierr.Write(w, r, http.StatusUnauthorized, "auth.unauthorized", "unauthorized", "", nil)
 		return
 	}
 	var user struct {
@@ -165,7 +166,7 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 		"SELECT id, email, name, locale FROM users WHERE id = $1", claims.UserID,
 	).Scan(&user.ID, &user.Email, &user.Name, &user.Locale)
 	if err != nil {
-		http.Error(w, "user not found", http.StatusNotFound)
+		apierr.Write(w, r, http.StatusNotFound, "auth.invalid_input", "user not found", claims.UserID, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
