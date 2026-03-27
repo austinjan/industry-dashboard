@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v0.0.3
 milestone_name: milestone
-status: verifying
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-27T10:47:38.773Z"
+status: executing
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-27T11:11:18.020Z"
 last_activity: 2026-03-27
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 6
+  completed_plans: 4
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** Real-time visibility into factory operations with customizable dashboards that adapt to each site's monitoring needs.
-**Current focus:** Phase 01 — backend-local-auth
+**Current focus:** Phase 02 — error-handling
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 02 (error-handling) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-03-27
 
 Progress: [░░░░░░░░░░] 0%
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-backend-local-auth P01 | 5 | 2 tasks | 6 files |
 | Phase 01-backend-local-auth P02 | 4min | 2 tasks | 3 files |
 | Phase 01-backend-local-auth P03 | 20min | 2 tasks | 2 files |
+| Phase 02-error-handling P01 | 15min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,8 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 01-backend-local-auth]: authHandler always constructed regardless of Azure config — local auth works without OIDC
 - [Phase 01-backend-local-auth]: Rate limits: 5/min for login (brute-force), 3/hr for register (spam prevention)
 - [Phase 01-backend-local-auth]: Dev-mode /api/auth fallback removed — real handlers cover all paths now authHandler is always non-nil
+- [Phase 02-error-handling]: apierr does not import internal/auth — userID passed as string to avoid circular import
+- [Phase 02-error-handling]: RBAC errors include userID from claims for log correlation; rbac.internal_error code for HasPermission DB failures
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T10:47:38.770Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-error-handling/02-CONTEXT.md
+Last session: 2026-03-27T11:11:18.018Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None

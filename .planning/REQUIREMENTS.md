@@ -20,9 +20,9 @@ Requirements for milestone v0.0.3: Local Auth, Error Handling & Release Validati
 
 ### Error Handling
 
-- [ ] **ERR-01**: Backend uses structured JSON error responses ({code, message}) across all handlers
+- [x] **ERR-01**: Backend uses structured JSON error responses ({code, message}) across all handlers
 - [ ] **ERR-02**: Frontend displays errors inline next to the relevant field or component
-- [ ] **ERR-03**: All errors are captured in system logs with structured logging (slog) and request context
+- [x] **ERR-03**: All errors are captured in system logs with structured logging (slog) and request context
 
 ### Release Validation
 
@@ -58,9 +58,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-03 | Phase 1 | Complete |
 | SSO-01 | Phase 4 | Pending |
 | SSO-02 | Phase 4 | Pending |
-| ERR-01 | Phase 2 | Pending |
+| ERR-01 | Phase 2 | Complete |
 | ERR-02 | Phase 3 | Pending |
-| ERR-03 | Phase 2 | Pending |
+| ERR-03 | Phase 2 | Complete |
 | REL-01 | Phase 5 | Pending |
 | REL-02 | Phase 5 | Pending |
 

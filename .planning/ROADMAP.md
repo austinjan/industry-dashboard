@@ -44,9 +44,9 @@ Plans:
   1. Every API error response uses the shape {code, message} — no plain-text errors remain in any handler
   2. Machine-readable error codes are consistent (e.g., invalid_credentials, email_taken, not_found) across all handlers
   3. Every error logged by slog includes request ID and user ID where available — no errors are swallowed silently
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 Plans:
-- [ ] 02-01-PLAN.md — Foundation: shared apierr package with Write() + slog, RequestID middleware, auth/rbac middleware conversion
+- [x] 02-01-PLAN.md — Foundation: shared apierr package with Write() + slog, RequestID middleware, auth/rbac middleware conversion
 - [ ] 02-02-PLAN.md — Auth package migration + 5 large domain handlers (site, alert, worker_config, worker_api, dashboard)
 - [ ] 02-03-PLAN.md — Remaining handlers (rbac, llmauth, datapoint, user, audit) + main.go dev routes + verification sweep
 
@@ -93,7 +93,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Backend Local Auth | 3/3 | Complete   | 2026-03-27 |
-| 2. Error Handling | 0/3 | Planned | - |
+| 2. Error Handling | 1/3 | In Progress|  |
 | 3. Frontend Auth UI | 0/? | Not started | - |
 | 4. SSO Binding | 0/? | Not started | - |
 | 5. Release Validation | 0/? | Not started | - |
