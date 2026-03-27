@@ -66,7 +66,7 @@ export function AuditLogPage() {
             {logs?.map((log: any) => (
               <TableRow key={log.id}>
                 <TableCell className="text-sm text-slate-500">{new Date(log.timestamp).toLocaleString()}</TableCell>
-                <TableCell className="text-sm">{log.user_id?.slice(0, 8) ?? '—'}</TableCell>
+                <TableCell className="text-sm">{log.user_name || log.user_email || log.user_id?.slice(0, 8) || '—'}</TableCell>
                 <TableCell className="font-medium">{log.action}</TableCell>
                 <TableCell className="text-sm">
                   {log.resource_type}

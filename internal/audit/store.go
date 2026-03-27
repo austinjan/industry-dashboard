@@ -48,6 +48,8 @@ func (s *Store) Log(ctx context.Context, entry Entry) error {
 type AuditLog struct {
 	ID           string                 `json:"id"`
 	UserID       string                 `json:"user_id"`
+	UserName     string                 `json:"user_name"`
+	UserEmail    string                 `json:"user_email"`
 	Action       string                 `json:"action"`
 	ResourceType string                 `json:"resource_type"`
 	ResourceID   string                 `json:"resource_id"`
@@ -69,26 +71,28 @@ func (s *Store) List(ctx context.Context, params ListParams) ([]AuditLog, error)
 	if params.Limit == 0 {
 		params.Limit = 50
 	}
-	query := `SELECT id, user_id, action, resource_type, resource_id, details, ip_address, timestamp
-		FROM audit_logs WHERE 1=1`
+	query := `SELECT al.id, al.user_id, COALESCE(u.name, ''), COALESCE(u.email, ''), al.action, al.resource_type, al.resource_id, al.details, host(al.ip_address), al.timestamp
+		FROM audit_logs al
+		LEFT JOIN users u ON al.user_id = u.id
+		WHERE 1=1`
 	args := []interface{}{}
 	argIdx := 1
 	if params.UserID != "" {
-		query += ` AND user_id = $` + strconv.Itoa(argIdx)
+		query += ` AND al.user_id = $` + strconv.Itoa(argIdx)
 		args = append(args, params.UserID)
 		argIdx++
 	}
 	if params.Action != "" {
-		query += ` AND action = $` + strconv.Itoa(argIdx)
+		query += ` AND al.action = $` + strconv.Itoa(argIdx)
 		args = append(args, params.Action)
 		argIdx++
 	}
 	if params.ResourceType != "" {
-		query += ` AND resource_type = $` + strconv.Itoa(argIdx)
+		query += ` AND al.resource_type = $` + strconv.Itoa(argIdx)
 		args = append(args, params.ResourceType)
 		argIdx++
 	}
-	query += ` ORDER BY timestamp DESC LIMIT $` + strconv.Itoa(argIdx) + ` OFFSET $` + strconv.Itoa(argIdx+1)
+	query += ` ORDER BY al.timestamp DESC LIMIT $` + strconv.Itoa(argIdx) + ` OFFSET $` + strconv.Itoa(argIdx+1)
 	args = append(args, params.Limit, params.Offset)
 	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {
@@ -100,7 +104,7 @@ func (s *Store) List(ctx context.Context, params ListParams) ([]AuditLog, error)
 		var l AuditLog
 		var details []byte
 		var ipAddr *string
-		if err := rows.Scan(&l.ID, &l.UserID, &l.Action, &l.ResourceType, &l.ResourceID, &details, &ipAddr, &l.Timestamp); err != nil {
+		if err := rows.Scan(&l.ID, &l.UserID, &l.UserName, &l.UserEmail, &l.Action, &l.ResourceType, &l.ResourceID, &details, &ipAddr, &l.Timestamp); err != nil {
 			return nil, err
 		}
 		if details != nil {

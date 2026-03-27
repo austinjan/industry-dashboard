@@ -1,7 +1,10 @@
 package audit
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -20,7 +23,21 @@ func NewMiddleware(logger Logger) *Middleware {
 func (m *Middleware) Log(resourceType, action string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Capture request body before handler consumes it
+			var details map[string]interface{}
+			if r.Body != nil && r.Method != http.MethodGet && r.Method != http.MethodDelete {
+				bodyBytes, err := io.ReadAll(r.Body)
+				r.Body.Close()
+				if err == nil && len(bodyBytes) > 0 {
+					// Try to parse as JSON for structured storage
+					json.Unmarshal(bodyBytes, &details)
+					// Restore body for the handler
+					r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+				}
+			}
+
 			next.ServeHTTP(w, r)
+
 			claims := auth.GetClaims(r.Context())
 			if claims == nil {
 				return
@@ -29,6 +46,7 @@ func (m *Middleware) Log(resourceType, action string) func(http.Handler) http.Ha
 				UserID:       claims.UserID,
 				Action:       action,
 				ResourceType: resourceType,
+				Details:      details,
 				IPAddress:    extractIP(r),
 				Timestamp:    time.Now(),
 			})
