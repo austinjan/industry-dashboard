@@ -10,19 +10,27 @@
 - `default.env.example`
 
 ```bash
-# 1. 設定環境變數 — 只需改 2 個值
+# 1. 設定執行權限
+chmod +x ./dashboard-server-*
+
+# 2. 設定環境變數 — 只需改 2 個值
 cp default.env.example .env
 # 編輯 .env — 修改 DB_PASSWORD 和 JWT_SECRET
 
-# 2. 啟動資料庫
+# 3. 啟動資料庫
 docker compose -f docker-compose.production.yml up -d db
 
-# 3. 啟動伺服器（自動從 DB_* 變數建立連線，自動執行遷移）
+# 4. 啟動伺服器（自動從 DB_* 變數建立連線，自動執行遷移）
 source .env
 ./dashboard-server-linux-amd64
 ```
 
 打開 `http://localhost:8080` — 完成。
+
+> **macOS 使用者：** 如果出現「無法打開，因為它來自未識別的開發者」，請執行：
+> ```bash
+> xattr -d com.apple.quarantine ./dashboard-server-darwin-arm64
+> ```
 
 ---
 

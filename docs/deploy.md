@@ -10,19 +10,27 @@ Download from [GitHub Releases](https://github.com/austinjan/industry-dashboard/
 - `default.env.example`
 
 ```bash
-# 1. Set up config — only 2 values to change
+# 1. Make binary executable
+chmod +x ./dashboard-server-*
+
+# 2. Set up config — only 2 values to change
 cp default.env.example .env
 # Edit .env — change DB_PASSWORD and JWT_SECRET
 
-# 2. Start database
+# 3. Start database
 docker compose -f docker-compose.production.yml up -d db
 
-# 3. Start server (auto-builds DATABASE_URL from DB_* vars, auto-migrates)
+# 4. Start server (auto-builds DATABASE_URL from DB_* vars, auto-migrates)
 source .env
 ./dashboard-server-linux-amd64
 ```
 
 Open `http://localhost:8080` — done.
+
+> **macOS users:** If you see "cannot be opened because it is from an unidentified developer", run:
+> ```bash
+> xattr -d com.apple.quarantine ./dashboard-server-darwin-arm64
+> ```
 
 ---
 
