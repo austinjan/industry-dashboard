@@ -71,6 +71,10 @@ All protected API routes pass through: **Auth (JWT) → RBAC (permission check) 
 - Audit logs are append-only with JSONB details
 - Fake worker (`cmd/fake-worker`) generates simulated sensor data for testing; real Modbus workers will share the same `internal/worker` coordination layer
 
+## API Change Policy
+
+When any backend API endpoint is created, updated, or deleted, **always check `cmd/dashboard-cli/`** and update the CLI implementation to stay in sync. The dashboard-cli is the LLM-facing interface to this system — API changes that aren't reflected in the CLI will break LLM agent workflows.
+
 ## i18n (Internationalization)
 
 Supports 4 languages: English (`en`), Traditional Chinese (`zh-TW`), Thai (`th`), Vietnamese (`vi`).
