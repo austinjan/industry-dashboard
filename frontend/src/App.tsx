@@ -19,6 +19,7 @@ import { WorkerConfigEditPage } from '@/pages/admin/WorkerConfigEditPage';
 import { DashboardListPage } from '@/pages/dashboards/DashboardListPage';
 import { DashboardViewPage } from '@/pages/dashboards/DashboardViewPage';
 import { DashboardEditorPage } from '@/pages/dashboards/DashboardEditorPage';
+import AlertRulesPage from '@/pages/AlertRulesPage';
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ export default function App() {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/machines" element={<MachineListPage />} />
               <Route path="/machines/:machineId" element={<MachineDetailPage />} />
+              <Route path="/alerts/rules" element={<AlertRulesPage />} />
               <Route path="/alerts" element={<AlertsPage />} />
               <Route path="/reports" element={<div>Reports (coming soon)</div>} />
               <Route path="/dashboards" element={<DashboardListPage />} />

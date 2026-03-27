@@ -58,7 +58,7 @@ export function useAlertEvents(siteId: string | undefined, params?: Record<strin
   const query = new URLSearchParams({ site_id: siteId ?? '', ...params }).toString();
   return useQuery({
     queryKey: ['alert-events', siteId, params],
-    queryFn: () => fetchJSON<any[]>(`/alert-events?${query}`),
+    queryFn: () => fetchJSON<{ events: any[]; total: number }>(`/alert-events?${query}`),
     enabled: !!siteId,
     refetchInterval: ri,
   });
@@ -69,6 +69,102 @@ export function useAcknowledgeAlert() {
   return useMutation({
     mutationFn: (eventId: string) =>
       apiFetch(`/alert-events/${eventId}/acknowledge`, { method: 'POST' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['alert-events'] }),
+  });
+}
+
+export function useSiteMachines(siteId: string | undefined) {
+  return useQuery({
+    queryKey: ['site-machines', siteId],
+    queryFn: () => fetchJSON<any[]>(`/site-machines?site_id=${siteId}`),
+    enabled: !!siteId,
+  });
+}
+
+export function useCreateAlert() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ siteId, ...data }: {
+      siteId: string;
+      name: string;
+      machine_id: string;
+      metric_name: string;
+      condition: string;
+      threshold: number;
+      severity: string;
+    }) =>
+      mutateJSON(`/alerts?site_id=${siteId}`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['alerts'] }),
+  });
+}
+
+export function useUpdateAlert() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, siteId, ...data }: {
+      id: string;
+      siteId: string;
+      name: string;
+      metric_name: string;
+      condition: string;
+      threshold: number;
+      severity: string;
+      is_active: boolean;
+    }) =>
+      mutateJSON(`/alerts/${id}?site_id=${siteId}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['alerts'] }),
+  });
+}
+
+export function useDeleteAlert() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, siteId }: { id: string; siteId: string }) =>
+      mutateJSON(`/alerts/${id}?site_id=${siteId}`, { method: 'DELETE' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['alerts'] }),
+  });
+}
+
+export function useBulkAlertAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ siteId, ...data }: {
+      siteId: string;
+      ids: string[];
+      action: 'enable' | 'disable' | 'delete';
+    }) =>
+      mutateJSON(`/alerts/bulk-action?site_id=${siteId}`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['alerts'] }),
+  });
+}
+
+export function useMachineMetrics(machineId: string | undefined) {
+  return useQuery({
+    queryKey: ['machine-register-metrics', machineId],
+    queryFn: () =>
+      fetchJSON<{ name: string; type: string; register_type: string }[]>(
+        `/machines/${machineId}/register-metrics`
+      ),
+    enabled: !!machineId,
+  });
+}
+
+export function useAcknowledgeAllInfo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (siteId: string) =>
+      mutateJSON(`/alert-events/acknowledge-info?site_id=${siteId}`, {
+        method: 'POST',
+      }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['alert-events'] }),
   });
 }

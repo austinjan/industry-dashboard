@@ -5,7 +5,8 @@ import { useSite } from '@/lib/site-context';
 export function AlertListWidget({ config }: { config: Record<string, unknown> }) {
   const { currentSite } = useSite();
   const limit = config.limit as number | undefined;
-  const { data: events } = useAlertEvents(currentSite?.id, { limit: String(limit || 5) });
+  const { data } = useAlertEvents(currentSite?.id, { limit: String(limit || 5) });
+  const events = data?.events;
   return (
     <div className="h-full overflow-auto">
       <p className="mb-1 text-xs text-slate-500">{(config.title as string) || 'Alerts'}</p>

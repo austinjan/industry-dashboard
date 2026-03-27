@@ -72,8 +72,8 @@ func (e *AlertEvaluator) Evaluate(ctx context.Context, machineID string, values 
 
 			if !exists {
 				_, err := e.db.Exec(ctx,
-					`INSERT INTO alert_events (alert_id, triggered_at) VALUES ($1, NOW())`,
-					rule.ID,
+					`INSERT INTO alert_events (alert_id, triggered_at, triggered_value) VALUES ($1, NOW(), $2)`,
+					rule.ID, value,
 				)
 				if err == nil {
 					log.Printf("  ALERT triggered: %s (value=%.2f %s %.2f)", rule.Name, value, rule.Condition, rule.Threshold)

@@ -40,6 +40,7 @@ export function Sidebar() {
       { to: '/', label: t('nav.siteOverview') },
       { to: '/machines', label: t('nav.machineList') },
       { to: '/alerts', label: t('nav.alertsAlarms') },
+      { to: '/alerts/rules', label: t('alertRules.title') },
       { to: '/reports', label: t('nav.reports') },
     ]},
   ];

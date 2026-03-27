@@ -13,7 +13,8 @@ export function DashboardPage() {
   const queryClient = useQueryClient();
   const { data: summary } = useSiteSummary(currentSite?.id);
   const { data: lines } = useSiteLines(currentSite?.id);
-  const { data: alertEvents } = useAlertEvents(currentSite?.id, { limit: '5' });
+  const { data: alertData } = useAlertEvents(currentSite?.id, { limit: '5' });
+  const alertEvents = alertData?.events;
 
   const handleRefresh = () => {
     queryClient.invalidateQueries();

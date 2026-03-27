@@ -321,6 +321,82 @@ func (s *Store) GetMachineRegisters(ctx context.Context, machineID string) ([]Re
 	return registers, nil
 }
 
+// ListMachinesBySite returns all machines belonging to any line within the given site.
+func (s *Store) ListMachinesBySite(ctx context.Context, siteID string) ([]Machine, error) {
+	rows, err := s.db.Query(ctx,
+		`SELECT m.id, m.line_id, m.name, m.model, m.status, m.modbus_config, m.created_at
+		 FROM machines m
+		 JOIN production_lines pl ON m.line_id = pl.id
+		 WHERE pl.site_id = $1
+		 ORDER BY m.name`, siteID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var machines []Machine
+	for rows.Next() {
+		var m Machine
+		var configBytes []byte
+		if err := rows.Scan(&m.ID, &m.LineID, &m.Name, &m.Model, &m.Status, &configBytes, &m.CreatedAt); err != nil {
+			return nil, err
+		}
+		if configBytes != nil {
+			json.Unmarshal(configBytes, &m.Config)
+		}
+		machines = append(machines, m)
+	}
+	return machines, rows.Err()
+}
+
+// RegisterMetric describes a named metric derived from a machine's register configuration.
+type RegisterMetric struct {
+	Name         string `json:"name"`
+	Type         string `json:"type"`          // "analog" or "coil"
+	RegisterType string `json:"register_type"` // "holding", "input", "coil", "discrete_input"
+}
+
+// ListMachineRegisterMetrics returns metrics for a machine, derived from register config or
+// falling back to distinct metric names from data_points.
+func (s *Store) ListMachineRegisterMetrics(ctx context.Context, machineID string) ([]RegisterMetric, error) {
+	registers, err := s.GetMachineRegisters(ctx, machineID)
+	if err != nil || len(registers) == 0 {
+		return s.listMetricsFromDataPoints(ctx, machineID)
+	}
+
+	metrics := make([]RegisterMetric, 0, len(registers))
+	for _, reg := range registers {
+		metricType := "analog"
+		if reg.Type == "coil" || reg.Type == "discrete_input" {
+			metricType = "coil"
+		}
+		metrics = append(metrics, RegisterMetric{
+			Name:         reg.Name,
+			Type:         metricType,
+			RegisterType: reg.Type,
+		})
+	}
+	return metrics, nil
+}
+
+func (s *Store) listMetricsFromDataPoints(ctx context.Context, machineID string) ([]RegisterMetric, error) {
+	rows, err := s.db.Query(ctx,
+		`SELECT DISTINCT metric_name FROM data_points WHERE machine_id = $1 ORDER BY metric_name`,
+		machineID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var metrics []RegisterMetric
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		metrics = append(metrics, RegisterMetric{Name: name, Type: "analog", RegisterType: "unknown"})
+	}
+	return metrics, rows.Err()
+}
+
 // SetMachineRegisters merges the registers array into a machine's modbus_config.
 func (s *Store) SetMachineRegisters(ctx context.Context, machineID string, registers []Register) error {
 	regsJSON, err := json.Marshal(registers)
