@@ -33,6 +33,9 @@ type AlertEvent struct {
 	ID             string     `json:"id"`
 	AlertID        string     `json:"alert_id"`
 	AlertName      string     `json:"alert_name"`
+	LineID         string     `json:"line_id"`
+	LineName       string     `json:"line_name"`
+	MachineID      string     `json:"machine_id"`
 	MachineName    string     `json:"machine_name"`
 	MetricName     string     `json:"metric_name"`
 	Condition      string     `json:"condition"`
@@ -42,6 +45,23 @@ type AlertEvent struct {
 	TriggeredValue *float64   `json:"triggered_value"`
 	ResolvedAt     *time.Time `json:"resolved_at"`
 	AcknowledgedBy *string    `json:"acknowledged_by"`
+}
+
+type AlertEventListParams struct {
+	SiteID    string
+	Severity  string
+	Status    string // "open", "acknowledged", "resolved", ""
+	LineID    string
+	MachineID string
+	SortBy    string // "triggered_at", "severity", "alert_name", "machine_name"
+	SortOrder string // "asc", "desc"
+	Limit     int
+	Offset    int
+}
+
+type AlertEventListResult struct {
+	Events []AlertEvent `json:"events"`
+	Total  int          `json:"total"`
 }
 
 func (s *Store) ListAlerts(ctx context.Context, siteID string) ([]Alert, error) {
@@ -67,25 +87,72 @@ func (s *Store) ListAlerts(ctx context.Context, siteID string) ([]Alert, error) 
 	return alerts, rows.Err()
 }
 
-func (s *Store) ListAlertEvents(ctx context.Context, siteID string, severity string, limit, offset int) ([]AlertEvent, error) {
-	if limit == 0 {
-		limit = 50
+func (s *Store) ListAlertEvents(ctx context.Context, p AlertEventListParams) (*AlertEventListResult, error) {
+	if p.Limit == 0 {
+		p.Limit = 20
 	}
-	query := `SELECT ae.id, ae.alert_id, a.name, m.name, a.metric_name, a.condition, a.threshold, a.severity, ae.triggered_at, ae.triggered_value, ae.resolved_at, ae.acknowledged_by
-		FROM alert_events ae
+
+	baseFrom := ` FROM alert_events ae
 		JOIN alerts a ON ae.alert_id = a.id
 		JOIN machines m ON a.machine_id = m.id
 		JOIN production_lines pl ON m.line_id = pl.id
 		WHERE pl.site_id = $1`
-	args := []interface{}{siteID}
+	args := []interface{}{p.SiteID}
 	argIdx := 2
-	if severity != "" {
-		query += ` AND a.severity = $` + strconv.Itoa(argIdx)
-		args = append(args, severity)
+
+	if p.Severity != "" {
+		baseFrom += ` AND a.severity = $` + strconv.Itoa(argIdx)
+		args = append(args, p.Severity)
 		argIdx++
 	}
-	query += ` ORDER BY ae.triggered_at DESC LIMIT $` + strconv.Itoa(argIdx) + ` OFFSET $` + strconv.Itoa(argIdx+1)
-	args = append(args, limit, offset)
+	if p.LineID != "" {
+		baseFrom += ` AND pl.id = $` + strconv.Itoa(argIdx)
+		args = append(args, p.LineID)
+		argIdx++
+	}
+	if p.MachineID != "" {
+		baseFrom += ` AND m.id = $` + strconv.Itoa(argIdx)
+		args = append(args, p.MachineID)
+		argIdx++
+	}
+	switch p.Status {
+	case "open":
+		baseFrom += ` AND ae.resolved_at IS NULL AND ae.acknowledged_by IS NULL`
+	case "acknowledged":
+		baseFrom += ` AND ae.acknowledged_by IS NOT NULL AND ae.resolved_at IS NULL`
+	case "resolved":
+		baseFrom += ` AND ae.resolved_at IS NOT NULL`
+	}
+
+	// Count total
+	var total int
+	countQuery := `SELECT COUNT(*)` + baseFrom
+	if err := s.db.QueryRow(ctx, countQuery, args...).Scan(&total); err != nil {
+		return nil, err
+	}
+
+	// Sort
+	sortCol := "ae.triggered_at"
+	switch p.SortBy {
+	case "severity":
+		sortCol = "a.severity"
+	case "alert_name":
+		sortCol = "a.name"
+	case "machine_name":
+		sortCol = "m.name"
+	case "line_name":
+		sortCol = "pl.name"
+	}
+	sortDir := "DESC"
+	if p.SortOrder == "asc" {
+		sortDir = "ASC"
+	}
+
+	selectCols := `SELECT ae.id, ae.alert_id, a.name, pl.id, pl.name, m.id, m.name, a.metric_name, a.condition, a.threshold, a.severity, ae.triggered_at, ae.triggered_value, ae.resolved_at, ae.acknowledged_by`
+	query := selectCols + baseFrom + ` ORDER BY ` + sortCol + ` ` + sortDir +
+		` LIMIT $` + strconv.Itoa(argIdx) + ` OFFSET $` + strconv.Itoa(argIdx+1)
+	args = append(args, p.Limit, p.Offset)
+
 	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -94,12 +161,15 @@ func (s *Store) ListAlertEvents(ctx context.Context, siteID string, severity str
 	var events []AlertEvent
 	for rows.Next() {
 		var e AlertEvent
-		if err := rows.Scan(&e.ID, &e.AlertID, &e.AlertName, &e.MachineName, &e.MetricName, &e.Condition, &e.Threshold, &e.Severity, &e.TriggeredAt, &e.TriggeredValue, &e.ResolvedAt, &e.AcknowledgedBy); err != nil {
+		if err := rows.Scan(&e.ID, &e.AlertID, &e.AlertName, &e.LineID, &e.LineName, &e.MachineID, &e.MachineName, &e.MetricName, &e.Condition, &e.Threshold, &e.Severity, &e.TriggeredAt, &e.TriggeredValue, &e.ResolvedAt, &e.AcknowledgedBy); err != nil {
 			return nil, err
 		}
 		events = append(events, e)
 	}
-	return events, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return &AlertEventListResult{Events: events, Total: total}, nil
 }
 
 func (s *Store) CreateAlert(ctx context.Context, name, machineID, metricName, condition string, threshold float64, severity string) (*Alert, error) {

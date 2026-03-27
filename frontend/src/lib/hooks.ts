@@ -58,7 +58,7 @@ export function useAlertEvents(siteId: string | undefined, params?: Record<strin
   const query = new URLSearchParams({ site_id: siteId ?? '', ...params }).toString();
   return useQuery({
     queryKey: ['alert-events', siteId, params],
-    queryFn: () => fetchJSON<any[]>(`/alert-events?${query}`),
+    queryFn: () => fetchJSON<{ events: any[]; total: number }>(`/alert-events?${query}`),
     enabled: !!siteId,
     refetchInterval: ri,
   });

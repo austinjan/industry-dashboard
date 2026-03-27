@@ -38,16 +38,26 @@ func (h *Handler) ListAlertEvents(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "site_id required", http.StatusBadRequest)
 		return
 	}
-	severity := r.URL.Query().Get("severity")
-	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
-	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
-	events, err := h.store.ListAlertEvents(r.Context(), siteID, severity, limit, offset)
+	q := r.URL.Query()
+	limit, _ := strconv.Atoi(q.Get("limit"))
+	offset, _ := strconv.Atoi(q.Get("offset"))
+	result, err := h.store.ListAlertEvents(r.Context(), AlertEventListParams{
+		SiteID:    siteID,
+		Severity:  q.Get("severity"),
+		Status:    q.Get("status"),
+		LineID:    q.Get("line_id"),
+		MachineID: q.Get("machine_id"),
+		SortBy:    q.Get("sort_by"),
+		SortOrder: q.Get("sort_order"),
+		Limit:     limit,
+		Offset:    offset,
+	})
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(events)
+	json.NewEncoder(w).Encode(result)
 }
 
 func (h *Handler) CreateAlert(w http.ResponseWriter, r *http.Request) {

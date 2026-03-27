@@ -72,7 +72,14 @@
     "acknowledged": "Đã xác nhận",
     "open": "Chưa xử lý",
     "noAlerts": "Không có cảnh báo.",
-    "selectSite": "Vui lòng chọn nhà máy."
+    "selectSite": "Vui lòng chọn nhà máy.",
+    "allStatus": "Tất cả trạng thái",
+    "allLines": "Tất cả dây chuyền",
+    "allMachines": "Tất cả máy",
+    "line": "Dây chuyền",
+    "page": "Trang {{page}} / {{total}}",
+    "prev": "Trước",
+    "next": "Tiếp"
   },
   "alertRules": {
     "title": "Quy tắc cảnh báo",

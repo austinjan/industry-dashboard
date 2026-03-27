@@ -72,7 +72,14 @@
     "acknowledged": "Acknowledged",
     "open": "Open",
     "noAlerts": "No alerts.",
-    "selectSite": "Select a site."
+    "selectSite": "Select a site.",
+    "allStatus": "All status",
+    "allLines": "All lines",
+    "allMachines": "All machines",
+    "line": "Line",
+    "page": "Page {{page}} of {{total}}",
+    "prev": "Previous",
+    "next": "Next"
   },
   "alertRules": {
     "title": "Alert Rules",
