@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v0.0.3
 milestone_name: milestone
-status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-03-27T09:12:06.464Z"
-last_activity: 2026-03-27 — Roadmap created for v0.0.3
+status: executing
+stopped_at: Completed 01-backend-local-auth-01-01-PLAN.md
+last_updated: "2026-03-27T09:38:22.623Z"
+last_activity: 2026-03-27
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 3
+  completed_plans: 1
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** Real-time visibility into factory operations with customizable dashboards that adapt to each site's monitoring needs.
-**Current focus:** Phase 1 — Backend Local Auth
+**Current focus:** Phase 01 — backend-local-auth
 
 ## Current Position
 
-Phase: 1 of 5 (Backend Local Auth)
-Plan: 0 of ? in current phase
-Status: Ready to plan
-Last activity: 2026-03-27 — Roadmap created for v0.0.3
+Phase: 01 (backend-local-auth) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-03-27
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 01-backend-local-auth P01 | 5 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -61,6 +62,8 @@ Progress: [░░░░░░░░░░] 0%
 - v0.0.3: No toast notifications — user prefers inline error display
 - v0.0.3: Error shape is {code, message} — RFC 7807 explicitly rejected in favour of simpler shape
 - v0.0.3: dummy bcrypt on not-found login path — prevents email enumeration via timing
+- [Phase 01-backend-local-auth]: bcrypt cost 12 for password hashing with pre-computed dummy hash for timing-safe not-found path
+- [Phase 01-backend-local-auth]: registered_via column defaults to 'microsoft' so all existing SSO rows are correctly categorised
 
 ### Pending Todos
 
@@ -74,6 +77,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T09:12:06.462Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-backend-local-auth/01-CONTEXT.md
+Last session: 2026-03-27T09:38:22.621Z
+Stopped at: Completed 01-backend-local-auth-01-01-PLAN.md
+Resume file: None

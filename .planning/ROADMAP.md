@@ -30,9 +30,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Login with wrong password returns 401 with no timing difference compared to a non-existent email (dummy bcrypt applied)
   4. More than 5 login attempts per minute from the same IP are rejected with 429
   5. GET /api/auth/providers returns the list of available auth methods so the frontend knows what to render
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 Plans:
-- [ ] 01-01-PLAN.md — Foundation: dependencies, password utilities, error helper, migration 022
+- [x] 01-01-PLAN.md — Foundation: dependencies, password utilities, error helper, migration 022
 - [ ] 01-02-PLAN.md — Auth handlers: RegisterLocal, LoginLocal, Providers, nil-safe handler, SeedDefaultAdmin
 - [ ] 01-03-PLAN.md — Wiring: main.go routes with rate limiting, dead code removal, comprehensive tests
 
@@ -88,7 +88,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Backend Local Auth | 0/3 | Planning complete | - |
+| 1. Backend Local Auth | 1/3 | In Progress|  |
 | 2. Error Handling | 0/? | Not started | - |
 | 3. Frontend Auth UI | 0/? | Not started | - |
 | 4. SSO Binding | 0/? | Not started | - |
