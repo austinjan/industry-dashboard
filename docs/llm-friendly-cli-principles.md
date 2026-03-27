@@ -11,34 +11,37 @@ LLMs have limited context windows and no visual UI. A CLI tool for LLMs must:
 
 ## Output Format
 
-### Use XML, Not JSON
+### Use JSON
 
-XML is better for LLM consumption:
-- Clear open/close tags reduce parsing ambiguity
-- No trailing comma issues in streaming
-- Attributes keep data compact: `<alert id="x" severity="critical"/>` vs `{"id":"x","severity":"critical"}`
-- LLMs handle XML natively in most prompting frameworks
+JSON is the best format for LLM consumption:
+- Modern LLMs are heavily trained on JSON (function calling, tool_use, structured output)
+- Agent frameworks natively expect JSON tool responses
+- For streaming, use JSON Lines (JSONL) if needed
+- Compact and widely supported by every language and tool
 
-### Mandatory `<meta>` Header
+### Mandatory `"meta"` Field
 
-Every command output starts with `<meta>`. This is the "control plane" — the LLM reads this first to understand what it got and what to do next.
+Every command output is a JSON object with a `"meta"` key. This is the "control plane" — the LLM reads this first to understand what it got and what to do next.
 
-```xml
-<meta>
-  <usage>command [flags]</usage>
-  <showing>15</showing>
-  <total>58</total>
-  <remaining>43</remaining>
-  <next>command --page 2</next>
-</meta>
+```json
+{
+  "meta": {
+    "usage": "command [flags]",
+    "showing": 15,
+    "total": 58,
+    "remaining": 43,
+    "next": "command --page 2"
+  },
+  "data": [...]
+}
 ```
 
 Fields:
-- `<usage>` — full flag reference so the LLM learns the command from any output
-- `<showing>` — number of records in this response
-- `<total>` — total matching records in the system
-- `<remaining>` — how many records NOT yet shown (total minus all shown across pages)
-- `<next>` — exact command to get the next chunk (absent on last page)
+- `"usage"` — full flag reference so the LLM learns the command from any output
+- `"showing"` — number of records in this response
+- `"total"` — total matching records in the system
+- `"remaining"` — how many records NOT yet shown (total minus all shown across pages)
+- `"next"` — exact command to get the next chunk (absent on last page)
 
 ### Token Budget
 
@@ -82,16 +85,18 @@ Never return all data. Always paginate. Always tell the LLM what's remaining. Th
 
 ## Error Handling
 
-Errors use the same XML structure with actionable hints:
+Errors use the same JSON structure with actionable hints:
 
-```xml
-<error>
-  <message>Site 'factory99' not found</message>
-  <hint>Run `dashboard-cli sites` to list available sites</hint>
-</error>
+```json
+{
+  "error": {
+    "message": "Site 'factory99' not found",
+    "hint": "Run 'dashboard-cli sites' to list available sites"
+  }
+}
 ```
 
-The `<hint>` is critical — it tells the LLM exactly how to recover.
+The `"hint"` is critical — it tells the LLM exactly how to recover.
 
 ## Authentication
 
@@ -137,15 +142,15 @@ This eliminates the bootstrapping problem — the agent knows the tool exists an
 
 When building an LLM-friendly CLI:
 
-- [ ] All output is structured (XML recommended)
-- [ ] `<meta>` header on every output with usage, pagination, remaining count
+- [ ] All output is structured JSON
+- [ ] `"meta"` field on every output with usage, pagination, remaining count
 - [ ] Token budget enforced (~1K tokens per output)
 - [ ] `--head N` flag on every command (`--head 0` for meta only)
 - [ ] `doc` command with progressive disclosure tree
-- [ ] Errors include `<hint>` with recovery command
+- [ ] Errors include `"hint"` with recovery command
 - [ ] Config file + env var authentication
 - [ ] API keys (not OAuth/sessions)
 - [ ] `inject-skill` command for agent system integration
 - [ ] Never return unbounded data — always paginate
-- [ ] `<remaining>` tells LLM exactly how much it hasn't seen
-- [ ] `<next>` gives the exact command for more data
+- [ ] `"remaining"` tells LLM exactly how much it hasn't seen
+- [ ] `"next"` gives the exact command for more data
