@@ -85,17 +85,6 @@ func main() {
 	llmKeyHandler := llmauth.NewHandler(llmKeyStore)
 	authMW.SetAPIKeyValidator(llmKeyStore)
 
-	// Bootstrap API key if env var set and no active keys exist
-	if os.Getenv("DASHBOARD_BOOTSTRAP_KEY") == "true" {
-		hasKey, _ := llmKeyStore.HasAnyKey(context.Background())
-		if !hasKey {
-			key, fullKey, err := llmKeyStore.Create(context.Background(), "bootstrap")
-			if err == nil {
-				log.Printf("[BOOTSTRAP] API key created: %s", fullKey)
-				log.Printf("[BOOTSTRAP] Key name: %s, prefix: %s", key.Name, key.KeyPrefix)
-			}
-		}
-	}
 
 	// OIDC client (optional — skip if Azure not configured)
 	var authHandler *auth.Handler
