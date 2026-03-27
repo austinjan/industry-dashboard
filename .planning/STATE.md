@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.0.3
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-backend-local-auth-01-01-PLAN.md
-last_updated: "2026-03-27T09:38:22.623Z"
+stopped_at: Completed 01-backend-local-auth-01-02-PLAN.md
+last_updated: "2026-03-27T09:45:51.332Z"
 last_activity: 2026-03-27
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 01 (backend-local-auth) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-03-27
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01-backend-local-auth P01 | 5 | 2 tasks | 6 files |
+| Phase 01-backend-local-auth P02 | 4min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,9 @@ Progress: [░░░░░░░░░░] 0%
 - v0.0.3: dummy bcrypt on not-found login path — prevents email enumeration via timing
 - [Phase 01-backend-local-auth]: bcrypt cost 12 for password hashing with pre-computed dummy hash for timing-safe not-found path
 - [Phase 01-backend-local-auth]: registered_via column defaults to 'microsoft' so all existing SSO rows are correctly categorised
+- [Phase 01-backend-local-auth]: LoginLocal skips @ validation — admin account uses 'admin' as email with no @ sign (Pitfall 5)
+- [Phase 01-backend-local-auth]: SeedDefaultAdmin is package-level function called at server startup before handler wired
+- [Phase 01-backend-local-auth]: Providers endpoint always includes local, adds microsoft only when OIDCClient is non-nil
 
 ### Pending Todos
 
@@ -77,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T09:38:22.621Z
-Stopped at: Completed 01-backend-local-auth-01-01-PLAN.md
+Last session: 2026-03-27T09:45:51.330Z
+Stopped at: Completed 01-backend-local-auth-01-02-PLAN.md
 Resume file: None
