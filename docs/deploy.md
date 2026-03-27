@@ -12,19 +12,13 @@ Download from [GitHub Releases](https://github.com/austinjan/industry-dashboard/
 ```bash
 # 1. Set up config
 cp default.env.example .env
-# Edit .env — set DB_PASSWORD and JWT_SECRET (required)
+# Edit .env — change DB_PASSWORD, JWT_SECRET, and DATABASE_URL password to match
 
 # 2. Start database
 docker compose -f docker-compose.production.yml up -d db
 
-# 3. Wait for DB to be ready (~5 seconds)
-docker compose -f docker-compose.production.yml logs db | tail -3
-
-# 4. Start server (auto-migrates database)
+# 3. Start server (waits for DB, auto-migrates)
 source .env
-DATABASE_URL="postgres://${DB_USER:-dashboard}:${DB_PASSWORD}@localhost:${DB_PORT:-5432}/${DB_NAME:-industry_dashboard}?sslmode=disable" \
-JWT_SECRET="${JWT_SECRET}" \
-PORT="${PORT:-8080}" \
 ./dashboard-server-linux-amd64
 ```
 

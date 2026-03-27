@@ -12,19 +12,13 @@
 ```bash
 # 1. 設定環境變數
 cp default.env.example .env
-# 編輯 .env — 設定 DB_PASSWORD 和 JWT_SECRET（必填）
+# 編輯 .env — 修改 DB_PASSWORD、JWT_SECRET，以及 DATABASE_URL 中的密碼（需一致）
 
 # 2. 啟動資料庫
 docker compose -f docker-compose.production.yml up -d db
 
-# 3. 等待資料庫就緒（約 5 秒）
-docker compose -f docker-compose.production.yml logs db | tail -3
-
-# 4. 啟動伺服器（自動執行資料庫遷移）
+# 3. 啟動伺服器（等待 DB 就緒，自動執行遷移）
 source .env
-DATABASE_URL="postgres://${DB_USER:-dashboard}:${DB_PASSWORD}@localhost:${DB_PORT:-5432}/${DB_NAME:-industry_dashboard}?sslmode=disable" \
-JWT_SECRET="${JWT_SECRET}" \
-PORT="${PORT:-8080}" \
 ./dashboard-server-linux-amd64
 ```
 
