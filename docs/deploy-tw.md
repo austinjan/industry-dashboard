@@ -61,9 +61,7 @@ Server starting on :8080
 
 前往 `http://localhost:8080` — 完成！
 
-> **注意：** 如果你修改了 `.env` 中的 `DB_PASSWORD`，請確認資料庫也是用相同密碼建立的。如果你已經用預設密碼啟動了 DB，之後又改了 `.env`，請：
-> - 重建 DB：`docker compose -f docker-compose.production.yml down -v && docker compose -f docker-compose.production.yml up -d db`
-> - 或將 `.env` 改回與現有 DB 一致的密碼
+> **注意：** 資料庫和伺服器都從同一個 `.env` 讀取 `DB_PASSWORD`，所以密碼一定一致。如果在 DB 建立後才改密碼，需要重建 DB：`docker compose -f docker-compose.production.yml down -v && docker compose -f docker-compose.production.yml up -d db`
 
 ---
 

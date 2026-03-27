@@ -61,9 +61,7 @@ Server starting on :8080
 
 Go to `http://localhost:8080` — done!
 
-> **Note:** If you change `DB_PASSWORD` in `.env`, make sure the database was created with the same password. If you already started the DB with the default password and then changed `.env`, either:
-> - Reset the DB: `docker compose -f docker-compose.production.yml down -v && docker compose -f docker-compose.production.yml up -d db`
-> - Or change `.env` back to match the existing DB password
+> **Note:** The database and server both read `DB_PASSWORD` from the same `.env` file, so they always match. If you change the password after the DB is already created, reset the DB: `docker compose -f docker-compose.production.yml down -v && docker compose -f docker-compose.production.yml up -d db`
 
 ---
 
