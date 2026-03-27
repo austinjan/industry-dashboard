@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -21,6 +22,10 @@ func NewHandler(oidc *OIDCClient, jwt *JWTService, db *pgxpool.Pool) *Handler {
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+	if h.oidc == nil {
+		writeError(w, http.StatusNotImplemented, "auth.sso_not_configured", "SSO is not configured")
+		return
+	}
 	state := generateState()
 	http.SetCookie(w, &http.Cookie{
 		Name:     "oauth_state",
@@ -33,6 +38,10 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Callback(w http.ResponseWriter, r *http.Request) {
+	if h.oidc == nil {
+		writeError(w, http.StatusNotImplemented, "auth.sso_not_configured", "SSO is not configured")
+		return
+	}
 	cookie, err := r.Cookie("oauth_state")
 	if err != nil || cookie.Value != r.URL.Query().Get("state") {
 		http.Error(w, "invalid state", http.StatusBadRequest)
@@ -187,4 +196,60 @@ func generateState() string {
 	b := make([]byte, 32)
 	rand.Read(b)
 	return base64.URLEncoding.EncodeToString(b)
+}
+
+// Providers returns the list of available auth methods.
+// Always includes "local". Includes "microsoft" only when Azure OIDC is configured.
+func (h *Handler) Providers(w http.ResponseWriter, r *http.Request) {
+	providers := []string{"local"}
+	if h.oidc != nil {
+		providers = append(providers, "microsoft")
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"providers": providers,
+	})
+}
+
+// SeedDefaultAdmin creates a default admin account if the users table is empty (first-run only).
+// email: "admin", password: "default", Admin role with global scope.
+// Called during server startup before the handler is fully wired.
+func SeedDefaultAdmin(ctx context.Context, db *pgxpool.Pool) {
+	var count int
+	err := db.QueryRow(ctx, "SELECT COUNT(*) FROM users").Scan(&count)
+	if err != nil {
+		log.Printf("Warning: could not check user count for admin seed: %v", err)
+		return
+	}
+	if count > 0 {
+		return // not first run — per D-08
+	}
+	hash, err := HashPassword("default")
+	if err != nil {
+		log.Printf("Warning: could not hash default admin password: %v", err)
+		return
+	}
+	var adminID string
+	err = db.QueryRow(ctx,
+		`INSERT INTO users (email, name, password_hash, registered_via, is_active)
+		 VALUES ('admin', 'Administrator', $1, 'local', true)
+		 RETURNING id`, hash).Scan(&adminID)
+	if err != nil {
+		log.Printf("Warning: could not create default admin: %v", err)
+		return
+	}
+	var adminRoleID string
+	err = db.QueryRow(ctx, `SELECT id FROM roles WHERE name='Admin'`).Scan(&adminRoleID)
+	if err != nil {
+		log.Printf("Warning: Admin role not found, skipping role assignment: %v", err)
+		return
+	}
+	_, err = db.Exec(ctx,
+		`INSERT INTO user_site_roles (user_id, role_id, site_id)
+		 VALUES ($1, $2, NULL) ON CONFLICT DO NOTHING`, adminID, adminRoleID)
+	if err != nil {
+		log.Printf("Warning: could not assign Admin role: %v", err)
+		return
+	}
+	log.Println("Default admin created (email: admin, password: default) -- CHANGE IMMEDIATELY")
 }

@@ -140,3 +140,19 @@ func TestLoginLocal_NoAtSignPassesValidation(t *testing.T) {
 	assert.Equal(t, "auth.invalid_input", resp["code"])
 }
 
+// --- Providers handler tests ---
+
+func TestProviders_NoOIDC(t *testing.T) {
+	jwtSvc := auth.NewJWTService("test-secret", 15*time.Minute, 168*time.Hour)
+	h := auth.NewHandler(nil, jwtSvc, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/auth/providers", nil)
+	w := httptest.NewRecorder()
+	h.Providers(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp map[string][]string
+	err := json.NewDecoder(w.Body).Decode(&resp)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"local"}, resp["providers"])
+}
