@@ -139,6 +139,9 @@ func main() {
 		// Shared (token management)
 		r.Post("/refresh", authHandler.Refresh)
 		r.Post("/logout", authHandler.Logout)
+
+		// Current user (protected — requires valid JWT)
+		r.With(authMW.Authenticate).Get("/me", authHandler.Me)
 	})
 
 	// Dev mode: seed data + bypass auth
@@ -376,9 +379,6 @@ func main() {
 	// Protected API routes
 	r.Route("/api", func(r chi.Router) {
 		r.Use(authMW.Authenticate)
-
-		// Current user
-		r.Get("/auth/me", authHandler.Me)
 
 		// User preferences (no RBAC — users update their own)
 		r.Patch("/me/preferences", prefHandler.UpdatePreferences)
