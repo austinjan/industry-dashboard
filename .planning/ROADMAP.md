@@ -78,7 +78,7 @@ Plans:
 **Plans:** 1/2 plans executed
 Plans:
 - [x] 04-01-PLAN.md — Backend: migration 023 (microsoft_email), config, OIDCClient bind methods, bind handlers, Me() extension, audit logging, route wiring
-- [ ] 04-02-PLAN.md — Frontend: AccountPage with auth method status, User interface extension, i18n (4 locales), TopNav link, route registration, visual verification
+- [x] 04-02-PLAN.md — Frontend: AccountPage with auth method status, User interface extension, i18n (4 locales), TopNav link, route registration, visual verification
 **UI hint**: yes
 
 ### Phase 5: Release Validation

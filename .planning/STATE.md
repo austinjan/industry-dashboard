@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v0.0.3
 milestone_name: milestone
-status: executing
-stopped_at: Completed 04-sso-binding 04-01-PLAN.md
-last_updated: "2026-03-31T07:45:03.645Z"
+status: verifying
+stopped_at: Completed 04-sso-binding 04-02-PLAN.md
+last_updated: "2026-03-31T07:50:01.853Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 8
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 Phase: 04 (sso-binding) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-03-31
 
 Progress: [░░░░░░░░░░] 0%
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-error-handling P01 | 15min | 2 tasks | 5 files |
 | Phase 02-error-handling P02 | 20min | 2 tasks | 8 files |
 | Phase 04-sso-binding P01 | 8min | 2 tasks | 7 files |
+| Phase 04-sso-binding P02 | 5min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,8 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 04-sso-binding]: oauth_bind_state cookie used for bind CSRF (not oauth_state) to avoid collision with login flow
 - [Phase 04-sso-binding]: AuditLogger interface defined in auth package, adapted in main.go to avoid circular import
 - [Phase 04-sso-binding]: Bind callback uses JWT claims for user identity (not OIDC response) to enforce user-initiated requirement and prevent nOAuth
+- [Phase 04-sso-binding]: AccountPage uses <a href> (not react-router Link) for Microsoft bind button — OIDC redirect must be full-page navigation
+- [Phase 04-sso-binding]: refreshUser() added to AuthContext so AccountPage can reload user data after bind redirect without re-mounting AuthProvider
 
 ### Pending Todos
 
@@ -95,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T07:45:03.643Z
-Stopped at: Completed 04-sso-binding 04-01-PLAN.md
+Last session: 2026-03-31T07:50:01.850Z
+Stopped at: Completed 04-sso-binding 04-02-PLAN.md
 Resume file: None
