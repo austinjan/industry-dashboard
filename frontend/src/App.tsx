@@ -8,6 +8,7 @@ import { AppShell } from '@/components/layout/AppShell';
 
 // Eager: login + main dashboard (first paint)
 import { LoginPage } from '@/pages/LoginPage';
+import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 
 // Lazy: everything else
@@ -51,6 +52,7 @@ export default function App() {
           <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
             {/* All protected routes share one SiteProvider */}
             <Route
