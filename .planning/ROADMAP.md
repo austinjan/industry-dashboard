@@ -13,7 +13,7 @@ This milestone adds local email/password authentication alongside the existing M
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Backend Local Auth** - Register and login with email/password, rate limiting, Guest role migration (completed 2026-03-27)
-- [ ] **Phase 2: Error Handling** - Structured JSON errors across all backend handlers and structured logging
+- [x] **Phase 2: Error Handling** - Structured JSON errors across all backend handlers and structured logging (completed 2026-03-27)
 - [ ] **Phase 3: Frontend Auth UI** - Login and registration pages wired to backend, inline error display
 - [ ] **Phase 4: SSO Binding** - User-initiated Microsoft account linking from account settings page
 - [ ] **Phase 5: Release Validation** - End-to-end release pipeline verified, dev login confirmed absent in production
@@ -48,7 +48,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md — Foundation: shared apierr package with Write() + slog, RequestID middleware, auth/rbac middleware conversion
 - [x] 02-02-PLAN.md — Auth package migration + 5 large domain handlers (site, alert, worker_config, worker_api, dashboard)
-- [ ] 02-03-PLAN.md — Remaining handlers (rbac, llmauth, datapoint, user, audit) + main.go dev routes + verification sweep
+- [x] 02-03-PLAN.md — Remaining handlers (rbac, llmauth, datapoint, user, audit) + main.go dev routes + verification sweep
 
 ### Phase 3: Frontend Auth UI
 **Goal**: Users can register, log in, and see clear inline error messages in all four supported languages
@@ -96,7 +96,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Backend Local Auth | 3/3 | Complete   | 2026-03-27 |
-| 2. Error Handling | 1/3 | In Progress|  |
+| 2. Error Handling | 3/3 | Complete | 2026-03-27 |
 | 3. Frontend Auth UI | 0/2 | Not started | - |
 | 4. SSO Binding | 0/? | Not started | - |
 | 5. Release Validation | 0/? | Not started | - |
