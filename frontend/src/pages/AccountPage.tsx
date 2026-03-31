@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
 import { apiFetch } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export function AccountPage() {
@@ -105,11 +105,9 @@ export function AccountPage() {
                     {t('account.microsoftNotLinked')}
                   </Badge>
                   {hasMicrosoftProvider && (
-                    <Button asChild size="sm">
-                      <a href="/api/auth/bind/microsoft">
-                        {t('account.linkMicrosoft')}
-                      </a>
-                    </Button>
+                    <a href="/api/auth/bind/microsoft" className={buttonVariants({ size: 'sm' })}>
+                      {t('account.linkMicrosoft')}
+                    </a>
                   )}
                 </>
               )}
