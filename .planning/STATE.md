@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v0.0.3
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 04-sso-binding 04-02-PLAN.md
-last_updated: "2026-03-31T07:50:01.853Z"
+status: executing
+stopped_at: Completed 03-frontend-auth-ui 03-01-PLAN.md
+last_updated: "2026-03-31T08:26:53.247Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 9
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** Real-time visibility into factory operations with customizable dashboards that adapt to each site's monitoring needs.
-**Current focus:** Phase 04 — sso-binding
+**Current focus:** Phase 03 — frontend-auth-ui
 
 ## Current Position
 
-Phase: 04 (sso-binding) — EXECUTING
+Phase: 03 (frontend-auth-ui) — EXECUTING
 Plan: 2 of 2
-Status: Phase complete — ready for verification
+Status: Ready to execute
 Last activity: 2026-03-31
 
 Progress: [░░░░░░░░░░] 0%
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-error-handling P02 | 20min | 2 tasks | 8 files |
 | Phase 04-sso-binding P01 | 8min | 2 tasks | 7 files |
 | Phase 04-sso-binding P02 | 5min | 2 tasks | 9 files |
+| Phase 03-frontend-auth-ui P01 | 5min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 04-sso-binding]: Bind callback uses JWT claims for user identity (not OIDC response) to enforce user-initiated requirement and prevent nOAuth
 - [Phase 04-sso-binding]: AccountPage uses <a href> (not react-router Link) for Microsoft bind button — OIDC redirect must be full-page navigation
 - [Phase 04-sso-binding]: refreshUser() added to AuthContext so AccountPage can reload user data after bind redirect without re-mounting AuthProvider
+- [Phase 03-frontend-auth-ui]: AUTH_NO_REFRESH_PATHS checked via path.startsWith() so /auth/login/local and /auth/register never trigger refresh retry
+- [Phase 03-frontend-auth-ui]: Existing 'login' section preserved unchanged; new 'auth' section added alongside it for form-based auth UI
 
 ### Pending Todos
 
@@ -98,6 +101,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T07:50:01.850Z
-Stopped at: Completed 04-sso-binding 04-02-PLAN.md
+Last session: 2026-03-31T08:26:53.245Z
+Stopped at: Completed 03-frontend-auth-ui 03-01-PLAN.md
 Resume file: None
