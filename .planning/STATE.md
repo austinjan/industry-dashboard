@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v0.0.3
 milestone_name: milestone
-status: executing
-stopped_at: Completed 03-frontend-auth-ui 03-01-PLAN.md
-last_updated: "2026-03-31T08:26:53.247Z"
+status: verifying
+stopped_at: Completed 03-frontend-auth-ui 03-02-PLAN.md
+last_updated: "2026-03-31T08:29:53.156Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 10
-  completed_plans: 9
+  completed_plans: 10
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 Phase: 03 (frontend-auth-ui) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-03-31
 
 Progress: [░░░░░░░░░░] 0%
@@ -60,6 +60,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 04-sso-binding P01 | 8min | 2 tasks | 7 files |
 | Phase 04-sso-binding P02 | 5min | 2 tasks | 9 files |
 | Phase 03-frontend-auth-ui P01 | 5min | 2 tasks | 5 files |
+| Phase 03-frontend-auth-ui P02 | 5min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,9 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 04-sso-binding]: refreshUser() added to AuthContext so AccountPage can reload user data after bind redirect without re-mounting AuthProvider
 - [Phase 03-frontend-auth-ui]: AUTH_NO_REFRESH_PATHS checked via path.startsWith() so /auth/login/local and /auth/register never trigger refresh retry
 - [Phase 03-frontend-auth-ui]: Existing 'login' section preserved unchanged; new 'auth' section added alongside it for form-based auth UI
+- [Phase 03-frontend-auth-ui]: Login input type=text (not type=email) so admin account (username: 'admin', no @ sign) can log in
+- [Phase 03-frontend-auth-ui]: mapAuthError extracted to lib/auth-errors.ts shared by LoginPage, RegisterPage, and AccountPage
+- [Phase 03-frontend-auth-ui]: SSO button visibility driven at runtime by /api/auth/providers fetch on mount, not build-time config
 
 ### Pending Todos
 
@@ -101,6 +105,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T08:26:53.245Z
-Stopped at: Completed 03-frontend-auth-ui 03-01-PLAN.md
+Last session: 2026-03-31T08:29:53.154Z
+Stopped at: Completed 03-frontend-auth-ui 03-02-PLAN.md
 Resume file: None

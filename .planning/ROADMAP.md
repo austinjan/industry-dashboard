@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Backend Local Auth** - Register and login with email/password, rate limiting, Guest role migration (completed 2026-03-27)
 - [x] **Phase 2: Error Handling** - Structured JSON errors across all backend handlers and structured logging (completed 2026-03-27)
-- [ ] **Phase 3: Frontend Auth UI** - Login and registration pages wired to backend, inline error display
+- [x] **Phase 3: Frontend Auth UI** - Login and registration pages wired to backend, inline error display (completed 2026-03-31)
 - [ ] **Phase 4: SSO Binding** - User-initiated Microsoft account linking from account settings page
 - [ ] **Phase 5: Release Validation** - End-to-end release pipeline verified, dev login confirmed absent in production
 
@@ -60,10 +60,10 @@ Plans:
   3. Wrong password on login shows an inline error message directly on the form — no toast, no redirect
   4. All new form labels, error messages, and button text appear correctly in EN, zh-TW, th, and vi
   5. A 401 returned by the login endpoint does not trigger the apiFetch refresh interceptor loop
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [x] 03-01-PLAN.md — Fix apiFetch 401 interceptor, add auth i18n keys to all 4 locales
-- [ ] 03-02-PLAN.md — Rewrite LoginPage, create RegisterPage, wire /register route, visual verification
+- [x] 03-02-PLAN.md — Rewrite LoginPage, create RegisterPage, wire /register route, visual verification
 **UI hint**: yes
 
 ### Phase 4: SSO Binding
@@ -100,6 +100,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Backend Local Auth | 3/3 | Complete   | 2026-03-27 |
 | 2. Error Handling | 3/3 | Complete | 2026-03-27 |
-| 3. Frontend Auth UI | 1/2 | In Progress|  |
+| 3. Frontend Auth UI | 2/2 | Complete   | 2026-03-31 |
 | 4. SSO Binding | 1/2 | In Progress|  |
 | 5. Release Validation | 0/? | Not started | - |
