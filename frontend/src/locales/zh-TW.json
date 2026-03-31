@@ -20,7 +20,8 @@
     "sitesAndMachines": "站點與設備",
     "workers": "採集器",
     "workerConfigs": "採集器配置",
-    "apiKeys": "API 金鑰"
+    "apiKeys": "API 金鑰",
+    "account": "帳號"
   },
   "dashboard": {
     "machinesOnline": "上線機台",
@@ -305,5 +306,23 @@
     "errorRateLimited": "嘗試次數過多，請稍後再試。",
     "errorNetworkError": "網路錯誤，請檢查連線。",
     "errorUnexpected": "發生錯誤，請重試。"
+  },
+  "account": {
+    "title": "帳號設定",
+    "authMethods": "驗證方式",
+    "localPassword": "本機密碼",
+    "localPasswordSet": "已設定密碼",
+    "localPasswordNotSet": "未設定密碼",
+    "microsoftAccount": "Microsoft 帳號",
+    "microsoftLinked": "已連結至 {{email}}",
+    "microsoftNotLinked": "未連結",
+    "linkMicrosoft": "連結 Microsoft 帳號",
+    "bindSuccess": "Microsoft 帳號已成功連結！",
+    "errorAlreadyLinked": "此 Microsoft 帳號已連結至其他使用者。",
+    "errorSsoNotConfigured": "此伺服器未設定 SSO。",
+    "userInfo": "使用者資訊",
+    "emailLabel": "電子郵件",
+    "nameLabel": "名稱",
+    "registeredVia": "註冊方式"
   }
 }

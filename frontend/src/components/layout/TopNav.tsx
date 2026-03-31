@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useSite } from '@/lib/site-context';
 import { useRefreshInterval } from '@/lib/refresh-interval';
@@ -92,6 +93,9 @@ export function TopNav() {
         </Select>
         {user && (
           <>
+            <Link to="/account" className="text-sm text-slate-300 hover:text-white">
+              {t('nav.account')}
+            </Link>
             <span className="text-sm text-slate-300">{user.email}</span>
             <Button variant="ghost" size="sm" onClick={logout} className="text-slate-300 hover:text-white">
               {t('common.logout')}

@@ -20,7 +20,8 @@
     "sitesAndMachines": "โรงงานและเครื่องจักร",
     "workers": "ตัวเก็บข้อมูล",
     "workerConfigs": "การตั้งค่าตัวเก็บข้อมูล",
-    "apiKeys": "คีย์ API"
+    "apiKeys": "คีย์ API",
+    "account": "บัญชี"
   },
   "dashboard": {
     "machinesOnline": "เครื่องจักรออนไลน์",
@@ -305,5 +306,23 @@
     "errorRateLimited": "ลองหลายครั้งเกินไป กรุณารอสักครู่แล้วลองอีกครั้ง",
     "errorNetworkError": "เกิดข้อผิดพลาดของเครือข่าย กรุณาตรวจสอบการเชื่อมต่อ",
     "errorUnexpected": "เกิดข้อผิดพลาด กรุณาลองอีกครั้ง"
+  },
+  "account": {
+    "title": "ตั้งค่าบัญชี",
+    "authMethods": "วิธีการยืนยันตัวตน",
+    "localPassword": "รหัสผ่านภายใน",
+    "localPasswordSet": "ตั้งรหัสผ่านแล้ว",
+    "localPasswordNotSet": "ยังไม่ได้ตั้งรหัสผ่าน",
+    "microsoftAccount": "บัญชี Microsoft",
+    "microsoftLinked": "เชื่อมต่อกับ {{email}}",
+    "microsoftNotLinked": "ยังไม่ได้เชื่อมต่อ",
+    "linkMicrosoft": "เชื่อมต่อบัญชี Microsoft",
+    "bindSuccess": "เชื่อมต่อบัญชี Microsoft สำเร็จแล้ว!",
+    "errorAlreadyLinked": "บัญชี Microsoft นี้เชื่อมต่อกับผู้ใช้อื่นแล้ว",
+    "errorSsoNotConfigured": "เซิร์ฟเวอร์นี้ไม่ได้ตั้งค่า SSO",
+    "userInfo": "ข้อมูลผู้ใช้",
+    "emailLabel": "อีเมล",
+    "nameLabel": "ชื่อ",
+    "registeredVia": "ลงทะเบียนผ่าน"
   }
 }

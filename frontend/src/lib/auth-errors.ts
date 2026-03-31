@@ -9,6 +9,8 @@ export function mapAuthError(code: string, message: string, status: number, t: T
     case 'auth.password_too_long': return t('auth.errorPasswordTooLong');
     case 'auth.invalid_input': return t('auth.errorInvalidInput');
     case 'auth.account_disabled': return t('auth.errorAccountDisabled');
+    case 'sso.already_linked': return t('account.errorAlreadyLinked');
+    case 'auth.sso_not_configured': return t('account.errorSsoNotConfigured');
     default: return t('auth.errorUnexpected');
   }
 }

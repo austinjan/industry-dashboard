@@ -29,6 +29,7 @@ const WorkersPage = lazy(() => import('@/pages/admin/WorkersPage').then(m => ({ 
 const WorkerConfigsPage = lazy(() => import('@/pages/admin/WorkerConfigsPage').then(m => ({ default: m.WorkerConfigsPage })));
 const WorkerConfigEditPage = lazy(() => import('@/pages/admin/WorkerConfigEditPage').then(m => ({ default: m.WorkerConfigEditPage })));
 const ApiKeysPage = lazy(() => import('@/pages/admin/ApiKeysPage').then(m => ({ default: m.ApiKeysPage })));
+const AccountPage = lazy(() => import('@/pages/AccountPage').then(m => ({ default: m.AccountPage })));
 
 const queryClient = new QueryClient();
 
@@ -87,6 +88,7 @@ export default function App() {
               <Route path="/admin/worker-configs/new" element={<WorkerConfigEditPage />} />
               <Route path="/admin/worker-configs/:id" element={<WorkerConfigEditPage />} />
               <Route path="/admin/api-keys" element={<ApiKeysPage />} />
+              <Route path="/account" element={<AccountPage />} />
               </Route>
             </Route>
           </Routes>

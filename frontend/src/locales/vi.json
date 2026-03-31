@@ -20,7 +20,8 @@
     "sitesAndMachines": "Nhà máy & Máy móc",
     "workers": "Bộ thu thập",
     "workerConfigs": "Cấu hình bộ thu thập",
-    "apiKeys": "Khóa API"
+    "apiKeys": "Khóa API",
+    "account": "Tài khoản"
   },
   "dashboard": {
     "machinesOnline": "Máy đang hoạt động",
@@ -305,5 +306,23 @@
     "errorRateLimited": "Quá nhiều lần thử. Vui lòng đợi và thử lại.",
     "errorNetworkError": "Lỗi mạng. Vui lòng kiểm tra kết nối.",
     "errorUnexpected": "Đã xảy ra lỗi. Vui lòng thử lại."
+  },
+  "account": {
+    "title": "Cài đặt tài khoản",
+    "authMethods": "Phương thức xác thực",
+    "localPassword": "Mật khẩu nội bộ",
+    "localPasswordSet": "Đã đặt mật khẩu",
+    "localPasswordNotSet": "Chưa đặt mật khẩu",
+    "microsoftAccount": "Tài khoản Microsoft",
+    "microsoftLinked": "Đã liên kết với {{email}}",
+    "microsoftNotLinked": "Chưa liên kết",
+    "linkMicrosoft": "Liên kết tài khoản Microsoft",
+    "bindSuccess": "Liên kết tài khoản Microsoft thành công!",
+    "errorAlreadyLinked": "Tài khoản Microsoft này đã được liên kết với người dùng khác.",
+    "errorSsoNotConfigured": "Máy chủ chưa cấu hình SSO.",
+    "userInfo": "Thông tin người dùng",
+    "emailLabel": "Email",
+    "nameLabel": "Tên",
+    "registeredVia": "Đăng ký qua"
   }
 }

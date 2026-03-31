@@ -20,7 +20,8 @@
     "sitesAndMachines": "Sites & Machines",
     "workers": "Workers",
     "workerConfigs": "Worker Configs",
-    "apiKeys": "API Keys"
+    "apiKeys": "API Keys",
+    "account": "Account"
   },
   "dashboard": {
     "machinesOnline": "Machines Online",
@@ -306,5 +307,23 @@
     "errorRateLimited": "Too many attempts. Please wait and try again.",
     "errorNetworkError": "Network error. Please check your connection.",
     "errorUnexpected": "Something went wrong. Please try again."
+  },
+  "account": {
+    "title": "Account Settings",
+    "authMethods": "Authentication Methods",
+    "localPassword": "Local Password",
+    "localPasswordSet": "Password is set",
+    "localPasswordNotSet": "No password set",
+    "microsoftAccount": "Microsoft Account",
+    "microsoftLinked": "Linked to {{email}}",
+    "microsoftNotLinked": "Not linked",
+    "linkMicrosoft": "Link Microsoft Account",
+    "bindSuccess": "Microsoft account linked successfully!",
+    "errorAlreadyLinked": "This Microsoft account is already linked to another user.",
+    "errorSsoNotConfigured": "SSO is not configured on this server.",
+    "userInfo": "User Information",
+    "emailLabel": "Email",
+    "nameLabel": "Name",
+    "registeredVia": "Registered via"
   }
 }
