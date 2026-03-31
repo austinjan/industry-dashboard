@@ -45,6 +45,40 @@ func (c *OIDCClient) AuthURL(state string) string {
 	return c.oauth2Config.AuthCodeURL(state)
 }
 
+func (c *OIDCClient) AuthURLWithRedirect(state, redirectURL string) string {
+	return c.oauth2Config.AuthCodeURL(state, oauth2.SetAuthURLParam("redirect_uri", redirectURL))
+}
+
+func (c *OIDCClient) ExchangeWithRedirect(ctx context.Context, code, redirectURL string) (*OIDCUser, error) {
+	cfg := c.oauth2Config
+	cfg.RedirectURL = redirectURL
+	token, err := cfg.Exchange(ctx, code)
+	if err != nil {
+		return nil, fmt.Errorf("failed to exchange code: %w", err)
+	}
+	rawIDToken, ok := token.Extra("id_token").(string)
+	if !ok {
+		return nil, fmt.Errorf("no id_token in response")
+	}
+	idToken, err := c.verifier.Verify(ctx, rawIDToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify id_token: %w", err)
+	}
+	var claims struct {
+		Sub   string `json:"sub"`
+		Email string `json:"email"`
+		Name  string `json:"name"`
+	}
+	if err := idToken.Claims(&claims); err != nil {
+		return nil, fmt.Errorf("failed to parse claims: %w", err)
+	}
+	return &OIDCUser{
+		MicrosoftID: claims.Sub,
+		Email:       claims.Email,
+		Name:        claims.Name,
+	}, nil
+}
+
 func (c *OIDCClient) Exchange(ctx context.Context, code string) (*OIDCUser, error) {
 	token, err := c.oauth2Config.Exchange(ctx, code)
 	if err != nil {
