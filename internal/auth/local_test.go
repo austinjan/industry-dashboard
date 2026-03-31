@@ -35,7 +35,7 @@ func TestDummyCheckPassword(t *testing.T) {
 
 func TestRegisterLocalValidation(t *testing.T) {
 	jwtSvc := auth.NewJWTService("test-secret", 15*time.Minute, 7*24*time.Hour)
-	handler := auth.NewHandler(nil, jwtSvc, nil) // nil db — validation returns before DB call
+	handler := auth.NewHandler(nil, jwtSvc, nil, "", nil) // nil db — validation returns before DB call
 
 	tests := []struct {
 		name       string
@@ -69,7 +69,7 @@ func TestRegisterLocalValidation(t *testing.T) {
 
 func TestLoginLocalValidation(t *testing.T) {
 	jwtSvc := auth.NewJWTService("test-secret", 15*time.Minute, 7*24*time.Hour)
-	handler := auth.NewHandler(nil, jwtSvc, nil) // nil db — validation fails first
+	handler := auth.NewHandler(nil, jwtSvc, nil, "", nil) // nil db — validation fails first
 
 	tests := []struct {
 		name       string
@@ -99,7 +99,7 @@ func TestLoginLocalValidation(t *testing.T) {
 
 func TestProviders(t *testing.T) {
 	t.Run("without OIDC", func(t *testing.T) {
-		handler := auth.NewHandler(nil, nil, nil)
+		handler := auth.NewHandler(nil, nil, nil, "", nil)
 		req := httptest.NewRequest("GET", "/api/auth/providers", nil)
 		rec := httptest.NewRecorder()
 		handler.Providers(rec, req)
@@ -116,7 +116,7 @@ func TestProviders(t *testing.T) {
 // No DB is wired — only validation-path tests (no DB access needed) run here.
 func newTestHandler() *auth.Handler {
 	jwtSvc := auth.NewJWTService("test-secret-local", 15*time.Minute, 168*time.Hour)
-	return auth.NewHandler(nil, jwtSvc, nil)
+	return auth.NewHandler(nil, jwtSvc, nil, "", nil)
 }
 
 func postJSON(t *testing.T, h http.Handler, path string, body interface{}) *httptest.ResponseRecorder {
@@ -242,7 +242,7 @@ func TestLoginLocal_NoAtSignPassesValidation(t *testing.T) {
 
 func TestProviders_NoOIDC(t *testing.T) {
 	jwtSvc := auth.NewJWTService("test-secret", 15*time.Minute, 168*time.Hour)
-	h := auth.NewHandler(nil, jwtSvc, nil)
+	h := auth.NewHandler(nil, jwtSvc, nil, "", nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/auth/providers", nil)
 	w := httptest.NewRecorder()
