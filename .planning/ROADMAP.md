@@ -75,9 +75,9 @@ Plans:
   2. The account page displays which auth methods are active (local password set, Microsoft linked or not)
   3. A user who visits the login page with a Microsoft account that matches an existing local email sees a guided message to log in locally first — no silent auto-link occurs
   4. The SSO bind action is recorded in the audit log
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
-- [ ] 04-01-PLAN.md — Backend: migration 023 (microsoft_email), config, OIDCClient bind methods, bind handlers, Me() extension, audit logging, route wiring
+- [x] 04-01-PLAN.md — Backend: migration 023 (microsoft_email), config, OIDCClient bind methods, bind handlers, Me() extension, audit logging, route wiring
 - [ ] 04-02-PLAN.md — Frontend: AccountPage with auth method status, User interface extension, i18n (4 locales), TopNav link, route registration, visual verification
 **UI hint**: yes
 
@@ -101,5 +101,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Backend Local Auth | 3/3 | Complete   | 2026-03-27 |
 | 2. Error Handling | 3/3 | Complete | 2026-03-27 |
 | 3. Frontend Auth UI | 0/2 | Not started | - |
-| 4. SSO Binding | 0/2 | Not started | - |
+| 4. SSO Binding | 1/2 | In Progress|  |
 | 5. Release Validation | 0/? | Not started | - |

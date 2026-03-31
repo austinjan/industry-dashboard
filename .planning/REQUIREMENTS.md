@@ -15,8 +15,8 @@ Requirements for milestone v0.0.3: Local Auth, Error Handling & Release Validati
 
 ### SSO Binding
 
-- [ ] **SSO-01**: Authenticated user can link their Microsoft Entra ID from an account page
-- [ ] **SSO-02**: Account page shows login status (local password set, Microsoft SSO linked or not)
+- [x] **SSO-01**: Authenticated user can link their Microsoft Entra ID from an account page
+- [x] **SSO-02**: Account page shows login status (local password set, Microsoft SSO linked or not)
 
 ### Error Handling
 
@@ -56,8 +56,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-01 | Phase 1 | Complete |
 | AUTH-02 | Phase 1 | Complete |
 | AUTH-03 | Phase 1 | Complete |
-| SSO-01 | Phase 4 | Pending |
-| SSO-02 | Phase 4 | Pending |
+| SSO-01 | Phase 4 | Complete |
+| SSO-02 | Phase 4 | Complete |
 | ERR-01 | Phase 2 | Complete |
 | ERR-02 | Phase 3 | Pending |
 | ERR-03 | Phase 2 | Complete |

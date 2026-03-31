@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.0.3
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-31T07:18:50.212Z"
-last_activity: 2026-03-27
+stopped_at: Completed 04-sso-binding 04-01-PLAN.md
+last_updated: "2026-03-31T07:45:03.645Z"
+last_activity: 2026-03-31
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 8
-  completed_plans: 6
+  total_plans: 10
+  completed_plans: 7
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** Real-time visibility into factory operations with customizable dashboards that adapt to each site's monitoring needs.
-**Current focus:** Phase 03 — frontend-auth-ui
+**Current focus:** Phase 04 — sso-binding
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
+Phase: 04 (sso-binding) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-03-27
+Last activity: 2026-03-31
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-backend-local-auth P03 | 20min | 2 tasks | 2 files |
 | Phase 02-error-handling P01 | 15min | 2 tasks | 5 files |
 | Phase 02-error-handling P02 | 20min | 2 tasks | 8 files |
+| Phase 04-sso-binding P01 | 8min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,9 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 02-error-handling]: RBAC errors include userID from claims for log correlation; rbac.internal_error code for HasPermission DB failures
 - [Phase 02-error-handling]: writeError/apiError in auth package deleted entirely (clean cut D-11) — no shim left behind
 - [Phase 02-error-handling]: alert.invalid_request used for unauthorized access in alert handlers (vs alert.invalid_input for body parsing)
+- [Phase 04-sso-binding]: oauth_bind_state cookie used for bind CSRF (not oauth_state) to avoid collision with login flow
+- [Phase 04-sso-binding]: AuditLogger interface defined in auth package, adapted in main.go to avoid circular import
+- [Phase 04-sso-binding]: Bind callback uses JWT claims for user identity (not OIDC response) to enforce user-initiated requirement and prevent nOAuth
 
 ### Pending Todos
 
@@ -91,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T07:18:50.210Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-sso-binding/04-CONTEXT.md
+Last session: 2026-03-31T07:45:03.643Z
+Stopped at: Completed 04-sso-binding 04-01-PLAN.md
+Resume file: None
