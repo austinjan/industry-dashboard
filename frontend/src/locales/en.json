@@ -283,5 +283,28 @@
     "title": "Industry Dashboard",
     "signInMicrosoft": "Sign in with Microsoft",
     "devLogin": "Dev Login (local only)"
+  },
+  "auth": {
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "confirmPasswordLabel": "Confirm Password",
+    "loginButton": "Log In",
+    "registerButton": "Create Account",
+    "registerLink": "Don't have an account? Register",
+    "loginLink": "Already have an account? Log in",
+    "signInWithMicrosoft": "Sign in with Microsoft",
+    "orDivider": "or",
+    "errorInvalidCredentials": "Invalid email or password",
+    "errorEmailTaken": "Email already registered",
+    "errorEmailTakenSso": "Email already in use. Log in via SSO to link your account.",
+    "errorPasswordMismatch": "Passwords do not match",
+    "errorEmailRequired": "Email is required",
+    "errorPasswordRequired": "Password is required",
+    "errorPasswordTooLong": "Password must be 72 characters or fewer",
+    "errorInvalidInput": "Please check your input and try again",
+    "errorAccountDisabled": "Account is disabled",
+    "errorRateLimited": "Too many attempts. Please wait and try again.",
+    "errorNetworkError": "Network error. Please check your connection.",
+    "errorUnexpected": "Something went wrong. Please try again."
   }
 }

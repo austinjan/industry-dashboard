@@ -282,5 +282,28 @@
     "title": "แดชบอร์ดอุตสาหกรรม",
     "signInMicrosoft": "เข้าสู่ระบบด้วย Microsoft",
     "devLogin": "เข้าสู่ระบบนักพัฒนา (เฉพาะเครื่อง)"
+  },
+  "auth": {
+    "emailLabel": "อีเมล",
+    "passwordLabel": "รหัสผ่าน",
+    "confirmPasswordLabel": "ยืนยันรหัสผ่าน",
+    "loginButton": "เข้าสู่ระบบ",
+    "registerButton": "สร้างบัญชี",
+    "registerLink": "ยังไม่มีบัญชี? ลงทะเบียน",
+    "loginLink": "มีบัญชีแล้ว? เข้าสู่ระบบ",
+    "signInWithMicrosoft": "เข้าสู่ระบบด้วย Microsoft",
+    "orDivider": "หรือ",
+    "errorInvalidCredentials": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+    "errorEmailTaken": "อีเมลนี้ถูกลงทะเบียนแล้ว",
+    "errorEmailTakenSso": "อีเมลนี้ถูกใช้แล้ว กรุณาเข้าสู่ระบบผ่าน SSO เพื่อเชื่อมต่อบัญชี",
+    "errorPasswordMismatch": "รหัสผ่านไม่ตรงกัน",
+    "errorEmailRequired": "กรุณากรอกอีเมล",
+    "errorPasswordRequired": "กรุณากรอกรหัสผ่าน",
+    "errorPasswordTooLong": "รหัสผ่านต้องไม่เกิน 72 ตัวอักษร",
+    "errorInvalidInput": "กรุณาตรวจสอบข้อมูลแล้วลองอีกครั้ง",
+    "errorAccountDisabled": "บัญชีถูกปิดใช้งาน",
+    "errorRateLimited": "ลองหลายครั้งเกินไป กรุณารอสักครู่แล้วลองอีกครั้ง",
+    "errorNetworkError": "เกิดข้อผิดพลาดของเครือข่าย กรุณาตรวจสอบการเชื่อมต่อ",
+    "errorUnexpected": "เกิดข้อผิดพลาด กรุณาลองอีกครั้ง"
   }
 }

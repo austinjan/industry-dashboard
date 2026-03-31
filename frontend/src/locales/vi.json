@@ -282,5 +282,28 @@
     "title": "Bảng điều khiển công nghiệp",
     "signInMicrosoft": "Đăng nhập bằng Microsoft",
     "devLogin": "Đăng nhập dev (chỉ local)"
+  },
+  "auth": {
+    "emailLabel": "Email",
+    "passwordLabel": "Mật khẩu",
+    "confirmPasswordLabel": "Xác nhận mật khẩu",
+    "loginButton": "Đăng nhập",
+    "registerButton": "Tạo tài khoản",
+    "registerLink": "Chưa có tài khoản? Đăng ký",
+    "loginLink": "Đã có tài khoản? Đăng nhập",
+    "signInWithMicrosoft": "Đăng nhập bằng Microsoft",
+    "orDivider": "hoặc",
+    "errorInvalidCredentials": "Email hoặc mật khẩu không đúng",
+    "errorEmailTaken": "Email đã được đăng ký",
+    "errorEmailTakenSso": "Email đã được sử dụng. Vui lòng đăng nhập qua SSO để liên kết tài khoản.",
+    "errorPasswordMismatch": "Mật khẩu không khớp",
+    "errorEmailRequired": "Vui lòng nhập email",
+    "errorPasswordRequired": "Vui lòng nhập mật khẩu",
+    "errorPasswordTooLong": "Mật khẩu không được quá 72 ký tự",
+    "errorInvalidInput": "Vui lòng kiểm tra lại thông tin và thử lại",
+    "errorAccountDisabled": "Tài khoản đã bị vô hiệu hóa",
+    "errorRateLimited": "Quá nhiều lần thử. Vui lòng đợi và thử lại.",
+    "errorNetworkError": "Lỗi mạng. Vui lòng kiểm tra kết nối.",
+    "errorUnexpected": "Đã xảy ra lỗi. Vui lòng thử lại."
   }
 }

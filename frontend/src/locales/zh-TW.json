@@ -282,5 +282,28 @@
     "title": "工業監控儀表板",
     "signInMicrosoft": "使用 Microsoft 帳號登入",
     "devLogin": "開發者登入（僅限本機）"
+  },
+  "auth": {
+    "emailLabel": "電子郵件",
+    "passwordLabel": "密碼",
+    "confirmPasswordLabel": "確認密碼",
+    "loginButton": "登入",
+    "registerButton": "建立帳號",
+    "registerLink": "還沒有帳號？註冊",
+    "loginLink": "已有帳號？登入",
+    "signInWithMicrosoft": "使用 Microsoft 帳號登入",
+    "orDivider": "或",
+    "errorInvalidCredentials": "電子郵件或密碼不正確",
+    "errorEmailTaken": "此電子郵件已被註冊",
+    "errorEmailTakenSso": "此電子郵件已被使用，請透過 SSO 登入以連結帳號。",
+    "errorPasswordMismatch": "密碼不一致",
+    "errorEmailRequired": "請輸入電子郵件",
+    "errorPasswordRequired": "請輸入密碼",
+    "errorPasswordTooLong": "密碼不得超過 72 個字元",
+    "errorInvalidInput": "請檢查輸入內容後重試",
+    "errorAccountDisabled": "帳號已停用",
+    "errorRateLimited": "嘗試次數過多，請稍後再試。",
+    "errorNetworkError": "網路錯誤，請檢查連線。",
+    "errorUnexpected": "發生錯誤，請重試。"
   }
 }
