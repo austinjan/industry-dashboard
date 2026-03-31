@@ -63,7 +63,7 @@ export function LoginPage() {
               <Label htmlFor="email">{t('auth.emailLabel')}</Label>
               <Input
                 id="email"
-                type="email"
+                type="text"
                 value={email}
                 onChange={e => { setEmail(e.target.value); setError(null); }}
                 required
