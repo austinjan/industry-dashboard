@@ -30,6 +30,23 @@ import (
 
 var version = "dev"
 
+// auditLoggerAdapter bridges audit.Store to auth.AuditLogger (avoids circular import).
+type auditLoggerAdapter struct {
+	store *audit.Store
+}
+
+func (a *auditLoggerAdapter) LogEntry(ctx context.Context, userID, action, resourceType, resourceID, ipAddress string, details map[string]interface{}) error {
+	return a.store.Log(ctx, audit.Entry{
+		UserID:       userID,
+		Action:       action,
+		ResourceType: resourceType,
+		ResourceID:   resourceID,
+		Details:      details,
+		IPAddress:    ipAddress,
+		Timestamp:    time.Now(),
+	})
+}
+
 func main() {
 	cfg := config.Load()
 	ctx := context.Background()
@@ -102,8 +119,9 @@ func main() {
 			log.Printf("Warning: OIDC client setup failed: %v (SSO endpoints will return 501)", err)
 		}
 	}
+
 	// Always construct handler — local auth works without OIDC
-	authHandler := auth.NewHandler(oidcClient, jwtService, pool)
+	authHandler := auth.NewHandler(oidcClient, jwtService, pool, cfg.AzureBindRedirectURL, &auditLoggerAdapter{store: auditStore})
 
 	// Seed default admin on first run (per D-07, D-08)
 	auth.SeedDefaultAdmin(ctx, pool)
@@ -142,6 +160,10 @@ func main() {
 
 		// Current user (protected — requires valid JWT)
 		r.With(authMW.Authenticate).Get("/me", authHandler.Me)
+
+		// SSO bind routes (protected — user must be authenticated, per D-01)
+		r.With(authMW.Authenticate).Get("/bind/microsoft", authHandler.BindMicrosoft)
+		r.With(authMW.Authenticate).Get("/bind/callback", authHandler.BindCallback)
 	})
 
 	// Dev mode: seed data + bypass auth

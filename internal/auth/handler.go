@@ -13,13 +13,15 @@ import (
 )
 
 type Handler struct {
-	oidc *OIDCClient
-	jwt  *JWTService
-	db   *pgxpool.Pool
+	oidc            *OIDCClient
+	jwt             *JWTService
+	db              *pgxpool.Pool
+	bindRedirectURL string
+	auditLogger     AuditLogger
 }
 
-func NewHandler(oidc *OIDCClient, jwt *JWTService, db *pgxpool.Pool) *Handler {
-	return &Handler{oidc: oidc, jwt: jwt, db: db}
+func NewHandler(oidc *OIDCClient, jwt *JWTService, db *pgxpool.Pool, bindRedirectURL string, auditLogger AuditLogger) *Handler {
+	return &Handler{oidc: oidc, jwt: jwt, db: db, bindRedirectURL: bindRedirectURL, auditLogger: auditLogger}
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
@@ -157,14 +159,22 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var user struct {
-		ID     string  `json:"id"`
-		Email  string  `json:"email"`
-		Name   string  `json:"name"`
-		Locale *string `json:"locale"`
+		ID             string  `json:"id"`
+		Email          string  `json:"email"`
+		Name           string  `json:"name"`
+		Locale         *string `json:"locale"`
+		HasMicrosoft   bool    `json:"has_microsoft"`
+		RegisteredVia  string  `json:"registered_via"`
+		MicrosoftEmail *string `json:"microsoft_email"`
 	}
 	err := h.db.QueryRow(r.Context(),
-		"SELECT id, email, name, locale FROM users WHERE id = $1", claims.UserID,
-	).Scan(&user.ID, &user.Email, &user.Name, &user.Locale)
+		`SELECT id, email, name, locale,
+		        microsoft_id IS NOT NULL AS has_microsoft,
+		        registered_via,
+		        microsoft_email
+		 FROM users WHERE id = $1`, claims.UserID,
+	).Scan(&user.ID, &user.Email, &user.Name, &user.Locale,
+		&user.HasMicrosoft, &user.RegisteredVia, &user.MicrosoftEmail)
 	if err != nil {
 		apierr.Write(w, r, http.StatusNotFound, "auth.invalid_input", "user not found", claims.UserID, err)
 		return
