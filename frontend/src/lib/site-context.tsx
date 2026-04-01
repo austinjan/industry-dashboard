@@ -12,6 +12,7 @@ interface SiteContextType {
   sites: Site[];
   currentSite: Site | null;
   setCurrentSite: (site: Site) => void;
+  refreshSites: () => void;
   loading: boolean;
 }
 
@@ -19,6 +20,7 @@ const SiteContext = createContext<SiteContextType>({
   sites: [],
   currentSite: null,
   setCurrentSite: () => {},
+  refreshSites: () => {},
   loading: true,
 });
 
@@ -27,7 +29,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   const [currentSite, setCurrentSite] = useState<Site | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchSites = () => {
     apiFetch('/sites')
       .then((res) => (res.ok ? res.json() : []))
       .then((data: Site[]) => {
@@ -35,11 +37,13 @@ export function SiteProvider({ children }: { children: ReactNode }) {
         if (data && data.length > 0) {
           const saved = localStorage.getItem('current_site_id');
           const match = data.find((s) => s.id === saved);
-          setCurrentSite(match ?? data[0]);
+          setCurrentSite((prev) => prev ?? match ?? data[0]);
         }
       })
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchSites(); }, []);
 
   const handleSetSite = (site: Site) => {
     setCurrentSite(site);
@@ -47,7 +51,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <SiteContext.Provider value={{ sites, currentSite, setCurrentSite: handleSetSite, loading }}>
+    <SiteContext.Provider value={{ sites, currentSite, setCurrentSite: handleSetSite, refreshSites: fetchSites, loading }}>
       {children}
     </SiteContext.Provider>
   );

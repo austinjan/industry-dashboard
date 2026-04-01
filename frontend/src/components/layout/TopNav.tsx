@@ -54,7 +54,9 @@ export function TopNav() {
             }}
           >
             <SelectTrigger className="w-48 border-slate-700 bg-slate-800 text-white">
-              <SelectValue placeholder={t('common.selectSite')} />
+              <SelectValue placeholder={t('common.selectSite')}>
+                {currentSite?.name ?? t('common.selectSite')}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {sites.map((site) => (
@@ -69,7 +71,7 @@ export function TopNav() {
       <div className="flex items-center gap-3">
         <Select value={String(interval)} onValueChange={(v) => { if (v) setRefreshInterval(parseInt(v, 10)); }}>
           <SelectTrigger className="w-24 border-slate-700 bg-slate-800 text-white text-xs">
-            <SelectValue />
+            <SelectValue>⟳ {refreshOptions.find((o) => o.value === interval)?.label}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {refreshOptions.map((opt) => (
@@ -81,7 +83,7 @@ export function TopNav() {
         </Select>
         <Select value={i18n.language} onValueChange={handleLanguageChange}>
           <SelectTrigger className="w-36 border-slate-700 bg-slate-800 text-white">
-            <SelectValue />
+            <SelectValue>{languages.find((l) => l.code === i18n.language)?.label ?? i18n.language}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {languages.map((lang) => (

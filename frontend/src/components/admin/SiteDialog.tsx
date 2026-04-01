@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCreateSite, useUpdateSite } from '@/lib/hooks';
+import { useSite } from '@/lib/site-context';
 
 const TIMEZONES = [
   'UTC',
@@ -34,6 +35,7 @@ export function SiteDialog({ open, onClose, site }: SiteDialogProps) {
 
   const createSite = useCreateSite();
   const updateSite = useUpdateSite();
+  const { refreshSites } = useSite();
 
   useEffect(() => {
     if (open) {
@@ -56,6 +58,7 @@ export function SiteDialog({ open, onClose, site }: SiteDialogProps) {
       } else {
         await createSite.mutateAsync({ name, code, timezone, address: address || undefined });
       }
+      refreshSites();
       onClose();
     } catch (e: any) {
       setError(e.message || 'Unknown error');
@@ -90,7 +93,7 @@ export function SiteDialog({ open, onClose, site }: SiteDialogProps) {
             <Label>{t('admin.timezone')}</Label>
             <Select value={timezone} onValueChange={(v) => setTimezone(v ?? 'UTC')}>
               <SelectTrigger>
-                <SelectValue placeholder={t('admin.timezone')} />
+                <SelectValue placeholder={t('admin.timezone')}>{timezone}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {TIMEZONES.map((tz) => (
