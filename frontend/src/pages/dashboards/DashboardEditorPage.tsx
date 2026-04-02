@@ -157,7 +157,7 @@ export function DashboardEditorPage() {
             isDraggable
           >
             {widgets.map((w) => (
-              <div key={w.id} className="group relative rounded-lg border bg-white shadow-sm">
+              <div key={w.id} className="group relative">
                 {/* Drag handle covers the whole cell */}
                 <div className="widget-drag absolute inset-0 z-0 cursor-grab" />
                 {/* Widget content — pointer-events off so drag handle works */}

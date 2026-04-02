@@ -70,7 +70,7 @@ export function DashboardViewPage() {
           isResizable={false}
         >
           {dashboard.widgets.map((w: any) => (
-            <div key={w.id} className="rounded-lg border bg-white p-3 shadow-sm">
+            <div key={w.id}>
               <WidgetRenderer widgetType={w.widget_type} config={w.config} />
             </div>
           ))}
@@ -109,7 +109,7 @@ export function DashboardViewPage() {
           isResizable={false}
         >
           {dashboard.widgets.map((w: any) => (
-            <div key={w.id} className="rounded-lg border bg-white p-3 shadow-sm">
+            <div key={w.id}>
               <WidgetRenderer widgetType={w.widget_type} config={w.config} />
             </div>
           ))}

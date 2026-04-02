@@ -38,19 +38,43 @@ const WIDGETS: Record<string, React.FC<{ config: Record<string, unknown> }>> = {
   text_markdown: TextWidget,
 };
 
+function getCardClass(style: string): string {
+  switch (style) {
+    case 'minimal':
+      return 'rounded-lg p-3';
+    case 'accent':
+      return 'rounded-lg border-l-4 bg-white p-3 shadow-sm';
+    default:
+      return 'rounded-lg border bg-white p-3 shadow-sm';
+  }
+}
+
 export function WidgetRenderer({ widgetType, config }: Props) {
   const Component = WIDGETS[widgetType];
   if (!Component) return <div className="p-2 text-sm text-red-500">Unknown widget: {widgetType}</div>;
   const showCountdown = config.show_countdown !== false;
   const title = (config.title as string) || DEFAULT_LABELS[widgetType] || widgetType;
+  const titleColor = (config.title_color as string) || undefined;
+  const widgetStyle = (config.widget_style as string) || 'default';
+  const accentColor = (config.accent_color as string) || '#3b82f6';
+  const cardClass = getCardClass(widgetStyle);
+  const accentStyle = widgetStyle === 'accent' ? { borderLeftColor: accentColor } : undefined;
+
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between shrink-0 mb-1">
-        <span className="text-xs font-semibold text-foreground truncate">{title}</span>
-        {showCountdown && <PollingCountdown />}
-      </div>
-      <div className="min-h-0 flex-1 overflow-auto">
-        <Component config={config} />
+    <div className={cardClass} style={accentStyle}>
+      <div className="flex h-full flex-col">
+        <div className="flex items-center justify-between shrink-0 mb-1">
+          <span
+            className="text-xs font-semibold truncate"
+            style={{ color: titleColor || undefined }}
+          >
+            {title}
+          </span>
+          {showCountdown && <PollingCountdown />}
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto">
+          <Component config={config} />
+        </div>
       </div>
     </div>
   );
