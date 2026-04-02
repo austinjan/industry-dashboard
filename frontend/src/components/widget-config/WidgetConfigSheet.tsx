@@ -6,6 +6,7 @@ import { BarChartConfig } from './BarChartConfig';
 import { AlertListConfig } from './AlertListConfig';
 import { MachineStatusConfig } from './MachineStatusConfig';
 import { TextConfig } from './TextConfig';
+import { IndicatorConfig } from './IndicatorConfig';
 
 interface ConfigFormProps {
   config: Record<string, unknown>;
@@ -31,6 +32,7 @@ const CONFIG_FORMS: Record<string, FC<ConfigFormProps>> = {
   alert_list: AlertListConfig,
   machine_status: MachineStatusConfig,
   text_markdown: TextConfig,
+  indicator: IndicatorConfig,
 };
 
 const WIDGET_HINTS: Record<string, { color: string; bg: string; text: string }> = {
@@ -43,6 +45,7 @@ const WIDGET_HINTS: Record<string, { color: string; bg: string; text: string }> 
   alert_list: { color: '#f59e0b', bg: '#fffbeb', text: 'Recent alert events. Filter by severity and limit count.' },
   machine_status: { color: '#22c55e', bg: '#f0fdf4', text: 'Grid overview of machine statuses in a production line.' },
   text_markdown: { color: '#8b5cf6', bg: '#f5f3ff', text: 'Static text block. Supports Markdown for formatting.' },
+  indicator: { color: '#06b6d4', bg: '#ecfeff', text: 'Maps a numeric value to display text with color and animation effects (blink, marquee, warning).' },
 };
 
 export function WidgetConfigSheet({ open, onClose, widgetType, config, onSave }: Props) {

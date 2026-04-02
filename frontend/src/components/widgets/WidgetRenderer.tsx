@@ -7,6 +7,7 @@ import { DataTableWidget } from './DataTableWidget';
 import { AlertListWidget } from './AlertListWidget';
 import { MachineStatusWidget } from './MachineStatusWidget';
 import { TextWidget } from './TextWidget';
+import { IndicatorWidget } from './IndicatorWidget';
 import { PollingCountdown } from './PollingCountdown';
 
 interface Props {
@@ -24,6 +25,7 @@ const DEFAULT_LABELS: Record<string, string> = {
   alert_list: 'Alerts',
   machine_status: 'Machine Status',
   text_markdown: 'Text',
+  indicator: 'Indicator',
 };
 
 const WIDGETS: Record<string, React.FC<{ config: Record<string, unknown> }>> = {
@@ -36,6 +38,7 @@ const WIDGETS: Record<string, React.FC<{ config: Record<string, unknown> }>> = {
   alert_list: AlertListWidget,
   machine_status: MachineStatusWidget,
   text_markdown: TextWidget,
+  indicator: IndicatorWidget,
 };
 
 function getCardClass(style: string): string {
@@ -61,7 +64,7 @@ export function WidgetRenderer({ widgetType, config }: Props) {
   const accentStyle = widgetStyle === 'accent' ? { borderLeftColor: accentColor } : undefined;
 
   return (
-    <div className={cardClass} style={accentStyle}>
+    <div className={`h-full ${cardClass}`} style={accentStyle}>
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between shrink-0 mb-1">
           <span

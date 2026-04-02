@@ -33,6 +33,7 @@ const widgetIcons: Record<string, string> = {
   alert_list: '🔔',
   machine_status: '⚙️',
   text_markdown: '📝',
+  indicator: '🔴',
 };
 
 export function DashboardEditorPage() {

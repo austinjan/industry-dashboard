@@ -1,0 +1,35 @@
+/* Blink — fade in/out */
+.indicator-blink {
+  animation: indicator-blink 1s ease-in-out infinite;
+}
+@keyframes indicator-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
+
+/* Marquee — horizontal scroll */
+.indicator-marquee {
+  display: inline-block;
+  animation: indicator-marquee 6s linear infinite;
+}
+@keyframes indicator-marquee {
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Warning — pulsing glow with scale */
+.indicator-warning {
+  animation: indicator-warning 0.8s ease-in-out infinite alternate;
+}
+@keyframes indicator-warning {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    text-shadow: 0 0 4px currentColor;
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1.05);
+    text-shadow: 0 0 16px currentColor, 0 0 32px currentColor;
+  }
+}

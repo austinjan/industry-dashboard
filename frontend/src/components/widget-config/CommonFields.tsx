@@ -304,17 +304,28 @@ export function HeaderFields({
   );
 }
 
+import type { LegendDisplay } from './legend-utils';
+export type { LegendDisplay } from './legend-utils';
+
+const DEFAULT_LEGEND_DISPLAY: LegendDisplay = { show_site: false, show_line: false, show_machine: true };
+
 export function LegendFields({
   showLegend,
   onShowLegendChange,
   legendPosition,
   onLegendPositionChange,
+  legendDisplay,
+  onLegendDisplayChange,
 }: {
   showLegend: boolean;
   onShowLegendChange: (v: boolean) => void;
   legendPosition: string;
   onLegendPositionChange: (v: string) => void;
+  legendDisplay?: LegendDisplay;
+  onLegendDisplayChange?: (v: LegendDisplay) => void;
 }) {
+  const display = legendDisplay || DEFAULT_LEGEND_DISPLAY;
+
   return (
     <>
       <ConfigSection label="Legend" />
@@ -323,22 +334,54 @@ export function LegendFields({
         <span>Show legend</span>
       </label>
       {showLegend && (
-        <div className="space-y-1">
-          <Label className="text-xs uppercase text-slate-500">Position</Label>
-          <div className="flex gap-1">
-            {(['top', 'bottom'] as const).map((pos) => (
-              <button
-                key={pos}
-                onClick={() => onLegendPositionChange(pos)}
-                className={`rounded px-3 py-1 text-xs capitalize ${
-                  legendPosition === pos ? 'bg-slate-800 text-white' : 'border bg-white text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {pos}
-              </button>
-            ))}
+        <>
+          <div className="space-y-1">
+            <Label className="text-xs uppercase text-slate-500">Position</Label>
+            <div className="flex gap-1">
+              {(['top', 'bottom'] as const).map((pos) => (
+                <button
+                  key={pos}
+                  onClick={() => onLegendPositionChange(pos)}
+                  className={`rounded px-3 py-1 text-xs capitalize ${
+                    legendPosition === pos ? 'bg-slate-800 text-white' : 'border bg-white text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {pos}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+          {onLegendDisplayChange && (
+            <div className="space-y-1">
+              <Label className="text-xs uppercase text-slate-500">Label includes</Label>
+              <div className="flex gap-3">
+                {([
+                  { key: 'show_site', label: 'Site' },
+                  { key: 'show_line', label: 'Line' },
+                  { key: 'show_machine', label: 'Machine' },
+                ] as const).map(({ key, label }) => (
+                  <label key={key} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                    <Checkbox
+                      checked={display[key]}
+                      onCheckedChange={(checked) =>
+                        onLegendDisplayChange({ ...display, [key]: !!checked })
+                      }
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Preview: {[
+                  display.show_site && 'Site',
+                  display.show_line && 'Line',
+                  display.show_machine && 'Machine',
+                  'Metric',
+                ].filter(Boolean).join(' : ')}
+              </p>
+            </div>
+          )}
+        </>
       )}
     </>
   );
@@ -430,6 +473,211 @@ export function DataSourceLine({
     <>
       <ConfigSection label="Data Source" />
       <LinePicker value={lineId} onChange={onLineChange} />
+    </>
+  );
+}
+
+// --- Multi Data Source support ---
+
+const DS_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316', '#14b8a6', '#6366f1'];
+
+export interface DataSource {
+  id: string;
+  machine_id: string;
+  metric: string;
+  color: string;
+  label: string;
+  // Denormalized names for legend display
+  site_name?: string;
+  line_name?: string;
+  machine_name?: string;
+}
+
+function newDataSource(existing: DataSource[]): DataSource {
+  const usedColors = existing.map((ds) => ds.color);
+  const color = DS_COLORS.find((c) => !usedColors.includes(c)) || DS_COLORS[0];
+  return { id: crypto.randomUUID(), machine_id: '', metric: '', color, label: '' };
+}
+
+function DataSourceItem({
+  ds,
+  index,
+  onChange,
+  onRemove,
+  showRemove,
+}: {
+  ds: DataSource;
+  index: number;
+  onChange: (updated: DataSource) => void;
+  onRemove: () => void;
+  showRemove: boolean;
+}) {
+  const { currentSite } = useSite();
+  const { data: lines, isLoading: linesLoading } = useSiteLines(currentSite?.id);
+  const [lineId, setLineId] = useState('');
+  const { data: machines } = useLineMachines(lineId || undefined);
+  const { data: metrics } = useQuery({
+    queryKey: ['machine-metrics', ds.machine_id],
+    queryFn: async () => {
+      const r = await apiFetch(`/machines/${ds.machine_id}/metrics`);
+      return r.ok ? r.json() : [];
+    },
+    enabled: !!ds.machine_id,
+  });
+
+  // Auto-select first line
+  useEffect(() => {
+    if (lines && lines.length > 0 && !lineId) setLineId(lines[0].id);
+  }, [lines, lineId]);
+
+  const currentLine = lines?.find((l: { id: string }) => l.id === lineId) as { id: string; name: string } | undefined;
+  const currentMachine = machines?.find((m: { id: string }) => m.id === ds.machine_id) as { id: string; name: string } | undefined;
+
+  return (
+    <div className="space-y-2 rounded-md border p-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-muted-foreground">#{index + 1}</span>
+        {showRemove && (
+          <button onClick={onRemove} className="text-xs text-red-500 hover:text-red-700">Remove</button>
+        )}
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs uppercase text-slate-500">Production Line</Label>
+        {linesLoading ? (
+          <p className="text-xs text-slate-400">Loading...</p>
+        ) : (
+          <select
+            value={lineId}
+            onChange={(e) => { setLineId(e.target.value); onChange({ ...ds, machine_id: '', metric: '', machine_name: '', line_name: '' }); }}
+            className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+          >
+            <option value="">Select line</option>
+            {lines?.map((l: { id: string; name: string }) => <option key={l.id} value={l.id}>{l.name}</option>)}
+          </select>
+        )}
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs uppercase text-slate-500">Machine</Label>
+        <select
+          value={ds.machine_id}
+          onChange={(e) => {
+            const mid = e.target.value;
+            const mach = machines?.find((m: { id: string }) => m.id === mid) as { id: string; name: string } | undefined;
+            onChange({
+              ...ds, machine_id: mid, metric: '',
+              machine_name: mach?.name || '',
+              line_name: currentLine?.name || '',
+              site_name: currentSite?.name || '',
+            });
+          }}
+          className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+        >
+          <option value="">Select machine</option>
+          {(machines || []).map((m: { id: string; name: string; model: string }) => <option key={m.id} value={m.id}>{m.name} ({m.model})</option>)}
+        </select>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs uppercase text-slate-500">Metric</Label>
+        <select
+          value={ds.metric}
+          onChange={(e) => {
+            const metric = e.target.value;
+            onChange({
+              ...ds, metric,
+              machine_name: currentMachine?.name || ds.machine_name || '',
+              line_name: currentLine?.name || ds.line_name || '',
+              site_name: currentSite?.name || ds.site_name || '',
+            });
+          }}
+          className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+        >
+          <option value="">Select metric</option>
+          {((metrics as string[]) || []).map((m: string) => <option key={m} value={m}>{m}</option>)}
+        </select>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="space-y-1 flex-1">
+          <Label className="text-xs uppercase text-slate-500">Label</Label>
+          <Input
+            value={ds.label}
+            onChange={(e) => onChange({ ...ds, label: e.target.value })}
+            placeholder={currentMachine?.name ? `${currentMachine.name} - ${ds.metric}` : 'Auto'}
+            className="h-8 text-sm"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs uppercase text-slate-500">Color</Label>
+          <div className="flex items-center gap-0.5">
+            {DS_COLORS.slice(0, 6).map((color) => (
+              <button
+                key={color}
+                onClick={() => onChange({ ...ds, color })}
+                className="h-6 w-6 rounded-md border-2 transition-transform hover:scale-110"
+                style={{ backgroundColor: color, borderColor: ds.color === color ? '#1e293b' : 'transparent' }}
+              />
+            ))}
+            <input
+              type="color"
+              value={ds.color}
+              onChange={(e) => onChange({ ...ds, color: e.target.value })}
+              className="ml-0.5 h-6 w-6 cursor-pointer rounded border-0 p-0"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function DataSourceList({
+  mode,
+  dataSources,
+  onChange,
+}: {
+  mode: 'single' | 'multiple';
+  dataSources: DataSource[];
+  onChange: (ds: DataSource[]) => void;
+}) {
+  // Ensure at least one entry
+  const items = dataSources.length > 0 ? dataSources : [newDataSource([])];
+
+  const updateItem = (index: number, updated: DataSource) => {
+    const next = [...items];
+    next[index] = updated;
+    onChange(next);
+  };
+
+  const removeItem = (index: number) => {
+    onChange(items.filter((_, i) => i !== index));
+  };
+
+  const addItem = () => {
+    onChange([...items, newDataSource(items)]);
+  };
+
+  return (
+    <>
+      <ConfigSection label={mode === 'single' ? 'Data Source' : 'Data Sources'} />
+      <div className="space-y-2">
+        {items.map((ds, i) => (
+          <DataSourceItem
+            key={ds.id}
+            ds={ds}
+            index={i}
+            onChange={(updated) => updateItem(i, updated)}
+            onRemove={() => removeItem(i)}
+            showRemove={mode === 'multiple' && items.length > 1}
+          />
+        ))}
+        {mode === 'multiple' && (
+          <button
+            onClick={addItem}
+            className="w-full rounded-md border border-dashed py-1.5 text-xs text-muted-foreground hover:bg-slate-50"
+          >
+            + Add Data Source
+          </button>
+        )}
+      </div>
     </>
   );
 }
