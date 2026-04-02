@@ -177,3 +177,62 @@ export function ShowCountdownField({ value, onChange }: { value: boolean; onChan
     </label>
   );
 }
+
+export function ConfigSection({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2 pt-2">
+      <div className="h-px flex-1 bg-border" />
+      <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
+      <div className="h-px flex-1 bg-border" />
+    </div>
+  );
+}
+
+export function HeaderFields({
+  title,
+  onTitleChange,
+  titleColor,
+  onTitleColorChange,
+  showCountdown,
+  onShowCountdownChange,
+}: {
+  title: string;
+  onTitleChange: (v: string) => void;
+  titleColor: string;
+  onTitleColorChange: (v: string) => void;
+  showCountdown: boolean;
+  onShowCountdownChange: (v: boolean) => void;
+}) {
+  return (
+    <>
+      <ConfigSection label="Header" />
+      <TitleField value={title} onChange={onTitleChange} />
+      <div className="space-y-1">
+        <Label className="text-xs uppercase text-slate-500">Title Color</Label>
+        <div className="flex items-center gap-1">
+          {['', '#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6'].map((color) => (
+            <button
+              key={color}
+              onClick={() => onTitleColorChange(color)}
+              className="h-6 w-6 rounded-md border-2 transition-transform hover:scale-110"
+              style={{
+                backgroundColor: color || undefined,
+                borderColor: titleColor === color ? '#1e293b' : 'transparent',
+              }}
+            >
+              {color === '' && <span className="text-[10px] text-muted-foreground">Auto</span>}
+            </button>
+          ))}
+          <input
+            type="color"
+            value={titleColor || '#000000'}
+            onChange={(e) => onTitleColorChange(e.target.value)}
+            className="ml-1 h-6 w-6 cursor-pointer rounded border-0 p-0"
+            title="Custom color"
+          />
+        </div>
+      </div>
+      <ShowCountdownField value={showCountdown} onChange={onShowCountdownChange} />
+    </>
+  );
+}
