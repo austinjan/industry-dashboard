@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,9 +15,10 @@ export function AlertsPage() {
   const { t } = useTranslation();
   const { currentSite } = useSite();
 
+  const [searchParams] = useSearchParams();
   const [severity, setSeverity] = useState('');
   const [status, setStatus] = useState('');
-  const [lineId, setLineId] = useState('');
+  const [lineId, setLineId] = useState(searchParams.get('line_id') ?? '');
   const [machineId, setMachineId] = useState('');
   const [sortBy, setSortBy] = useState('triggered_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -74,6 +76,8 @@ export function AlertsPage() {
     return sortOrder === 'asc' ? ' ↑' : ' ↓';
   };
 
+  const activeLineName = lineId ? lines?.find((l: any) => l.id === lineId)?.name : null;
+
   if (!currentSite) return <div className="text-slate-500">{t('alerts.selectSite')}</div>;
 
   const severityBadge = (s: string) => {
@@ -88,6 +92,18 @@ export function AlertsPage() {
   return (
     <div>
       <h2 className="mb-4 text-xl font-bold">{t('alerts.heading', { siteName: currentSite.name })}</h2>
+
+      {activeLineName && (
+        <div className="mb-4 flex items-center gap-2 rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-800">
+          <span>{t('alerts.filteringByLine', { lineName: activeLineName })}</span>
+          <button
+            onClick={() => { setLineId(''); setMachineId(''); }}
+            className="ml-auto text-xs text-blue-600 hover:underline"
+          >
+            {t('alerts.clearFilter')}
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -112,7 +128,9 @@ export function AlertsPage() {
         </Select>
 
         <Select value={lineId} onValueChange={(v) => { handleFilterChange(setLineId)(v); setMachineId(''); }}>
-          <SelectTrigger className="w-[160px]"><SelectValue placeholder={t('alerts.allLines')} /></SelectTrigger>
+          <SelectTrigger className="w-[160px]">
+            {activeLineName ? <span>{activeLineName}</span> : <SelectValue placeholder={t('alerts.allLines')} />}
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="">{t('alerts.allLines')}</SelectItem>
             {lines?.map((l: any) => (

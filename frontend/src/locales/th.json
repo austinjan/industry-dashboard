@@ -31,7 +31,14 @@
     "overview": "{{siteName}} — ภาพรวม",
     "noProductionLines": "ยังไม่มีสายการผลิต",
     "recentAlerts": "การแจ้งเตือนล่าสุด",
-    "noRecentAlerts": "ไม่มีการแจ้งเตือนล่าสุด"
+    "noRecentAlerts": "ไม่มีการแจ้งเตือนล่าสุด",
+    "machinesTotal": "{{count}} เครื่องจักรทั้งหมด",
+    "offline": "{{count}} ออฟไลน์",
+    "requiresAttention": "ต้องการความสนใจ",
+    "viewAlerts": "ดูการแจ้งเตือน",
+    "running": "{{count}} กำลังทำงาน",
+    "error": "{{count}} ข้อผิดพลาด",
+    "noMachines": "ไม่มีเครื่องจักร"
   },
   "machines": {
     "heading": "เครื่องจักร — {{siteName}}",
@@ -81,7 +88,9 @@
     "line": "สายการผลิต",
     "page": "หน้า {{page}} จาก {{total}}",
     "prev": "ก่อนหน้า",
-    "next": "ถัดไป"
+    "next": "ถัดไป",
+    "filteringByLine": "กรองตามสาย: {{lineName}}",
+    "clearFilter": "ล้างตัวกรอง"
   },
   "alertRules": {
     "title": "กฎการแจ้งเตือน",

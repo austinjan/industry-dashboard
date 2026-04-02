@@ -31,7 +31,14 @@
     "overview": "{{siteName}} — Overview",
     "noProductionLines": "No production lines configured.",
     "recentAlerts": "Recent Alerts",
-    "noRecentAlerts": "No recent alerts."
+    "noRecentAlerts": "No recent alerts.",
+    "machinesTotal": "{{count}} machines total",
+    "offline": "{{count}} offline",
+    "requiresAttention": "Requires attention",
+    "viewAlerts": "View alerts",
+    "running": "{{count}} running",
+    "error": "{{count}} error",
+    "noMachines": "No machines"
   },
   "machines": {
     "heading": "Machines — {{siteName}}",
@@ -81,7 +88,9 @@
     "line": "Line",
     "page": "Page {{page}} of {{total}}",
     "prev": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "filteringByLine": "Filtering by line: {{lineName}}",
+    "clearFilter": "Clear filter"
   },
   "alertRules": {
     "title": "Alert Rules",
