@@ -303,3 +303,133 @@ export function HeaderFields({
     </>
   );
 }
+
+export function LegendFields({
+  showLegend,
+  onShowLegendChange,
+  legendPosition,
+  onLegendPositionChange,
+}: {
+  showLegend: boolean;
+  onShowLegendChange: (v: boolean) => void;
+  legendPosition: string;
+  onLegendPositionChange: (v: string) => void;
+}) {
+  return (
+    <>
+      <ConfigSection label="Legend" />
+      <label className="flex items-center gap-2 text-sm">
+        <Checkbox checked={showLegend} onCheckedChange={(checked) => onShowLegendChange(!!checked)} />
+        <span>Show legend</span>
+      </label>
+      {showLegend && (
+        <div className="space-y-1">
+          <Label className="text-xs uppercase text-slate-500">Position</Label>
+          <div className="flex gap-1">
+            {(['top', 'bottom'] as const).map((pos) => (
+              <button
+                key={pos}
+                onClick={() => onLegendPositionChange(pos)}
+                className={`rounded px-3 py-1 text-xs capitalize ${
+                  legendPosition === pos ? 'bg-slate-800 text-white' : 'border bg-white text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {pos}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+export function DataSourceMachine({
+  machineId,
+  onMachineChange,
+  metrics,
+  onMetricsChange,
+  multi = false,
+}: {
+  machineId: string;
+  onMachineChange: (v: string) => void;
+  metrics: string[];
+  onMetricsChange: (v: string[]) => void;
+  multi?: boolean;
+}) {
+  return (
+    <>
+      <ConfigSection label="Data Source" />
+      <MachinePicker value={machineId} onChange={onMachineChange} />
+      {multi ? (
+        <MultiMetricPicker machineId={machineId} values={metrics} onChange={onMetricsChange} />
+      ) : (
+        <MetricPicker
+          machineId={machineId}
+          value={metrics[0] || ''}
+          onChange={(v) => onMetricsChange(v ? [v] : [])}
+        />
+      )}
+    </>
+  );
+}
+
+function MultiMetricPicker({
+  machineId,
+  values,
+  onChange,
+}: {
+  machineId: string;
+  values: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const { data: metrics, isLoading } = useQuery({
+    queryKey: ['machine-metrics', machineId],
+    queryFn: async () => {
+      const r = await apiFetch(`/machines/${machineId}/metrics`);
+      return r.ok ? r.json() : [];
+    },
+    enabled: !!machineId,
+  });
+
+  const toggle = (m: string) => {
+    onChange(values.includes(m) ? values.filter((v) => v !== m) : [...values, m]);
+  };
+
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs uppercase text-slate-500">Metrics (select multiple)</Label>
+      {!machineId ? (
+        <p className="text-xs text-slate-400">Select a machine first.</p>
+      ) : isLoading ? (
+        <p className="text-xs text-slate-400">Loading metrics...</p>
+      ) : !metrics || (metrics as string[]).length === 0 ? (
+        <p className="text-xs text-slate-400">No metrics available.</p>
+      ) : (
+        <div className="space-y-1 rounded-md border p-2">
+          {(metrics as string[]).map((m: string) => (
+            <label key={m} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 rounded px-1 py-0.5">
+              <input type="checkbox" checked={values.includes(m)} onChange={() => toggle(m)} className="rounded" />
+              <span>{m}</span>
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function DataSourceLine({
+  lineId,
+  onLineChange,
+}: {
+  lineId: string;
+  onLineChange: (v: string) => void;
+}) {
+  return (
+    <>
+      <ConfigSection label="Data Source" />
+      <LinePicker value={lineId} onChange={onLineChange} />
+    </>
+  );
+}
