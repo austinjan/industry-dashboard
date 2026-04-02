@@ -45,6 +45,25 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
+// DBEnvInfo returns non-secret database connection info for display purposes.
+type DBEnvInfo struct {
+	Host    string `json:"host"`
+	Port    string `json:"port"`
+	User    string `json:"user"`
+	DBName  string `json:"db_name"`
+	SSLMode string `json:"sslmode"`
+}
+
+func GetDBEnvInfo() DBEnvInfo {
+	return DBEnvInfo{
+		Host:    getEnv("DB_HOST", "localhost"),
+		Port:    getEnv("DB_PORT", "5432"),
+		User:    getEnv("DB_USER", "dashboard"),
+		DBName:  getEnv("DB_NAME", "industry_dashboard"),
+		SSLMode: getEnv("DB_SSLMODE", "disable"),
+	}
+}
+
 func getDatabaseURL() string {
 	// If DATABASE_URL is set explicitly, use it
 	if v := os.Getenv("DATABASE_URL"); v != "" {

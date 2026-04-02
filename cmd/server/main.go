@@ -523,6 +523,13 @@ func main() {
 			})
 		})
 
+		// System info (for deploy guide)
+		r.With(rbacMW.Require("workers:manage", globalScope)).Get("/system/db-env", func(w http.ResponseWriter, r *http.Request) {
+			info := config.GetDBEnvInfo()
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(info)
+		})
+
 		// LLM API keys
 		r.Route("/llm/keys", func(r chi.Router) {
 			r.With(rbacMW.Require("role:manage", rbac.SiteFromQuery)).Get("/", llmKeyHandler.ListKeys)
