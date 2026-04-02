@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { TitleField, MachinePicker, TimeRangePicker, ShowCountdownField } from './CommonFields';
-import { useQuery } from '@tanstack/react-query';
-import { apiFetch } from '@/lib/api';
+import {
+  HeaderFields,
+  StyleFields,
+  DataSourceMachine,
+  LegendFields,
+  ConfigSection,
+  TimeRangePicker,
+} from './CommonFields';
 
 const COLOR_PRESETS = [
   '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6',
@@ -18,7 +23,7 @@ const LINE_STYLES = [
 
 interface MetricStyle {
   color: string;
-  style: string; // solid | dashed | dotted
+  style: string;
 }
 
 interface Props {
@@ -29,6 +34,10 @@ interface Props {
 
 export function LineChartConfig({ config, onSave, onCancel }: Props) {
   const [title, setTitle] = useState((config.title as string) || '');
+  const [titleColor, setTitleColor] = useState((config.title_color as string) || '');
+  const [showCountdown, setShowCountdown] = useState(config.show_countdown !== false);
+  const [widgetStyle, setWidgetStyle] = useState((config.widget_style as string) || 'default');
+  const [accentColor, setAccentColor] = useState((config.accent_color as string) || '#3b82f6');
   const [machineId, setMachineId] = useState((config.machine_id as string) || '');
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(
     (config.metrics as string[]) || []
@@ -37,32 +46,26 @@ export function LineChartConfig({ config, onSave, onCancel }: Props) {
     (config.metric_styles as Record<string, MetricStyle>) || {}
   );
   const [timeRange, setTimeRange] = useState((config.time_range as string) || '24h');
-  const [showCountdown, setShowCountdown] = useState(config.show_countdown !== false);
+  const [showLegend, setShowLegend] = useState(config.show_legend !== false);
+  const [legendPosition, setLegendPosition] = useState((config.legend_position as string) || 'bottom');
 
-  const { data: availableMetrics } = useQuery({
-    queryKey: ['machine-metrics', machineId],
-    queryFn: async () => {
-      const r = await apiFetch(`/machines/${machineId}/metrics`);
-      return r.ok ? r.json() : [];
-    },
-    enabled: !!machineId,
-  });
+  const handleMachineChange = (v: string) => {
+    setMachineId(v);
+    setSelectedMetrics([]);
+    setMetricStyles({});
+  };
 
-  const toggleMetric = (metric: string) => {
-    setSelectedMetrics((prev) => {
-      if (prev.includes(metric)) {
-        return prev.filter((m) => m !== metric);
-      }
-      // Auto-assign a color when adding
-      const newStyles = { ...metricStyles };
-      if (!newStyles[metric]) {
+  const handleMetricsChange = (metrics: string[]) => {
+    const newStyles = { ...metricStyles };
+    for (const m of metrics) {
+      if (!newStyles[m]) {
         const usedColors = Object.values(newStyles).map((s) => s.color);
         const nextColor = COLOR_PRESETS.find((c) => !usedColors.includes(c)) || COLOR_PRESETS[0];
-        newStyles[metric] = { color: nextColor, style: 'solid' };
-        setMetricStyles(newStyles);
+        newStyles[m] = { color: nextColor, style: 'solid' };
       }
-      return [...prev, metric];
-    });
+    }
+    setMetricStyles(newStyles);
+    setSelectedMetrics(metrics);
   };
 
   const updateStyle = (metric: string, key: keyof MetricStyle, value: string) => {
@@ -74,49 +77,36 @@ export function LineChartConfig({ config, onSave, onCancel }: Props) {
 
   return (
     <div className="space-y-4">
-      <TitleField value={title} onChange={setTitle} />
-      <MachinePicker value={machineId} onChange={(v) => { setMachineId(v); setSelectedMetrics([]); setMetricStyles({}); }} />
+      <HeaderFields
+        title={title} onTitleChange={setTitle}
+        titleColor={titleColor} onTitleColorChange={setTitleColor}
+        showCountdown={showCountdown} onShowCountdownChange={setShowCountdown}
+      />
+      <StyleFields
+        widgetStyle={widgetStyle} onWidgetStyleChange={setWidgetStyle}
+        accentColor={accentColor} onAccentColorChange={setAccentColor}
+      />
+      <DataSourceMachine
+        machineId={machineId} onMachineChange={handleMachineChange}
+        metrics={selectedMetrics} onMetricsChange={handleMetricsChange}
+        multi
+      />
 
-      <div className="space-y-1">
-        <Label className="text-xs uppercase text-slate-500">Metrics (select multiple)</Label>
-        {!machineId ? (
-          <p className="text-xs text-slate-400">Select a machine first.</p>
-        ) : !availableMetrics || (availableMetrics as string[]).length === 0 ? (
-          <p className="text-xs text-slate-400">No metrics available for this machine.</p>
-        ) : (
-          <div className="space-y-1 rounded-md border p-2">
-            {(availableMetrics as string[]).map((m: string) => (
-              <label key={m} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 rounded px-1 py-0.5">
-                <input
-                  type="checkbox"
-                  checked={selectedMetrics.includes(m)}
-                  onChange={() => toggleMetric(m)}
-                  className="rounded"
-                />
-                <span>{m}</span>
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
+      <ConfigSection label="Time Range" />
+      <TimeRangePicker value={timeRange} onChange={setTimeRange} />
 
-      {/* Per-metric color and style */}
       {selectedMetrics.length > 0 && (
-        <div className="space-y-2">
-          <Label className="text-xs uppercase text-slate-500">Line Color & Style</Label>
+        <>
+          <ConfigSection label="Metric Style" />
           <div className="space-y-3 rounded-md border p-3">
             {selectedMetrics.map((metric) => {
               const ms = metricStyles[metric] || { color: COLOR_PRESETS[0], style: 'solid' };
               return (
                 <div key={metric} className="space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <div
-                      className="h-3 w-3 rounded-full border"
-                      style={{ backgroundColor: ms.color }}
-                    />
+                    <div className="h-3 w-3 rounded-full border" style={{ backgroundColor: ms.color }} />
                     <span className="text-sm font-medium">{metric}</span>
                   </div>
-                  {/* Color picker */}
                   <div className="flex items-center gap-1">
                     {COLOR_PRESETS.map((color) => (
                       <button
@@ -137,7 +127,6 @@ export function LineChartConfig({ config, onSave, onCancel }: Props) {
                       title="Custom color"
                     />
                   </div>
-                  {/* Line style */}
                   <div className="flex gap-1">
                     {LINE_STYLES.map((ls) => (
                       <button
@@ -157,23 +146,24 @@ export function LineChartConfig({ config, onSave, onCancel }: Props) {
               );
             })}
           </div>
-        </div>
+        </>
       )}
 
-      <TimeRangePicker value={timeRange} onChange={setTimeRange} />
-      <ShowCountdownField value={showCountdown} onChange={setShowCountdown} />
+      <LegendFields
+        showLegend={showLegend} onShowLegendChange={setShowLegend}
+        legendPosition={legendPosition} onLegendPositionChange={setLegendPosition}
+      />
 
       <div className="flex gap-2 pt-2">
         <Button
           onClick={() =>
             onSave({
               ...config,
-              title,
-              machine_id: machineId,
-              metrics: selectedMetrics,
-              metric_styles: metricStyles,
-              time_range: timeRange,
-              show_countdown: showCountdown,
+              title, title_color: titleColor, show_countdown: showCountdown,
+              widget_style: widgetStyle, accent_color: accentColor,
+              machine_id: machineId, metrics: selectedMetrics,
+              metric_styles: metricStyles, time_range: timeRange,
+              show_legend: showLegend, legend_position: legendPosition,
             })
           }
           className="flex-1"
