@@ -188,6 +188,73 @@ export function ConfigSection({ label }: { label: string }) {
   );
 }
 
+const STYLE_PRESETS = [
+  { value: 'default', label: 'Default' },
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'accent', label: 'Accent' },
+];
+
+const ACCENT_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+
+export function StyleFields({
+  widgetStyle,
+  onWidgetStyleChange,
+  accentColor,
+  onAccentColorChange,
+}: {
+  widgetStyle: string;
+  onWidgetStyleChange: (v: string) => void;
+  accentColor: string;
+  onAccentColorChange: (v: string) => void;
+}) {
+  return (
+    <>
+      <ConfigSection label="Style" />
+      <div className="space-y-1">
+        <Label className="text-xs uppercase text-slate-500">Widget Style</Label>
+        <div className="flex gap-1">
+          {STYLE_PRESETS.map((p) => (
+            <button
+              key={p.value}
+              onClick={() => onWidgetStyleChange(p.value)}
+              className={`rounded px-3 py-1 text-xs ${
+                widgetStyle === p.value ? 'bg-slate-800 text-white' : 'border bg-white text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {widgetStyle === 'accent' && (
+        <div className="space-y-1">
+          <Label className="text-xs uppercase text-slate-500">Accent Color</Label>
+          <div className="flex items-center gap-1">
+            {ACCENT_COLORS.map((color) => (
+              <button
+                key={color}
+                onClick={() => onAccentColorChange(color)}
+                className="h-6 w-6 rounded-md border-2 transition-transform hover:scale-110"
+                style={{
+                  backgroundColor: color,
+                  borderColor: accentColor === color ? '#1e293b' : 'transparent',
+                }}
+              />
+            ))}
+            <input
+              type="color"
+              value={accentColor}
+              onChange={(e) => onAccentColorChange(e.target.value)}
+              className="ml-1 h-6 w-6 cursor-pointer rounded border-0 p-0"
+              title="Custom color"
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 export function HeaderFields({
   title,
   onTitleChange,
