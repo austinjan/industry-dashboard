@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { TitleField, ShowCountdownField } from './CommonFields';
+import { HeaderFields, StyleFields, ConfigSection } from './CommonFields';
 
 interface Props {
   config: Record<string, unknown>;
@@ -12,12 +12,24 @@ interface Props {
 
 export function TextConfig({ config, onSave, onCancel }: Props) {
   const [title, setTitle] = useState((config.title as string) || '');
-  const [content, setContent] = useState((config.content as string) || '');
+  const [titleColor, setTitleColor] = useState((config.title_color as string) || '');
   const [showCountdown, setShowCountdown] = useState(config.show_countdown !== false);
+  const [widgetStyle, setWidgetStyle] = useState((config.widget_style as string) || 'default');
+  const [accentColor, setAccentColor] = useState((config.accent_color as string) || '#3b82f6');
+  const [content, setContent] = useState((config.content as string) || '');
 
   return (
     <div className="space-y-4">
-      <TitleField value={title} onChange={setTitle} />
+      <HeaderFields
+        title={title} onTitleChange={setTitle}
+        titleColor={titleColor} onTitleColorChange={setTitleColor}
+        showCountdown={showCountdown} onShowCountdownChange={setShowCountdown}
+      />
+      <StyleFields
+        widgetStyle={widgetStyle} onWidgetStyleChange={setWidgetStyle}
+        accentColor={accentColor} onAccentColorChange={setAccentColor}
+      />
+      <ConfigSection label="Content" />
       <div className="space-y-1">
         <Label className="text-xs uppercase text-slate-500">Content (Markdown)</Label>
         <Textarea
@@ -29,14 +41,15 @@ export function TextConfig({ config, onSave, onCancel }: Props) {
         />
         <p className="text-xs text-slate-400">Supports **bold**, *italic*, lists, headings</p>
       </div>
-      <ShowCountdownField value={showCountdown} onChange={setShowCountdown} />
       <div className="flex gap-2 pt-2">
-        <Button onClick={() => onSave({ ...config, title, content, show_countdown: showCountdown })} className="flex-1">
-          Apply
-        </Button>
-        <Button variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
-        </Button>
+        <Button
+          onClick={() => onSave({
+            ...config, title, title_color: titleColor, show_countdown: showCountdown,
+            widget_style: widgetStyle, accent_color: accentColor, content,
+          })}
+          className="flex-1"
+        >Apply</Button>
+        <Button variant="outline" onClick={onCancel} className="flex-1">Cancel</Button>
       </div>
     </div>
   );
