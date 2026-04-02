@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { TitleField, MachinePicker, TimeRangePicker } from './CommonFields';
+import { TitleField, MachinePicker, TimeRangePicker, ShowCountdownField } from './CommonFields';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api';
 
@@ -37,6 +37,7 @@ export function LineChartConfig({ config, onSave, onCancel }: Props) {
     (config.metric_styles as Record<string, MetricStyle>) || {}
   );
   const [timeRange, setTimeRange] = useState((config.time_range as string) || '24h');
+  const [showCountdown, setShowCountdown] = useState(config.show_countdown !== false);
 
   const { data: availableMetrics } = useQuery({
     queryKey: ['machine-metrics', machineId],
@@ -160,6 +161,7 @@ export function LineChartConfig({ config, onSave, onCancel }: Props) {
       )}
 
       <TimeRangePicker value={timeRange} onChange={setTimeRange} />
+      <ShowCountdownField value={showCountdown} onChange={setShowCountdown} />
 
       <div className="flex gap-2 pt-2">
         <Button
@@ -171,6 +173,7 @@ export function LineChartConfig({ config, onSave, onCancel }: Props) {
               metrics: selectedMetrics,
               metric_styles: metricStyles,
               time_range: timeRange,
+              show_countdown: showCountdown,
             })
           }
           className="flex-1"

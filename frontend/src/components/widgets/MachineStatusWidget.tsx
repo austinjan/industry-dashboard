@@ -11,7 +11,6 @@ export function MachineStatusWidget({ config }: { config: Record<string, unknown
   const { data: machines } = useLineMachines(lineId);
   return (
     <div className="h-full overflow-auto">
-      <p className="mb-2 text-xs text-slate-500">{(config.title as string) || 'Machine Status'}</p>
       <div className="grid grid-cols-3 gap-2">
         {machines?.map((m: { id: string; name: string; status: string }) => (
           <div

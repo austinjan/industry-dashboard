@@ -6,7 +6,6 @@ export function DataTableWidget({ config }: { config: Record<string, unknown> })
   const { data: machines } = useLineMachines(lineId);
   return (
     <div className="h-full overflow-auto">
-      <p className="mb-1 text-xs text-slate-500">{(config.title as string) || 'Data Table'}</p>
       {machines && machines.length > 0 ? (
         <Table>
           <TableHeader>

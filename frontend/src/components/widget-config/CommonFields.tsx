@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useSite } from '@/lib/site-context';
 import { useSiteLines, useLineMachines } from '@/lib/hooks';
 import { useQuery } from '@tanstack/react-query';
@@ -165,5 +166,14 @@ export function LimitField({ value, onChange }: { value: number; onChange: (v: n
         className="w-24"
       />
     </div>
+  );
+}
+
+export function ShowCountdownField({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-center gap-2 text-sm">
+      <Checkbox checked={value} onCheckedChange={(checked) => onChange(!!checked)} />
+      <span>Show polling countdown</span>
+    </label>
   );
 }

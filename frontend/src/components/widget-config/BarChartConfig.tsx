@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { TitleField, LinePicker, TimeRangePicker } from './CommonFields';
+import { TitleField, LinePicker, TimeRangePicker, ShowCountdownField } from './CommonFields';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
@@ -16,6 +16,7 @@ export function BarChartConfig({ config, onSave, onCancel }: Props) {
   const [metric, setMetric] = useState((config.metric as string) || '');
   const [timeRange, setTimeRange] = useState((config.time_range as string) || '24h');
   const [aggregation, setAggregation] = useState((config.aggregation as string) || 'avg');
+  const [showCountdown, setShowCountdown] = useState(config.show_countdown !== false);
 
   return (
     <div className="space-y-4">
@@ -46,10 +47,11 @@ export function BarChartConfig({ config, onSave, onCancel }: Props) {
         </Select>
       </div>
       <TimeRangePicker value={timeRange} onChange={setTimeRange} />
+      <ShowCountdownField value={showCountdown} onChange={setShowCountdown} />
       <div className="flex gap-2 pt-2">
         <Button
           onClick={() =>
-            onSave({ ...config, title, line_id: lineId, metric, aggregation, time_range: timeRange })
+            onSave({ ...config, title, line_id: lineId, metric, aggregation, time_range: timeRange, show_countdown: showCountdown })
           }
           className="flex-1"
         >

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { TitleField, LimitField } from './CommonFields';
+import { TitleField, LimitField, ShowCountdownField } from './CommonFields';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 
@@ -16,6 +16,7 @@ export function AlertListConfig({ config, onSave, onCancel }: Props) {
   const [severities, setSeverities] = useState<string[]>(
     (config.severity as string[]) || ['critical', 'warning'],
   );
+  const [showCountdown, setShowCountdown] = useState(config.show_countdown !== false);
 
   const toggleSeverity = (s: string) => {
     setSeverities((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
@@ -34,9 +35,10 @@ export function AlertListConfig({ config, onSave, onCancel }: Props) {
         ))}
       </div>
       <LimitField value={limit} onChange={setLimit} />
+      <ShowCountdownField value={showCountdown} onChange={setShowCountdown} />
       <div className="flex gap-2 pt-2">
         <Button
-          onClick={() => onSave({ ...config, title, severity: severities, limit })}
+          onClick={() => onSave({ ...config, title, severity: severities, limit, show_countdown: showCountdown })}
           className="flex-1"
         >
           Apply

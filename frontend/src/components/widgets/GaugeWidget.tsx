@@ -12,7 +12,6 @@ export function GaugeWidget({ config }: { config: Record<string, unknown> }) {
   const data = [{ value: pct, fill }];
   return (
     <div className="flex h-full flex-col items-center justify-center">
-      <p className="text-xs text-slate-500">{(config.title as string) || 'Gauge'}</p>
       <ResponsiveContainer width="100%" height={120}>
         <RadialBarChart innerRadius="60%" outerRadius="90%" data={data} startAngle={180} endAngle={0}>
           <RadialBar dataKey="value" background cornerRadius={4} />

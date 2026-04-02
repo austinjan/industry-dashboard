@@ -67,7 +67,6 @@ export function LineChartWidget({ config }: { config: Record<string, unknown> })
 
   return (
     <div className="h-full">
-      <p className="mb-1 text-xs text-slate-500">{(config.title as string) || 'Line Chart'}</p>
       {isLoading ? (
         <p className="py-4 text-center text-xs text-slate-400">Loading...</p>
       ) : chartData.length > 0 ? (

@@ -40,6 +40,32 @@
     "error": "{{count}} 台異常",
     "noMachines": "沒有設備"
   },
+  "dashboardList": {
+    "title": "我的儀表板",
+    "newDashboard": "新增儀表板",
+    "createTitle": "建立儀表板",
+    "titlePlaceholder": "儀表板名稱",
+    "create": "建立",
+    "view": "檢視",
+    "edit": "編輯",
+    "delete": "刪除",
+    "shared": "已共享",
+    "private": "私人",
+    "updated": "更新於 {{time}}",
+    "confirmDelete": "確定要刪除「{{name}}」嗎？此操作無法復原。",
+    "cancel": "取消",
+    "emptyTitle": "尚無儀表板",
+    "emptyDescription": "建立第一個儀表板來開始監控。",
+    "selectSite": "請選擇廠區。",
+    "owner": "擁有者",
+    "share": "分享",
+    "rename": "重新命名",
+    "save": "儲存"
+  },
+  "dashboardView": {
+    "fullscreen": "全螢幕",
+    "exitFullscreen": "退出全螢幕"
+  },
   "machines": {
     "heading": "機台 — {{siteName}}",
     "machine": "機台",

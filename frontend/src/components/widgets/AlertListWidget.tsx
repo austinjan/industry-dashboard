@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useAlertEvents } from '@/lib/hooks';
 import { useSite } from '@/lib/site-context';
 
@@ -45,12 +44,6 @@ export function AlertListWidget({ config }: { config: Record<string, unknown> })
   const events = data?.events;
   return (
     <div className="h-full overflow-auto">
-      <Link
-        to="/alerts"
-        className="mb-2 block text-xs font-semibold text-foreground hover:underline underline-offset-2 decoration-muted-foreground"
-      >
-        {(config.title as string) || 'Alerts'} ↗
-      </Link>
       {events?.map((e: { id: string; severity: string; machine_name: string; alert_name: string; triggered_at: string }) => {
         const style = severityStyles[e.severity] || severityStyles.info;
         return (

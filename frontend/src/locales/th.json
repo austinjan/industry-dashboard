@@ -40,6 +40,32 @@
     "error": "{{count}} ข้อผิดพลาด",
     "noMachines": "ไม่มีเครื่องจักร"
   },
+  "dashboardList": {
+    "title": "แดชบอร์ดของฉัน",
+    "newDashboard": "แดชบอร์ดใหม่",
+    "createTitle": "สร้างแดชบอร์ด",
+    "titlePlaceholder": "ชื่อแดชบอร์ด",
+    "create": "สร้าง",
+    "view": "ดู",
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "shared": "แชร์แล้ว",
+    "private": "ส่วนตัว",
+    "updated": "อัปเดต {{time}}",
+    "confirmDelete": "คุณแน่ใจหรือไม่ว่าต้องการลบ \"{{name}}\"? ไม่สามารถย้อนกลับได้",
+    "cancel": "ยกเลิก",
+    "emptyTitle": "ยังไม่มีแดชบอร์ด",
+    "emptyDescription": "สร้างแดชบอร์ดแรกเพื่อเริ่มตรวจสอบ",
+    "selectSite": "เลือกโรงงาน",
+    "owner": "เจ้าของ",
+    "share": "แชร์",
+    "rename": "เปลี่ยนชื่อ",
+    "save": "บันทึก"
+  },
+  "dashboardView": {
+    "fullscreen": "เต็มจอ",
+    "exitFullscreen": "ออกจากเต็มจอ"
+  },
   "machines": {
     "heading": "เครื่องจักร — {{siteName}}",
     "machine": "เครื่องจักร",

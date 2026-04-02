@@ -40,6 +40,32 @@
     "error": "{{count}} lỗi",
     "noMachines": "Không có máy"
   },
+  "dashboardList": {
+    "title": "Bảng điều khiển của tôi",
+    "newDashboard": "Bảng điều khiển mới",
+    "createTitle": "Tạo bảng điều khiển",
+    "titlePlaceholder": "Tên bảng điều khiển",
+    "create": "Tạo",
+    "view": "Xem",
+    "edit": "Sửa",
+    "delete": "Xóa",
+    "shared": "Đã chia sẻ",
+    "private": "Riêng tư",
+    "updated": "Cập nhật {{time}}",
+    "confirmDelete": "Bạn có chắc muốn xóa \"{{name}}\"? Hành động này không thể hoàn tác.",
+    "cancel": "Hủy",
+    "emptyTitle": "Chưa có bảng điều khiển",
+    "emptyDescription": "Tạo bảng điều khiển đầu tiên để bắt đầu giám sát.",
+    "selectSite": "Chọn nhà máy.",
+    "owner": "Chủ sở hữu",
+    "share": "Chia sẻ",
+    "rename": "Đổi tên",
+    "save": "Lưu"
+  },
+  "dashboardView": {
+    "fullscreen": "Toàn màn hình",
+    "exitFullscreen": "Thoát toàn màn hình"
+  },
   "machines": {
     "heading": "Máy — {{siteName}}",
     "machine": "Máy",

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { TitleField, MachinePicker, MetricPicker } from './CommonFields';
+import { TitleField, MachinePicker, MetricPicker, ShowCountdownField } from './CommonFields';
 
 interface Props {
   config: Record<string, unknown>;
@@ -15,6 +15,7 @@ export function StatusCardConfig({ config, onSave, onCancel }: Props) {
   const [machineId, setMachineId] = useState((config.machine_id as string) || '');
   const [metric, setMetric] = useState((config.metric as string) || '');
   const [unit, setUnit] = useState((config.unit as string) || '');
+  const [showCountdown, setShowCountdown] = useState(config.show_countdown !== false);
 
   return (
     <div className="space-y-4">
@@ -31,9 +32,10 @@ export function StatusCardConfig({ config, onSave, onCancel }: Props) {
         />
         <p className="text-xs text-slate-400">Display unit after the value</p>
       </div>
+      <ShowCountdownField value={showCountdown} onChange={setShowCountdown} />
       <div className="flex gap-2 pt-2">
         <Button
-          onClick={() => onSave({ ...config, title, machine_id: machineId, metric, unit })}
+          onClick={() => onSave({ ...config, title, machine_id: machineId, metric, unit, show_countdown: showCountdown })}
           className="flex-1"
         >
           Apply

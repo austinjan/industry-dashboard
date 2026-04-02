@@ -40,6 +40,32 @@
     "error": "{{count}} error",
     "noMachines": "No machines"
   },
+  "dashboardList": {
+    "title": "My Dashboards",
+    "newDashboard": "New Dashboard",
+    "createTitle": "Create Dashboard",
+    "titlePlaceholder": "Dashboard title",
+    "create": "Create",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "shared": "Shared",
+    "private": "Private",
+    "updated": "Updated {{time}}",
+    "confirmDelete": "Are you sure you want to delete \"{{name}}\"? This cannot be undone.",
+    "cancel": "Cancel",
+    "emptyTitle": "No dashboards yet",
+    "emptyDescription": "Create your first dashboard to start monitoring.",
+    "selectSite": "Select a site.",
+    "owner": "Owner",
+    "share": "Share",
+    "rename": "Rename",
+    "save": "Save"
+  },
+  "dashboardView": {
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit Fullscreen"
+  },
   "machines": {
     "heading": "Machines — {{siteName}}",
     "machine": "Machine",

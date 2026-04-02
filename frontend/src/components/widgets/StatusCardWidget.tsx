@@ -7,7 +7,6 @@ export function StatusCardWidget({ config }: { config: Record<string, unknown> }
   const value = metric ? latest?.[metric] : undefined;
   return (
     <div className="flex h-full flex-col justify-center">
-      <p className="text-xs text-slate-500">{(config.title as string) || metric}</p>
       <p className="text-2xl font-bold">
         {value !== undefined ? `${value.toFixed(1)}${(config.unit as string) || ''}` : '--'}
       </p>
